@@ -81,6 +81,50 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
         Route::get('notifications/{id}/state/{state}', 'NotificationController@changeState');
         Route::post('notifications-search', 'NotificationController@search');
 
+
+        Route::get('corps/{id}/state/{state}', 'CorpsController@changeState');
+        Route::post('corps-search', 'CorpsController@search');
+
+        Route::get('statut/{id}/state/{state}', 'StatutController@changeState');
+        Route::post('statut-search', 'StatutController@search');
+
+        Route::get('fonction/{id}/state/{state}', 'FonctionController@changeState');
+        Route::post('corps-search', 'FonctionController@search');
+
+        Route::get('grade/{id}/state/{state}', 'GradeController@changeState');
+        Route::post('grade-search', 'GradeController@search');
+
+        Route::get('periode/{id}/state/{state}', 'PeriodeController@changeState');
+        Route::post('periode-search', 'PeriodeController@search');
+
+        Route::get('typeacte/{id}/state/{state}', 'TypeacteController@changeState');
+        Route::post('typeacte-search', 'TypeacteController@search');
+
+        Route::get('typeprime/{id}/state/{state}', 'TypeprimeController@changeState');
+        Route::post('typeprime-search', 'TypeprimeController@search');
+
+        Route::get('primestatut/{id}/state/{state}', 'PrimeStatutController@changeState');
+        Route::post('primestatut-search', 'PrimeStatutController@search');
+
+        Route::get('retenue/{id}/state/{state}', 'RetenueController@changeState');
+        Route::post('retenue-search', 'RetenueController@search');
+
+        Route::get('agent/{id}/state/{state}', 'Agentontroller@changeState');
+        Route::post('agent-search', 'AgentController@search');
+
+        Route::get('joursferies/{id}/state/{state}', 'JoursFeriesontroller@changeState');
+        Route::post('joursferies-search', 'JoursFeriesController@search');
+
+        Route::get('notationagent/{id}/state/{state}', 'NotationAgent@changeState');
+        Route::post('notationagent-search', 'NotationAgentController@search');
+
+        Route::get('hsup/{id}/state/{state}', 'Hsup@changeState');
+        Route::post('hsup-search', 'HsupController@search');
+
+        Route::get('ua/{id}/state/{state}', 'UA@changeState');
+        Route::post('ua-search', 'UAController@search');
+
+        
         Route::get('countries/{id}/state/{state}', 'CountryController@changeState');
         Route::post('countries-search', 'CountryController@search');
 
