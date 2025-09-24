@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Services\StatutAgentService;
 use App\Utilities\Core;
 use eloquentFilter\QueryFilter\ModelFilters\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
