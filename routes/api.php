@@ -19,6 +19,7 @@ Route::group([
     'namespace' => 'App\Http\Controllers'
 ], function () {
     Route::post('/login', 'Auth\UserAuthController@login');
+    Route::post('/register', 'Auth\UserAuthController@register');
     Route::post('/send-reset-password-link', 'Auth\ResetPasswordController@sendResetPasswordLink');
     Route::post('/recovery-password/{token}', 'Auth\ResetPasswordController@recoveryPassword');
     Route::post('eservice', 'EServiceController@store');

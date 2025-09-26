@@ -186,9 +186,9 @@ return [
          * Package Service Providers...
          */
         Spatie\Permission\PermissionServiceProvider::class,
-        Spatie\Backup\BackupServiceProvider::class,
-        SimpleSoftwareIO\QrCode\QrCodeServiceProvider::class,
-        Maatwebsite\Excel\ExcelServiceProvider::class,
+      //  Spatie\Backup\BackupServiceProvider::class,
+      //  SimpleSoftwareIO\QrCode\QrCodeServiceProvider::class,
+       // Maatwebsite\Excel\ExcelServiceProvider::class,
 
         /*
          * Application Service Providers...
