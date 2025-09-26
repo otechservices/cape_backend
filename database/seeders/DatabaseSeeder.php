@@ -9,22 +9,11 @@ class DatabaseSeeder extends Seeder
 {
     /**
      * Seed the application's database.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
-
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-      //  $this->call(RoleSeeder::class);
-        //$this->call(CreateAdminUserSeeder::class);
-       // $this->call(RoleMemberSeeder::class);
-       // $this->call(ControlerSeeder::class);
-        $this->call(SessionRoleSeeder::class);
-
+        $this->call(SettingSeeder::class);
+        $this->call(PermissionSeeder::class);
+        $this->call(SuperAdminSeeder::class);
     }
 }

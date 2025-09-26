@@ -8,14 +8,16 @@ use Illuminate\Database\Eloquent\Model;
 class PasswordReset extends Model
 {
     use HasFactory;
-    const UPDATED_AT = null;
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
-    protected $fillable = [
-        'email',
-        'token'
-    ];
+
+    protected $guarded = [];
+
+    protected $table = 'password_reset_tokens';
+
+    protected $primaryKey = 'email';  // Définir la clé primaire correcte
+
+    public $incrementing = false;     // Désactiver l'auto-incrémentation (pour éviter l'usage d'un 'id')
+
+    protected $keyType = 'string';
+
+    public $timestamps = false;
 }

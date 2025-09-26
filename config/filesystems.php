@@ -43,27 +43,6 @@ return [
             'visibility' => 'public',
             'throw' => false,
         ],
-        'doc_store' => [
-            'driver' => 'local',
-            'root' => public_path('docs'),
-            'url' => env('APP_URL'),
-            'visibility' => 'public',
-            'throw' => false,
-        ],
-        'db_backup' => [
-            'driver' => 'local',
-            'root' => public_path('backups'),
-            'url' => env('APP_URL'),
-            'visibility' => 'public',
-            'throw' => false,
-        ],
-        'session_store' => [
-            'driver' => 'local',
-            'root' => public_path('sessions'),
-            'url' => env('APP_URL'),
-            'visibility' => 'public',
-            'throw' => false,
-        ],
 
         's3' => [
             'driver' => 's3',
@@ -72,6 +51,7 @@ return [
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
             'url' => env('AWS_URL'),
+            'acl' => env('AWS_ACL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,

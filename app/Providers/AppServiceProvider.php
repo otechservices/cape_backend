@@ -2,30 +2,35 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use App\Events\ChangeStatutAgentEvent;
+use App\Listeners\ChangeStatutAgentListener;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
-
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
-     *
-     * @return void
      */
-    public function register()
-    {
-        //
-    }
+    public function register(): void {}
 
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
-        Schema::defaultStringLength(191); //Update defaultStringLength
+        Event::listen(
+            ChangeStatutAgentEvent::class,
+            ChangeStatutAgentListener::class,
+        );
+        Schema::defaultStringLength(191);
+
+        // Queue::connection('rabbitmq')->pushRaw(json_encode([
+        //     'event' => 'TypeActivityDeleteEvent',
+        //     'activity_id' => 123, // Remplace par la vraie donnée
+        // ]));
 
     }
 }
