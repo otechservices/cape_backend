@@ -26,11 +26,7 @@ class LoginRequest extends FormRequest
     {
         return [
             'email' => 'required|email|exists:users,email',
-            'password' => 'required|min:8',
-            'device' => 'required|in:web,mobile',
-            'code_otp' => 'nullable|integer',
-            'new_connexion_canal' => 'nullable|in:SMS,WHATSAPP,EMAIL',
-            'canal_value' => 'required_with:new_connexion_canal',
+            'password' => 'required|min:8'
 
         ];
     }

@@ -15,48 +15,15 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use Filterable,HasApiTokens, HasFactory,Notifiable,SoftDeletes,HasRoles;
+    use Filterable,HasApiTokens, HasFactory,Notifiable,HasRoles;
 
     // Liste blanche des attributs pouvant être filtrés
     private static $whiteListFilter = ['*'];
 
     // Les attributs qui sont mass-assignable
-    protected $fillable = [
-        'code',
-        'name',
-        'lastname',
-        'firstname',
-        'birthdate',
-        'birthplace',
-        'address',
-        'phone',
-        'photo',
-        'is_active',
-        'is_first_connexion',
-        'email',
-        'password',
-        'token',
-        'email_verified_at',
-        'code_otp',
-        'project_id',
-        'spoken_languages',
-        'understood_languages',
-        'municipality_id',
-        'statut_agent_id',
-        'residence_place',
-        'education_level',
-        'nb_children',
-        'computer_skills',
-        'reference_person',
-        'comment',
-        'cv',
-        'push_token',
-    ];
+    protected $guarded = [];
 
-    protected $casts = [
-        'spoken_languages' => 'array',
-        'understood_languages' => 'array',
-    ];
+    protected $casts = [];
 
     protected $appends = [];
 
@@ -73,29 +40,7 @@ class User extends Authenticatable implements JWTSubject
         self::creating(function ($model) {
             // Génération du code unique pour chaque utilisateur
             $model->code = (string) Core::generateIncrementUniqueCode('users', 3, 'code', null);
-
-            $model->name = $model->lastname.' '.$model->firstname;
         });
-    }
-
-    public function setFirstnameAttribute($value)
-    {
-        $this->attributes['firstname'] = $value;
-        $this->updateFullName();
-    }
-
-    public function setLastnameAttribute($value)
-    {
-        $this->attributes['lastname'] = $value;
-        $this->updateFullName();
-    }
-
-    private function updateFullName()
-    {
-        $firstname = $this->attributes['firstname'] ?? '';
-        $lastname = $this->attributes['lastname'] ?? '';
-
-        $this->attributes['name'] = trim("$lastname $firstname");
     }
 
   
@@ -117,6 +62,11 @@ class User extends Authenticatable implements JWTSubject
             'email' => $this->email,
             'name' => $this->name,
         ];
+    }
+
+
+    function promoter()  {
+        return $this->belongsTo(User::class,'promoter_id');
     }
 
 

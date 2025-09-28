@@ -226,11 +226,16 @@ class RequeteController extends Controller
 
         $code = RequeteController::generateUniqueCode($service);
         $dataR = [];
-        if ($data->has_aggrement) {
-            $dataR['aggreement_reference'] = $data->aggreement_reference;
-            $dataR['aggreement_year'] = $data->aggreement_year;
-            $dataR['file_aggreement'] = FileStorage::setFile("doc_store", $request->file('file_aggreement'), $code, time());
-            $dataR['has_agreemant'] = true;
+            if (!empty($data) && !empty($data->has_agreement)) {
+            $dataR['aggreement_reference'] = $data->aggreement_reference ?? null;
+            $dataR['aggreement_year'] = $data->aggreement_year ?? null;
+            $dataR['file_aggreement'] = FileStorage::setFile(
+                "doc_store", 
+                $request->file('file_agreement'), 
+                $code, 
+                time()
+            );
+            $dataR['has_agreement'] = true;
             $dataR['is_authorized'] = true;
         }
         $filename = null;
@@ -277,10 +282,11 @@ class RequeteController extends Controller
             "head_office" => isset($data->head_office) ? $data->head_office : null,
             "pomoter_is_director" => $data->chief_is_directeor,
             "consent_file" => $consent_file,
-            "target" => json_encode($data->targets),
-            "status" => $data->has_aggrement ? 8 : 0,
+            "target" => !empty($data) && !empty($data->targets)  ?json_encode($data->targets):json_encode([]),
+            "status" => !empty($data) && !empty($data->has_agreement) ? 8 : 0,
             "district_id" => (int) $data->district_id,
-            "service_id" => (int) $request->service_id
+            "service_id" => (int) $request->service_id,
+            'promoter_id' =>Auth::user()->promoter_id
         ], $dataR));
 
         if (isset($data?->type_garderies)) {
@@ -326,6 +332,7 @@ class RequeteController extends Controller
             "filename" => $recFile,
             "level" => 1,
             "file_id" => null,
+            'promoter_id' =>Auth::user()->promoter_id,
             "requete_id" => $requete->id,
         ]);
 
@@ -403,7 +410,7 @@ class RequeteController extends Controller
                 //'alexiskatel92@gmail.com',
                 [$filePath],
             );
-            if (!$mailResult['success']) {
+            if (!$mailResult) {
                 $allMailsSent = false;
                 Log::error('Échec d\'envoi à ' . $item['email']);
             }

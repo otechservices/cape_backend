@@ -44,6 +44,28 @@ return [
             'throw' => false,
         ],
 
+         'doc_store' => [
+            'driver' => 'local',
+            'root' => public_path('docs'),
+            'url' => env('APP_URL'),
+            'visibility' => 'public',
+            'throw' => false,
+        ],
+        'db_backup' => [
+            'driver' => 'local',
+            'root' => public_path('backups'),
+            'url' => env('APP_URL'),
+            'visibility' => 'public',
+            'throw' => false,
+        ],
+        'session_store' => [
+            'driver' => 'local',
+            'root' => public_path('sessions'),
+            'url' => env('APP_URL'),
+            'visibility' => 'public',
+            'throw' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

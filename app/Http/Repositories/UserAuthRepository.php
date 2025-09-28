@@ -6,7 +6,7 @@ use App\Exceptions\JsonResponseException;
 use App\Models\PasswordReset;
 use App\Models\User;
 use App\Models\UserAuth;
-use App\Models\UserProject;
+use App\Models\Promoter;
 use App\Notifications\DefaultNotification;
 use App\Notifications\ElectionPrClosedNotification;
 use App\Services\OTPService;
@@ -54,14 +54,7 @@ class UserAuthRepository
      */
     public function login($data)
     {
-        $browser = $this->getBrowser(request());
-        $ipAddress = request()->ip();
-        // Tente l'authentification
-        $exp = $data['device'] == 'web' ? Carbon::now()->addSeconds(3600) : Carbon::now()->addSeconds(86400);
-        unset($data['device']);
-        unset($data['new_connexion_canal']);
-        unset($data['canal_value']);
-
+        $exp = Carbon::now()->addSeconds(3600);
         $token = Auth::guard('api')->attempt($data, ['exp' => $exp->timestamp]);
         if (! $token) {
             throw new JsonResponseException([
@@ -72,62 +65,7 @@ class UserAuthRepository
             ], 401);
 
         }
-        $user = Auth::guard(name: 'api')->user();
-        // if (($user->is_first_connexion || $user->browser != $browser || ($user->browser == $browser && $user->ip_address != $ipAddress)) && ! request()->has('new_connexion_canal')) {
-
-        //     throw new JsonResponseException([
-        //         'message' => 'Utilisateur reconnu, mais origine de connexion différente',
-        //         'success' => false,
-        //         'data' => null,
-        //         'warning' => 'Veuillez fournir le canal par lequel vous voudriez recevoir le code OTP',
-        //     ], 200);
-
-        // } elseif (request()->has('new_connexion_canal') || $user->settings?->use_2FA) {
-
-        //     if (! request()->has('code_otp')) {
-        //         $code = random_int(100000, 999999);
-        //         $canal = request()->new_connexion_canal ?? $user->settings?->mode_2FA;
-
-        //         switch ($canal) {
-        //             case 'SMS':
-        //                 if ($this->otpService->sendSMSOTP(request()->canal_value ?? $user->phone, $code) === false) {
-        //                     throw new HttpResponseException(Common::error("Echec d'envoi du code par SMS", []));
-        //                 }
-
-        //                 break;
-        //             case 'WHATSAPP':
-        //                 if ($this->otpService->sendWhatsappSms(request()->canal_value ?? $user->phone, $code) === false) {
-        //                     throw new HttpResponseException(Common::error("Echec d'envoi du code par WHATSAPP", []));
-        //                 }
-
-        //                 break;
-        //             case 'EMAIL':
-        //                 if ($this->otpService->sendMailOTP(request()->canal_value ?? $user->email, $code) == false) {
-        //                     throw new HttpResponseException(Common::error("Echec d'envoi du code par EMAIL", []));
-        //                 }
-        //                 break;
-
-        //             default:
-        //                 throw new HttpResponseException(Common::error('Aucun mode 2FA choisi', []));
-        //                 break;
-        //         }
-
-        //         return [
-        //             'message' => 'Un code otp a été envoyé par '.$canal,
-        //         ];
-        //     } else {
-        //         if ($user->code_otp != request()->code_otp) {
-        //             throw new HttpResponseException(Common::error('Code OTP erroné', []));
-        //         }
-        //     }
-        // }
-
-        $user->browser = $browser;
-        $user->ip_address = $ipAddress;
-        //  $user->is_first_connexion = false;
-        $user->save();
-
-        // Si l'authentification réussit
+              // Si l'authentification réussit
         return [
             'access_token' => $token,
             'token_type' => 'Bearer',
@@ -135,6 +73,46 @@ class UserAuthRepository
                 ->timezone('Africa/Porto-Novo')
                 ->toDateTimeString(),
         ];
+
+    }
+
+
+ 
+    public function register($data)
+    {
+        try {
+        DB::beginTransaction();
+        $promoter= new Promoter();
+        $promoter->lastname=$data['lastname'];
+        $promoter->firstname=$data['firstname'];
+        $promoter->phone=$data['phone'];
+        $promoter->email=$data['email'];
+        $promoter->save();
+        
+        $userData=[];
+ 
+        $userData['name']=$data['lastname']." ".$data['firstname'];
+        $userData['email']=$data['email'];
+        $userData['promoter_id']=$promoter->id;
+        $userData['password']= Hash::make($data['password']);
+        $user=User::create($userData);
+
+                DB::commit();
+
+        return $user;
+
+        } catch (\Throwable $th) {
+                    DB::rollback();
+
+            throw new JsonResponseException([
+                'message' => $th->getMessage(),
+                'success' => false,
+                'data' => null,
+                'warning' => null,
+            ], 500);
+        }
+
+      
 
     }
 

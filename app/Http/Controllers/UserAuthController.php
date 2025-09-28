@@ -9,6 +9,7 @@ use App\Http\Requests\UserAuth\ChangeFirstPasswordRequest;
 use App\Http\Requests\UserAuth\ChangePasswordRequest;
 use App\Http\Requests\UserAuth\GetUserPermissionRequest;
 use App\Http\Requests\UserAuth\LoginRequest;
+use App\Http\Requests\UserAuth\RegisterRequest;
 use App\Http\Requests\UserAuth\RecoveryPasswordRequest;
 use App\Http\Requests\UserAuth\ResetPasswordRequest;
 use App\Http\Requests\UserAuth\SendResetPasswordLinkRequest;
@@ -79,7 +80,54 @@ class UserAuthController extends Controller
             $result = $this->userauthRepository->login($request->validated());
             // $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
 
-            return Common::success('', $result);
+            return Common::success( $message , $result);
+        } catch (\App\Exceptions\JsonResponseException $e) {
+            // Vérifier si c'est une exception JsonResponseException
+            return $e->render();
+        } catch (\Throwable $th) {
+            // $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
+
+      /**
+     * @OA\Post(
+     *     path="/register",
+     *     summary="Log in a user",
+     *     description="Authenticate a user and return a token",
+     *     tags={"User Authentication"},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/RegisterRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful login",
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1Qi...")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=401, description="Invalid credentials")
+     * )
+     */
+    public function register(RegisterRequest $request)
+    {
+        $message = 'Inscription réussie avec succès';
+
+        try {
+
+            $result = $this->userauthRepository->register($request->validated());
+            // $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
+
+            return Common::success($message, $result);
         } catch (\App\Exceptions\JsonResponseException $e) {
             // Vérifier si c'est une exception JsonResponseException
             return $e->render();

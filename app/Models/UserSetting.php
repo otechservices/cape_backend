@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UserSetting extends Model
 {
-    use Filterable, HasFactory,SoftDeletes;
+    use Filterable, HasFactory;
 
     // Liste blanche des filtres (tous les champs sont filtrables)
     private static $whiteListFilter = ['*'];
