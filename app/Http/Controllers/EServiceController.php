@@ -8,7 +8,7 @@ use App\Models\RequeteFile;
 use App\Utilities\FileStorage;
 use VIPSoft\Unzip\Unzip;
 use App\Models\RequeteTypeGarderie;
-use Str,Mail,PDF,File,Artisan,Http,ZipArchive,Storage,Validator,Auth;
+use Str,Mail,PDF,File,Artisan,Http,ZipArchive,Storage,Validator;
 
 
 class EServiceController extends Controller
@@ -108,7 +108,6 @@ class EServiceController extends Controller
                 "filename"=>$filename,
                 "level"=>0,
                 "file_id"=>$request->file_id,
-                 "promoter_id"=>Auth::user()->promoter->id,
                 "init_code"=>$request->init_code,
             ]);
 

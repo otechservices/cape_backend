@@ -3,181 +3,426 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Repositories\ActivityRepository;
+use App\Http\Requests\Activity\StoreActivityRequest;
+use App\Http\Requests\Activity\UpdateActivityRequest;
+use App\Services\LogService;
+use App\Utilities\Common;
+use OpenApi\Attributes as OA;
 
-use App\Models\TypeActuality;
-use App\Models\Actuality;
 
-use App\Utilities\FileStorage;
-
-use Auth,Str;
-
-class ActualityController extends Controller
+class ActivityController extends Controller
 {
-
-    public function __construct() {
-      
-        $this->middleware('auth', ['except' => ['index2','show']]);
-    }
-
-
-       /**
-     * Display a listing of the resource.
+     /**
+     * The Activity repository being queried.
      *
-     * @return \Illuminate\Http\Response
+     * @var ActivityRepository
      */
-    public function index()
+    protected $ActivityRepository;
+
+    protected $ls;
+
+    public function __construct(ActivityRepository $ActivityRepository, LogService $ls)
     {
-        $actualities=Actuality::all();
-      
-        return response()->json([
-            "success"=>true,
-            "message"=>"Création d'actualité",
-            "data"=>$actualities
-        ],200);
+        $this->ActivityRepository = $ActivityRepository;
+        $this->ls = $ls;
+
+        //$this->middleware('auth:api')->except(['getNotified', 'show']);
+
     }
-       /**
-     * Display a listing of the resource.
+
+    /** @OA\Get(
+     *      path="/activityReports",
+     *      operationId="Activity list",
+     *      tags={"Activity"},
+     *       security={{"JWT":{}}},
+     *      summary="Return Activity data",
+     *      description="Get all activityReports",
      *
-     * @return \Illuminate\Http\Response
+     *      @OA\Parameter(
+     *          name="name",
+     *          in="query",
+     *          description="Can be used for filtering data by name",
+     *          required=false,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Activity"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Activity")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function index2()
+    public function index(Request $request)
     {
-        $actualities=Actuality::all();
-      
-        return response()->json([
-            "success"=>true,
-            "message"=>"Création d'actualité",
-            "data"=>$actualities
-        ],200);
+        $message = 'Récupération de la liste des Activity';
+
+        try {
+            $result = $this->ActivityRepository->getAll($request);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-
-
-
-    /**
-     * Store a newly created resource in storage.
+    /** @OA\Get(
+     *      path="/activityReports",
+     *      operationId="Activity list",
+     *      tags={"Activity"},
+     *       security={{"JWT":{}}},
+     *      summary="Return Activity data",
+     *      description="Get all activityReports",
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     *      @OA\Parameter(
+     *          name="name",
+     *          in="query",
+     *          description="Can be used for filtering data by name",
+     *          required=false,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Activity"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Activity")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function store(Request $request)
+    public function index2(Request $request)
     {
-        $datas=$request->all();
-        if ($request->file('big_photo')) {
-            $filename=FileStorage::setFile('public',$request->file('big_photo'),'actualities', Str::slug($request->title).time());
-            $datas['big_photo']=$filename;
-        }
-        if ($request->file('short_photo')) {
-            $filename=FileStorage::setFile('public',$request->file('short_photo'),'actualities', Str::slug($request->title).time());
-            $datas['short_photo']=$filename;
-        }
-        $datas['user_id']=Auth::id();
-        $actuality=Actuality::create($datas);
+        $message = 'Récupération de la liste des Activity';
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Création d'actualité",
-            "data"=>null
-        ],200);
+        try {
+            $result = $this->ActivityRepository->getAll($request);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
 
 
-
-
-  
-    /**
-     * Update the specified resource in storage.
+    /** @OA\Post(
+     *      path="/activityReports",
+     *      operationId="Activity store",
+     *      tags={"Activity"},
+     *       security={{"JWT":{}}},
+     *      summary="Store Activity data",
+     *      description="Create a new Activity",
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *       @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/ActivityCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Activity"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Activity")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function update(Request $request, $id)
+    public function store(StoreActivityRequest $request)
     {
-        
-        $datas=$request->all();
+        $message = 'Enregistrement d\'un Activity';
 
-        $actuality=Actuality::find($id);
-        if ($request->file('big_photo')) {
-            FileStorage::deleteFile('public', $actuality->big_photo,'actualities');
-            $filename=FileStorage::setFile('public',$request->file('big_photo'),'actualities', Str::slug($request->title).time());
-            $datas['big_photo']=$filename;
-        }
-        if ($request->file('short_photo')) {
-            FileStorage::deleteFile('public', $actuality->short_photo,'actualities');
-            $filename=FileStorage::setFile('public',$request->file('short_photo'),'actualities', Str::slug($request->title).time());
-            $datas['short_photo']=$filename;
-        }
-        $actuality->update($datas);
+        try {
+            $result = $this->ActivityRepository->makeStore($request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Mise à jour d'actualité",
-            "data"=>null
-        ],200);
+            return Common::successCreate('Activity créé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
+
+    /** @OA\Put(
+     *      path="/activityReports/{id}",
+     *      operationId="Activity update",
+     *      tags={"Activity"},
+     *       security={{"JWT":{}}},
+     *      summary="Update one Activity data",
+     *      description="Update Activity by ID",
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="Activity ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/ActivityCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Activity"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Activity")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function update(UpdateActivityRequest $request, $id)
+    {
+        $message = 'Mise à jour d\'un Activity';
+
+        try {
+            $result = $this->ActivityRepository->makeUpdate($id, $request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
+
+            return Common::success('Mise à jour de Activity effectuée avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
+    /** @OA\Delete(
+     *      path="/activityReports/{id}",
+     *      operationId="Activity Delete",
+     *      tags={"Activity"},
+     *       security={{"JWT":{}}},
+     *      summary="Delete Activity data",
+     *      description="Delete Activity by ID",
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="Activity ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=204,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/DeleteResponseData"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/DeleteResponseData")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
     public function destroy($id)
     {
+        $message = 'Suppression de Activity';
 
-        $actuality=Actuality::find($id);
+        try {
+            $recup = $this->ActivityRepository->get($id);
 
-        if ( $actuality) {
-            $actuality->delete();
-            return response()->json([
-                "success"=>true,
-                "message"=>"Création d'actualité",
-                "data"=>null
-            ],200);
-        
-        }else {
+            $result = $this->ActivityRepository->makeDestroy($id);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($recup)]);
 
-            return response()->json([
-                "success"=>true,
-                "message"=>"La ressource que vous essayez de retirer n'existe pas",
-                "data"=>null
-            ],500);
+            return Common::successDelete('Activity supprimé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
         }
     }
-
-
-    public function setPublishState($id,$state)
+    
+    /** @OA\Get(
+     *      path="/activityReportResponses/{id}/state/{state}",
+     *      operationId="ActivityResponse change state",
+     *      tags={"ActivityResponse"},
+     *      security={{"JWT":{}}},
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="ActivityResponse ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\Parameter(
+     *          name="state",
+     *          in="path",
+     *          description="ActivityResponse state",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      summary="Change ActivityResponse state",
+     *      description="Change ActivityResponse state by ID",
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/ActivityResponse"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/ActivityResponse")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function setPublishState($id, $status)
     {
+        $message = 'Changement de l\'état d\'un ActivityResponse';
 
-        $actuality=Actuality::find($id);
-        
-        $actuality->update(['is_active'=>$state]);
+        try {
+            $result = $this->ActivityResponseRepository->setPublishState($id, $state);
+            $statusMessage = $state == 1 ? 'activé' : 'désactivé';
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($result)]);
 
-        if ( $state) {
-            return response()->json([
-                "success"=>true,
-                "message"=>"Un élément publié avec succès",
-                "data"=>null
-            ],200);
-        }else {
-            return response()->json([
-                "success"=>true,
-                "message"=>"Un élément non publié avec succès",
-                "data"=>null
-            ],200);
+            return Common::success("ActivityResponse $statusMessage avec succès", $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
         }
-    }
 
-
-    public function show($id)
-    {
-        $actuality=Actuality::find($id);
-        return response()->json([
-            "success"=>true,
-            "message"=>"Récupération d'un avis",
-            "data"=>$actuality
-        ],200);
-    }
-
+    
+}
 }

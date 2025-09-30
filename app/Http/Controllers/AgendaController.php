@@ -3,126 +3,500 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Agdenda;
+use App\Http\Repositories\AgendaControllerRepository;
+use App\Http\Requests\AgendaController\StoreAgendaControllerRequest;
+use App\Http\Requests\AgendaController\UpdateAgendaControllerRequest;
+use App\Services\LogService;
+use App\Utilities\Common;
+use OpenApi\Attributes as OA;
 
-class AgendaController extends Controller
+
+class AgendaControllerController extends Controller
 {
-    
-   
-  
      /**
-     * Display a listing of the resource.
+     * The AgendaController repository being queried.
      *
-     * @return \Illuminate\Http\Response
+     * @var AgendaControllerRepository
      */
-    public function index()
+    protected $AgendaControllerRepository;
+
+    protected $ls;
+
+    public function __construct(AgendaControllerRepository $AgendaControllerRepository, LogService $ls)
     {
-        $agendas=Agenda::all();
-        return response()->json([
-            "success"=>true,
-            "message"=>"Liste des agendas",
-            "data"=>$agendas
-        ],200);
+        $this->AgendaControllerRepository = $AgendaControllerRepository;
+        $this->ls = $ls;
+
+        //$this->middleware('auth:api')->except(['getNotified', 'show']);
+
     }
 
-    /**
-     * Store a newly created resource in storage.
+    /** @OA\Get(
+     *      path="/agendas",
+     *      operationId="AgendaController list",
+     *      tags={"AgendaController"},
+     *       security={{"JWT":{}}},
+     *      summary="Return AgendaController data",
+     *      description="Get all agendas",
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     *      @OA\Parameter(
+     *          name="name",
+     *          in="query",
+     *          description="Can be used for filtering data by name",
+     *          required=false,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/AgendaController"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/AgendaController")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function store(Request $request)
+    public function index(Request $request)
     {
-        $datas = $request->all();
-        
-        $agendas=Agenda::create($datas);
+        $message = 'Récupération de la liste des AgendaController';
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Enregistrement d'une périodicité",
-            "data"=>$agendas
-        ],200);
+        try {
+            $result = $this->AgendaControllerRepository->getAll($request);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    /**
-     * Display the specified resource.
+
+    
+    /** @OA\Get(
+     *      path="/agendas",
+     *      operationId="AgendaController list",
+     *      tags={"AgendaController"},
+     *       security={{"JWT":{}}},
+     *      summary="Return AgendaController data",
+     *      description="Get all agendas",
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *      @OA\Parameter(
+     *          name="name",
+     *          in="query",
+     *          description="Can be used for filtering data by name",
+     *          required=false,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/AgendaController"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/AgendaController")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function show($id)
+    public function getDepartmentWithRelation()
     {
-        $agendas=Agenda::find($id);
-        return response()->json([
-            "success"=>true,
-            "message"=>"Récupération d'une périodicité",
-            "data"=>$agendas
-        ],200);
+        $message = 'Récupération de la liste des AgendaController ^pour CAPE';
+
+        try {
+            $result = $this->AgendaControllerRepository->getDepartmentWithRelation();
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    /**
-     * Update the specified resource in storage.
+    /** @OA\Get(
+     *      path="/agendas/{id}",
+     *      operationId="AgendaController show",
+     *      tags={"AgendaController"},
+     *       security={{"JWT":{}}},
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *  @OA\Parameter(
+     *          name="project_id",
+     *          in="query",
+     *          description="Project ID",
+     *
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="AgendaController ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      summary="Return one AgendaController data",
+     *      description="Get AgendaController by ID",
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/AgendaController"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/AgendaController")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function update(Request $request, $id)
+    public function show(Request $request, $id)
     {
-        $datas=$request->all();
-       
-        $agendas=Agenda::find($id);
+        $message = 'Récupération d\'un AgendaController';
 
-        $agendas->update($datas);
+        try {
+            $result = $this->AgendaControllerRepository->get($id);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($result)]);
 
-        $agendas=Agenda::find($id);
+            return Common::success('AgendaController trouvé', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Modification d'une péridiocité",
-            "data"=>$agendas
-        ],200);
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
+
+    /** @OA\Post(
+     *      path="/agendas",
+     *      operationId="AgendaController store",
+     *      tags={"AgendaController"},
+     *       security={{"JWT":{}}},
+     *      summary="Store AgendaController data",
+     *      description="Create a new AgendaController",
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *       @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/AgendaControllerCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/AgendaController"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/AgendaController")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function store(StoreAgendaControllerRequest $request)
+    {
+        $message = 'Enregistrement d\'un AgendaController';
+
+        try {
+            $result = $this->AgendaControllerRepository->makeStore($request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
+
+            return Common::successCreate('AgendaController créé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
+
+    /** @OA\Put(
+     *      path="/agendas/{id}",
+     *      operationId="AgendaController update",
+     *      tags={"AgendaController"},
+     *       security={{"JWT":{}}},
+     *      summary="Update one AgendaController data",
+     *      description="Update AgendaController by ID",
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="AgendaController ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/AgendaControllerCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/AgendaController"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/AgendaController")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function update(UpdateAgendaControllerRequest $request, $id)
+    {
+        $message = 'Mise à jour d\'un AgendaController';
+
+        try {
+            $result = $this->AgendaControllerRepository->makeUpdate($id, $request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
+
+            return Common::success('Mise à jour de AgendaController effectuée avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
+    /** @OA\Delete(
+     *      path="/agendas/{id}",
+     *      operationId="AgendaController Delete",
+     *      tags={"AgendaController"},
+     *       security={{"JWT":{}}},
+     *      summary="Delete AgendaController data",
+     *      description="Delete AgendaController by ID",
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="AgendaController ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=204,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/DeleteResponseData"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/DeleteResponseData")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
     public function destroy($id)
     {
-        $agendas=Agenda::find($id);
-        $agendas->delete();
+        $message = 'Suppression de AgendaController';
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Suppression d'une périodicité",
-            "data"=>null
-        ],200);
+        try {
+            $recup = $this->AgendaControllerRepository->get($id);
+
+            $result = $this->AgendaControllerRepository->makeDestroy($id);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($recup)]);
+
+            return Common::successDelete('AgendaController supprimé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
-    public function setStatus($id,$status)
+
+    /** @OA\Get(
+     *      path="/agendas/{id}/state/{state}",
+     *      operationId="AgendaController change state",
+     *      tags={"AgendaController"},
+     *      security={{"JWT":{}}},
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="AgendaController ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\Parameter(
+     *          name="state",
+     *          in="path",
+     *          description="AgendaController state",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      summary="Change AgendaController state",
+     *      description="Change AgendaController state by ID",
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/AgendaController"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/AgendaController")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function setStatus($id, $status)
     {
-        $agendas=Agenda::find($id);
-        $agendas->update(['is_active' =>$status]);
-        return response()->json([
-            "success"=>true,
-            "message"=>"Status mis à jour avec succès",
-            "data"=>null
-        ],200);
+        $message = 'Changement de l\'état d\'un AgendaController';
+
+        try {
+            $result = $this->AgendaControllerRepository->setStatus($id, $state);
+            $statusMessage = $state == 1 ? 'activé' : 'désactivé';
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($result)]);
+
+            return Common::success("AgendaController $statusMessage avec succès", $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+
     }
-
-
-    public function getDepartmentWithRelation()
-    {
-        $departments=Agenda::with(['Municipalities.districts'])->get();
-
-        return response()->json([
-            "success"=>true,
-            "message"=>"Liste des agendas",
-            "data"=>$departments
-        ],200);
-    }
-
 
 }

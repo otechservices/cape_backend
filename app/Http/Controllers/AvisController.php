@@ -1,122 +1,502 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Avis;
+
 use Illuminate\Http\Request;
+use App\Http\Repositories\AvisControllerRepository;
+use App\Http\Requests\AvisController\StoreAvisControllerRequest;
+use App\Http\Requests\AvisController\UpdateAvisControllerRequest;
+use App\Services\LogService;
+use App\Utilities\Common;
+use OpenApi\Attributes as OA;
 
-class AvisController extends Controller
+
+class AvisControllerController extends Controller
 {
-      /**
-     * Display a listing of the resource.
+     /**
+     * The AvisController repository being queried.
      *
-     * @return \Illuminate\Http\Response
+     * @var AvisControllerRepository
      */
-    public function index()
+    protected $AvisControllerRepository;
+
+    protected $ls;
+
+    public function __construct(AvisControllerRepository $AvisControllerRepository, LogService $ls)
     {
-        $avis=Avis::all();
-        return response()->json([
-            "success"=>true,
-            "message"=>"Liste des avis",
-            "data"=>$avis
-        ],200);
+        $this->AvisControllerRepository = $AvisControllerRepository;
+        $this->ls = $ls;
+
+        //$this->middleware('auth:api')->except(['getNotified', 'show']);
+
     }
 
-    /**
-     * Store a newly created resource in storage.
+    /** @OA\Get(
+     *      path="/aviss",
+     *      operationId="AvisController list",
+     *      tags={"AvisController"},
+     *       security={{"JWT":{}}},
+     *      summary="Return AvisController data",
+     *      description="Get all aviss",
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     *      @OA\Parameter(
+     *          name="name",
+     *          in="query",
+     *          description="Can be used for filtering data by name",
+     *          required=false,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/AvisController"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/AvisController")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function store(Request $request)
+    public function index(Request $request)
     {
-        $datas = $request->all();
-        
-        $avis=Avis::create($datas);
+        $message = 'Récupération de la liste des AvisController';
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Enregistrement d'un avis",
-            "data"=>$avis
-        ],200);
+        try {
+            $result = $this->AvisControllerRepository->getAll($request);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    /**
-     * Display the specified resource.
+
+    
+    /** @OA\Get(
+     *      path="/aviss",
+     *      operationId="AvisController list",
+     *      tags={"AvisController"},
+     *       security={{"JWT":{}}},
+     *      summary="Return AvisController data",
+     *      description="Get all aviss",
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *      @OA\Parameter(
+     *          name="name",
+     *          in="query",
+     *          description="Can be used for filtering data by name",
+     *          required=false,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/AvisController"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/AvisController")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function show($id)
+    public function getDepartmentWithRelation()
     {
-        $avis=Avis::find($id);
-        return response()->json([
-            "success"=>true,
-            "message"=>"Récupération d'un avis",
-            "data"=>$avis
-        ],200);
+        $message = 'Récupération de la liste des AvisController ^pour CAPE';
+
+        try {
+            $result = $this->AvisControllerRepository->getDepartmentWithRelation();
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    /**
-     * Update the specified resource in storage.
+    /** @OA\Get(
+     *      path="/aviss/{id}",
+     *      operationId="AvisController show",
+     *      tags={"AvisController"},
+     *       security={{"JWT":{}}},
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *  @OA\Parameter(
+     *          name="project_id",
+     *          in="query",
+     *          description="Project ID",
+     *
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="AvisController ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      summary="Return one AvisController data",
+     *      description="Get AvisController by ID",
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/AvisController"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/AvisController")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function update(Request $request, $id)
+    public function show(Request $request, $id)
     {
-        $datas=$request->all();
-       
-        $avis=Avis::find($id);
+        $message = 'Récupération d\'un AvisController';
 
-        $avis->update($datas);
+        try {
+            $result = $this->AvisControllerRepository->get($id);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($result)]);
 
-        $avis=Avis::find($id);
+            return Common::success('AvisController trouvé', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Modification d'un avis",
-            "data"=>$avis
-        ],200);
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
+
+    /** @OA\Post(
+     *      path="/aviss",
+     *      operationId="AvisController store",
+     *      tags={"AvisController"},
+     *       security={{"JWT":{}}},
+     *      summary="Store AvisController data",
+     *      description="Create a new AvisController",
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *       @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/AvisControllerCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/AvisController"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/AvisController")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function store(StoreAvisControllerRequest $request)
+    {
+        $message = 'Enregistrement d\'un AvisController';
+
+        try {
+            $result = $this->AvisControllerRepository->makeStore($request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
+
+            return Common::successCreate('AvisController créé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
+
+    /** @OA\Put(
+     *      path="/aviss/{id}",
+     *      operationId="AvisController update",
+     *      tags={"AvisController"},
+     *       security={{"JWT":{}}},
+     *      summary="Update one AvisController data",
+     *      description="Update AvisController by ID",
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="AvisController ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/AvisControllerCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/AvisController"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/AvisController")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function update(UpdateAvisControllerRequest $request, $id)
+    {
+        $message = 'Mise à jour d\'un AvisController';
+
+        try {
+            $result = $this->AvisControllerRepository->makeUpdate($id, $request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
+
+            return Common::success('Mise à jour de AvisController effectuée avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
+    /** @OA\Delete(
+     *      path="/aviss/{id}",
+     *      operationId="AvisController Delete",
+     *      tags={"AvisController"},
+     *       security={{"JWT":{}}},
+     *      summary="Delete AvisController data",
+     *      description="Delete AvisController by ID",
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="AvisController ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=204,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/DeleteResponseData"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/DeleteResponseData")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
     public function destroy($id)
     {
-        $avis=Avis::find($id);
-        $avis->delete();
+        $message = 'Suppression de AvisController';
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Suppression d'un avis",
-            "data"=>null
-        ],200);
+        try {
+            $recup = $this->AvisControllerRepository->get($id);
+
+            $result = $this->AvisControllerRepository->makeDestroy($id);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($recup)]);
+
+            return Common::successDelete('AvisController supprimé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
-    public function setStatus($id,$status)
+
+    /** @OA\Get(
+     *      path="/aviss/{id}/state/{state}",
+     *      operationId="AvisController change state",
+     *      tags={"AvisController"},
+     *      security={{"JWT":{}}},
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="AvisController ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\Parameter(
+     *          name="state",
+     *          in="path",
+     *          description="AvisController state",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      summary="Change AvisController state",
+     *      description="Change AvisController state by ID",
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/AvisController"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/AvisController")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function setStatus($id, $status)
     {
-        $avis=Avis::find($id);
-        $avis->update(['is_active' =>$status]);
-        return response()->json([
-            "success"=>true,
-            "message"=>"Status mis à jour avec succès",
-            "data"=>null
-        ],200);
+        $message = 'Changement de l\'état d\'un AvisController';
+
+        try {
+            $result = $this->AvisControllerRepository->setStatus($id, $state);
+            $statusMessage = $state == 1 ? 'activé' : 'désactivé';
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($result)]);
+
+            return Common::success("AvisController $statusMessage avec succès", $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+
     }
 
-
-    public function getDepartmentWithRelation()
-    {
-        $avis=Avis::with(['Municipalities.districts'])->get();
-
-        return response()->json([
-            "success"=>true,
-            "message"=>"Liste des avis",
-            "data"=>$avis
-        ],200);
-    }
 }

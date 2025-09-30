@@ -34,7 +34,7 @@ class CorpsController extends Controller
     }
 
     /** @OA\Get(
-     *      path="/Corpss",
+     *      path="/corps",
      *      operationId="Corps list",
      *      tags={"Corps"},
      *       security={{"JWT":{}}},
@@ -82,7 +82,7 @@ class CorpsController extends Controller
      */
     public function index(Request $request)
     {
-        $message = 'Récupération de la liste des Corps';
+        $message = 'Récupération de la liste des corps';
 
         try {
             $result = $this->CorpsRepository->getAll($request);
@@ -97,7 +97,7 @@ class CorpsController extends Controller
     }
 
     /** @OA\Get(
-     *      path="/Corpss/{id}",
+     *      path="/corps/{id}",
      *      operationId="Corps show",
      *      tags={"Corps"},
      *       security={{"JWT":{}}},
@@ -154,7 +154,7 @@ class CorpsController extends Controller
      */
     public function show(Request $request, $id)
     {
-        $message = 'Récupération d\'un Corps';
+        $message = 'Récupération d\'un corps';
 
         try {
             $result = $this->CorpsRepository->get($id);
@@ -169,7 +169,7 @@ class CorpsController extends Controller
     }
 
     /** @OA\Post(
-     *      path="/Corpss",
+     *      path="/corps",
      *      operationId="Corps store",
      *      tags={"Corps"},
      *       security={{"JWT":{}}},
@@ -212,7 +212,7 @@ class CorpsController extends Controller
      */
     public function store(StoreCorpsRequest $request)
     {
-        $message = 'Enregistrement d\'un Corps';
+        $message = 'Enregistrement d\'un corps';
 
         try {
             $result = $this->CorpsRepository->makeStore($request->validated());
@@ -227,7 +227,7 @@ class CorpsController extends Controller
     }
 
     /** @OA\Put(
-     *      path="/Corpss/{id}",
+     *      path="/corps/{id}",
      *      operationId="Corps update",
      *      tags={"Corps"},
      *       security={{"JWT":{}}},
@@ -281,7 +281,7 @@ class CorpsController extends Controller
      */
     public function update(UpdateCorpsRequest $request, $id)
     {
-        $message = 'Mise à jour d\'un Corps';
+        $message = 'Mise à jour d\'un corps';
 
         try {
             $result = $this->CorpsRepository->makeUpdate($id, $request->validated());
@@ -296,7 +296,7 @@ class CorpsController extends Controller
     }
 
     /** @OA\Delete(
-     *      path="/Corpss/{id}",
+     *      path="/corps/{id}",
      *      operationId="Corps Delete",
      *      tags={"Corps"},
      *       security={{"JWT":{}}},
@@ -343,7 +343,7 @@ class CorpsController extends Controller
      */
     public function destroy($id)
     {
-        $message = 'Suppression de Corps';
+        $message = 'Suppression de corps';
 
         try {
             $recup = $this->CorpsRepository->get($id);
@@ -360,7 +360,7 @@ class CorpsController extends Controller
     }
 
     /** @OA\Get(
-     *      path="/Corpss/{id}/state/{state}",
+     *      path="/corps/{id}/state/{state}",
      *      operationId="Corps change state",
      *      tags={"Corps"},
      *      security={{"JWT":{}}},
@@ -418,7 +418,7 @@ class CorpsController extends Controller
      */
     public function changeState($id, $state)
     {
-        $message = 'Changement de l\'état d\'un Corps';
+        $message = 'Changement de l\'état d\'un corps';
 
         try {
             $result = $this->CorpsRepository->setStatus($id, $state);
@@ -435,7 +435,7 @@ class CorpsController extends Controller
     }
 
     /** @OA\Post(
-     *      path="/Corpss-search",
+     *      path="/corps-search",
      *      operationId="Corps searching",
      *      tags={"Corps"},
      *       security={{"JWT":{}}},
@@ -493,7 +493,7 @@ class CorpsController extends Controller
         }
     }
 
-    function generateLink(GenerateLinkRequest $request,$id) {
+    /*function generateLink(GenerateLinkRequest $request,$id) {
         $message = 'Génération de lien de Corps';
 
         try {
@@ -555,5 +555,5 @@ class CorpsController extends Controller
 
             return Common::error($th->getMessage(), []);
         }
-    }
+    }*/
 }

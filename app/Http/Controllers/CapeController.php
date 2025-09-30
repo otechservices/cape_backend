@@ -3,539 +3,815 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Cape;
-use App\Models\Department;
-use App\Models\Municipality;
-use App\Models\District;
-use App\Models\TypeCape;
-use App\Models\User;
-use App\Models\Requete;
-
-use Auth,Response,Str;
-
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Reader\Exception;
-use PhpOffice\PhpSpreadsheet\Writer\Xls;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+use App\Http\Repositories\CapeRepository;
+use App\Http\Requests\Cape\StoreCapeRequest;
+use App\Http\Requests\Cape\UpdateCapeRequest;
+use App\Services\LogService;
+use App\Utilities\Common;
+use OpenApi\Attributes as OA;
 
 
 class CapeController extends Controller
 {
+     /**
+     * The Cape repository being queried.
+     *
+     * @var CapeRepository
+     */
+    protected $CapeRepository;
 
+    protected $ls;
 
-    public function __construct() {
-      
-        $this->middleware('auth', ['except' => ['downloadImportFile']]);
-    }
-  
-
-    public function getAllAuthorized()
+    public function __construct(CapeRepository $CapeRepository, LogService $ls)
     {
-        $capes=[];
+        $this->CapeRepository = $CapeRepository;
+        $this->ls = $ls;
 
-        if (request()->service_id) {
+        //$this->middleware('auth:api')->except(['getNotified', 'show']);
 
-            $service_id=request()->service_id;
+    }
 
-        $role=Auth::user()->roles()->first()->name;
-        $capes=[];
+    /** @OA\Get(
+     *      path="/capes",
+     *      operationId="Cape list",
+     *      tags={"Cape"},
+     *       security={{"JWT":{}}},
+     *      summary="Return Cape data",
+     *      description="Get all capes",
+     *
+     *      @OA\Parameter(
+     *          name="name",
+     *          in="query",
+     *          description="Can be used for filtering data by name",
+     *          required=false,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Cape"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Cape")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function index(Request $request)
+    {
+        $message = 'Récupération de la liste des Cape';
 
-        switch ($role) {
-            case 'cps':
-               // 'controls.TypeControl',
-                $departDistricts=Auth::user()->cps->districts->pluck('id');
-                $capes=Cape::with([
-                    'requete.TypeCape',
-                    'controls'=>function($q){$q->where("is_valid",true)->with('TypeControl');},
-                    'myControls'=>function($q){$q->where("user_id",Auth::id())->with(['TypeControl'])->withCount('transmissions');},
-                    'transmittedControls'=>function($q){
-                        $q->with('TypeControl')->whereHas("transmissions",function($qu){
-                        $qu->where("user_id","!=",Auth::id())->where("isLast",true)->where("user_down",Auth::id());
-                    });},
-                    
-                    
-                    ])->whereHas('requete',function($q)use($departDistricts,$service_id){
-                    $q->whereIn('district_id',$departDistricts)->where('is_authorized',true)->where('service_id',$service_id);
-                })->get();
-            break;
-            case 'ddasm':
-                $departDistricts=[];
-                $i=0;
-                $depart=Department::find(Auth::user()->department_id);
-                   foreach ($depart->municipalities as $key) {
-                    foreach ($key->districts as $d) {
-                        $departDistricts[$i]= $d->id;
-                        $i++;
-                     }
-                   }
-        
-                   $capes=Cape::with([
-                    'requete.TypeCape',
-                    'controls'=>function($q){$q->where("is_valid",true)->with('TypeControl');},
-                    'myControls'=>function($q){$q->where("user_id",Auth::id())->with(['TypeControl'])->withCount('transmissions');},
-                    'transmittedControls'=>function($q){
-                        $q->with('TypeControl')->whereHas("transmissions",function($qu){
-                        $qu->where("user_id","!=",Auth::id())->where("isLast",true)->where("user_down",Auth::id());
-                    });},
-                    
-                    
-                    ])->whereHas('requete',function($q)use($departDistricts,$service_id){
-                    $q->whereIn('district_id',$departDistricts)->where('is_authorized',true)->where('service_id',$service_id);
-                })->get();
-            break;
-            case 'dfea':
-                $capes=Cape::with(['requete.TypeCape'])->whereHas('requete',function($q)use($service_id){
-                    $q->where('service_id',$service_id);
-                })->get();
-            break;
-            case 'ministre':
-                $capes=Cape::with(['requete.TypeCape'])->whereHas('requete',function($q)use($service_id){
-                    $q->where('service_id',$service_id);
-                })->get();
-            break;
-            default:
+        try {
+            $result = $this->CapeRepository->getAll($request);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
 
-            break;
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
         }
-      
-    }
-        return response()->json([
-            "success"=>true,
-            "message"=>"Liste des capes",
-            "data"=>$capes
-        ],200);
-    }
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        $capes=Cape::with(['requete.TypeCape'])->get();
-        return response()->json([
-            "success"=>true,
-            "message"=>"Liste des capes",
-            "data"=>$capes
-        ],200);
     }
 
-    /**
-     * Store a newly created resource in storage.
+
+    /** @OA\Get(
+     *      path="/capes",
+     *      operationId="Cape list",
+     *      tags={"Cape"},
+     *       security={{"JWT":{}}},
+     *      summary="Return Cape data",
+     *      description="Get all capes",
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     *      @OA\Parameter(
+     *          name="name",
+     *          in="query",
+     *          description="Can be used for filtering data by name",
+     *          required=false,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Cape"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Cape")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function store(Request $request)
+    public function getAllAuthorized(Request $request)
     {
-        $district=District::find($request->district_id);
-        if ($district->cps == null) {
-            return response()->json([
-                "success"=>true,
-                "message"=>"Veuillez contacter l'administrateur!Arrondissement non classé",
-                "data"=>null
-            ],500);
+        $message = 'Récupération de la liste des Cape ^pour CAPE';
+
+        try {
+            $result = $this->CapeRepository->getAllAuthorized($request);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
         }
-        $user=User::where('cps_id',$district->cps->id)->first();
+    }
 
-        if ( $user== null) {
-            return response()->json([
-                "success"=>true,
-                "message"=>"Veuillez contacter l'administrateur! Compte Cps inexistant",
-                "data"=>null
-            ],500);
+
+    
+    /** @OA\Get(
+     *      path="/capes",
+     *      operationId="Cape list",
+     *      tags={"Cape"},
+     *       security={{"JWT":{}}},
+     *      summary="Return Cape data",
+     *      description="Get all capes",
+     *
+     *      @OA\Parameter(
+     *          name="name",
+     *          in="query",
+     *          description="Can be used for filtering data by name",
+     *          required=false,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Cape"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Cape")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function getDepartmentWithRelation()
+    {
+        $message = 'Récupération de la liste des Cape ^pour CAPE';
+
+        try {
+            $result = $this->CapeRepository->getDepartmentWithRelation();
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
         }
-       // $code=Str::uuid();
-       $code=RequeteController::generateUniqueCode();
-
-        $requete=Requete::create([
-            "code"=>$code,
-            "name"=>$request->name,
-            "type_cape_id"=>(int)$request->type_cape_id,
-            "name_pomoter"=>$request->name_pomoter,
-            "firstname_pomoter"=>$request->firstname_pomoter,
-            "phone_pomoter"=>$request->phone_pomoter,
-            "email_pomoter"=>$request->email_pomoter,
-            "name_chief"=>$request->name_chief??$request->name_pomoter,
-            "phone_chief"=>$request->phone_chief??$request->name_pomoter,
-            "firstname_chief"=>$request->firstname_chief,
-            "email_chief"=>$request->email_chief,
-            "email"=>$request->email,
-            "phone"=>$request->phone,
-            "capacity"=>$request->capacity,
-            "town"=>$request->town,
-            "address"=>$request->address,
-            "target"=>$request->targets,
-            "status"=>8,
-            "is_authorized"=>true,
-            "has_agreemant"=>true,
-            "status"=>8,
-            "district_id"=> (int)$request->district_id
-        ]);
-
-        Cape::create([
-            "requete_id"=>$requete->id,
-            "status"=>1,
-        ]);
-
-        return response()->json([
-            "success"=>true,
-            "message"=>"Enregistrement d'un cape",
-            "data"=>null
-        ],200);
     }
 
-    /**
-     * Display the specified resource.
+    /** @OA\Get(
+     *      path="/capes/{id}",
+     *      operationId="Cape show",
+     *      tags={"Cape"},
+     *       security={{"JWT":{}}},
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *  @OA\Parameter(
+     *          name="project_id",
+     *          in="query",
+     *          description="Project ID",
+     *
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="Cape ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      summary="Return one Cape data",
+     *      description="Get Cape by ID",
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Cape"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Cape")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
+        $message = 'Récupération d\'un Cape';
 
-        $capes=Cape::with([
-            'requete.referals.controls',
-            'requete.TypeCape',
-            'requete.files.file',
-            'residents',
-            'staffs'
-            ])->where("id",$id)->first();
-        return response()->json([
-            "success"=>true,
-            "message"=>"Récupération d'un cape",
-            "data"=>$capes
-        ],200);
+        try {
+            $result = $this->CapeRepository->get($id);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($result)]);
+
+            return Common::success('Cape trouvé', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    /**
-     * Update the specified resource in storage.
+    
+    /** @OA\Get(
+     *      path="/capes/{id}",
+     *      operationId="Cape show",
+     *      tags={"Cape"},
+     *       security={{"JWT":{}}},
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *  @OA\Parameter(
+     *          name="project_id",
+     *          in="query",
+     *          description="Project ID",
+     *
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="Cape ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      summary="Return one Cape data",
+     *      description="Get Cape by ID",
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Cape"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Cape")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function update(Request $request, $id)
+    public function send(Request $request, $id)
     {
-       $requete=Requete::find($id);
-        $requete->update([
-            "name"=>$request->name,
-            "type_cape_id"=>(int)$request->type_cape_id,
-            "name_pomoter"=>$request->name_pomoter,
-            "firstname_pomoter"=>$request->firstname_pomoter,
-            "phone_pomoter"=>$request->phone_pomoter,
-            "email_pomoter"=>$request->email_pomoter,
-            "name_chief"=>$request->name_chief??$request->name_pomoter,
-            "phone_chief"=>$request->phone_chief??$request->name_pomoter,
-            "firstname_chief"=>$request->firstname_chief,
-            "email_chief"=>$request->email_chief,
-            "email"=>$request->email,
-            "phone"=>$request->phone,
-            "capacity"=>$request->capacity,
-            "town"=>$request->town,
-            "address"=>$request->address,
-            "target"=>$request->targets,
-            "district_id"=> (int)$request->district_id
-        ]);
+        $message = 'Envoi e rapport';
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Modification d'une péridiocité",
-            "data"=>null
-        ],200);
+        try {
+            $result = $this->CapeRepository->send($id);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($result)]);
+
+            return Common::success('Cape trouvé', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
+    /** @OA\Post(
+     *      path="/capes",
+     *      operationId="Cape store",
+     *      tags={"Cape"},
+     *       security={{"JWT":{}}},
+     *      summary="Store Cape data",
+     *      description="Create a new Cape",
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *       @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/CapeCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Cape"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Cape")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function store(StoreCapeRequest $request)
+    {
+        $message = 'Enregistrement d\'un Cape';
+
+        try {
+            $result = $this->CapeRepository->makeStore($request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
+
+            return Common::successCreate('Cape créé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
+
+    /** @OA\Post(
+     *      path="/capes",
+     *      operationId="Cape store",
+     *      tags={"Cape"},
+     *       security={{"JWT":{}}},
+     *      summary="Store Cape data",
+     *      description="Create a new Cape",
+     *
+     *       @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/CapeCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Cape"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Cape")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function storeDistricts(storeDistrictsCape $request)
+    {
+        $message = 'Enregistrement d\'un Cape';
+
+        try {
+            $result = $this->CapeRepository->storeDistricts($request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
+
+            return Common::successCreate('Cape créé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
+    /** @OA\Put(
+     *      path="/capes/{id}",
+     *      operationId="Cape update",
+     *      tags={"Cape"},
+     *       security={{"JWT":{}}},
+     *      summary="Update one Cape data",
+     *      description="Update Cape by ID",
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="Cape ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/CapeCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Cape"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Cape")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function update(UpdateCapeRequest $request, $id)
+    {
+        $message = 'Mise à jour d\'un Cape';
+
+        try {
+            $result = $this->CapeRepository->makeUpdate($id, $request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
+
+            return Common::success('Mise à jour de Cape effectuée avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
+    /** @OA\Delete(
+     *      path="/capes/{id}",
+     *      operationId="Cape Delete",
+     *      tags={"Cape"},
+     *       security={{"JWT":{}}},
+     *      summary="Delete Cape data",
+     *      description="Delete Cape by ID",
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="Cape ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=204,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/DeleteResponseData"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/DeleteResponseData")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
     public function destroy($id)
     {
-        $capes=Cape::find($id);
-        $capes->delete();
+        $message = 'Suppression de Cape';
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Suppression d'un cape",
-            "data"=>null
-        ],200);
-    }
-    public function setStatus($id,$status)
-    {
-        $capes=Cape::find($id);
-        $capes->update(['is_active' =>$status]);
-        return response()->json([
-            "success"=>true,
-            "message"=>"Status mis à jour avec succès",
-            "data"=>null
-        ],200);
-    }
+        try {
+            $recup = $this->CapeRepository->get($id);
 
+            $result = $this->CapeRepository->makeDestroy($id);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($recup)]);
 
+            return Common::successDelete('Cape supprimé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
 
-    public function downloadImportFile()
-    {
-        $spreadsheet = new Spreadsheet();
-        $isFirst=true;
-        $departments=Department::orderBy('name','asc')->get();
-        $municipalities=Municipality::orderBy('name','asc')->get();
-        $districts=District::orderBy('name','asc')->get();
-        $typeCapes=TypeCape::orderBy('name','asc')->get();
-
-        if (
-            $departments->count()>0 &&
-            $municipalities->count()>0 &&
-            $districts->count()>0 &&
-            $typeCapes->count()>0             
-            ) {
-                $sheet =$isFirst? $spreadsheet->getActiveSheet(): $spreadsheet->createSheet();                  
-                $sheet->setTitle(substr("Importation des capes autorisés",0,31));
-                $sheet->getColumnDimension('A')->setWidth(30);
-                $sheet->getColumnDimension('B')->setWidth(30);
-                $sheet->getColumnDimension('C')->setWidth(30);
-                $sheet->getColumnDimension('D')->setWidth(30);
-                $sheet->getColumnDimension('E')->setWidth(30);
-                $sheet->getColumnDimension('F')->setWidth(30);
-                $sheet->getColumnDimension('G')->setWidth(30);
-                $sheet->getColumnDimension('H')->setWidth(30);
-                $sheet->getColumnDimension('I')->setWidth(30);
-                $sheet->getColumnDimension('J')->setWidth(30);
-                $sheet->getColumnDimension('K')->setWidth(30);
-                $sheet->getColumnDimension('L')->setWidth(30);
-                $sheet->getColumnDimension('M')->setWidth(30);
-                $sheet->getColumnDimension('N')->setWidth(30);
-                $sheet->getColumnDimension('O')->setWidth(30);
-                $sheet->getColumnDimension('P')->setWidth(30);
-                $sheet->getColumnDimension('Q')->setWidth(30);
-                $sheet->getColumnDimension('R')->setWidth(30);
-                $sheet->getColumnDimension('S')->setWidth(30);
-                $sheet->setCellValue("A1", 'Listes des CAPES disposant d\'agrément d\'exercice');
-                $sheet->setCellValue("A2", 'Nom promoteur');
-                $sheet->setCellValue("B2", 'Prénoms promoteur');
-                $sheet->setCellValue("C2", 'Email promoteur');
-                $sheet->setCellValue("D2", 'Contact promoteur');
-                $sheet->setCellValue("E2", 'Nom directeur');
-                $sheet->setCellValue("F2", 'Prénoms directeur');
-                $sheet->setCellValue("G2", 'Email directeur');
-                $sheet->setCellValue("H2", 'Contact directeur');
-                $sheet->setCellValue("J2", 'Dénomination du centre');
-                $sheet->setCellValue("K2", 'Capacité du centre');
-                $sheet->setCellValue("L2", 'Email du centre');
-                $sheet->setCellValue("M2", 'Contact du centre');
-                $sheet->setCellValue("N2", 'Cibles accueillies');
-                $sheet->setCellValue("P2", 'Quartier de ville / Village');
-                $sheet->setCellValue("Q2", 'Adresse');
-
-                $configs ="";
-                $i = 0;
-                $len = count($typeCapes);
-                foreach ($typeCapes as $el) {
-                     if ($i == $len - 1) {
-                        $configs.=$el->name;
-        
-                    }else {
-                        $configs.=$el->name.", ";
-                    }
-                    $i++;
-                }
-                $sheet->setCellValue("I2", 'Type de CAPE' );
-                $objValidation = $sheet->getCell("I2")->getDataValidation();
-                $objValidation->setType(DataValidation::TYPE_LIST);
-                $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
-                $objValidation->setAllowBlank(false);
-                $objValidation->setShowInputMessage(true);
-                $objValidation->setShowErrorMessage(true);
-                $objValidation->setShowDropDown(true);
-                $objValidation->setErrorTitle('Entrée erronée');
-                $objValidation->setError('Valeur non retrouvée');
-                $objValidation->setPromptTitle('Choisissez un élément');
-                $objValidation->setPrompt('Veuillez sélectionner une valeur dans la liste');
-                $objValidation->setFormula1('"' . $configs . '"');
-
-
-          
-               
-               // $sheet=$this->buildSelect($sheet,"I2",'Type de CAPE',$typeCapes);
-              //  $sheet=$this->buildSelect($sheet,"O2",'Arrondissement',$districts);
-            
-               
-
-                    $type="xlsx";
-                    $fileName = date("d_m_Y_h_i_s_")."cape_autorisés.".$type;
-                    if($type == 'xlsx') {
-                    $writer = new Xlsx($spreadsheet);
-                    } else if($type == 'xls') {
-                    $writer = new Xls($spreadsheet);
-                    }
-                    $writer->save("exports/".$fileName);
-                    header("Content-Type: application/vnd.ms-excel");
-                    return Response::download(public_path("exports/".$fileName));
-                    
-             
-        }else {
-            echo "Certaines données comme les départements, communes , arrondissement et type cape sont indispensables pour l'importation des données";
-            return;
+            return Common::error($th->getMessage(), []);
         }
-       
     }
 
-
-    public function buildSelect($sheet,$key,$value,$data)
+    /** @OA\Get(
+     *      path="/capes/{id}/state/{state}",
+     *      operationId="Cape change state",
+     *      tags={"Cape"},
+     *      security={{"JWT":{}}},
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="Cape ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\Parameter(
+     *          name="state",
+     *          in="path",
+     *          description="Cape state",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      summary="Change Cape state",
+     *      description="Change Cape state by ID",
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Cape"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Cape")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function setStatus($id, $status)
     {
+        $message = 'Changement de l\'état d\'un Cape';
 
-        $configs ="";
-        $i = 0;
-        $len = count($data);
-        foreach ($data as $el) {
-             if ($i == $len - 1) {
-                $configs.=$el->name;
+        try {
+            $result = $this->CapeRepository->setStatus($id, $state);
+            $statusMessage = $state == 1 ? 'activé' : 'désactivé';
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($result)]);
 
-            }else {
-                $configs.=$el->name.", ";
-            }
-            $i++;
+            return Common::success("Cape $statusMessage avec succès", $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
         }
-        $sheet->setCellValue($key, $value, );
-        $objValidation = $sheet->getCell($key)->getDataValidation();
-        $objValidation->setType(DataValidation::TYPE_LIST);
-        $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
-        $objValidation->setAllowBlank(false);
-        $objValidation->setShowInputMessage(true);
-        $objValidation->setShowErrorMessage(true);
-        $objValidation->setShowDropDown(true);
-        $objValidation->setErrorTitle('Entrée erronée');
-        $objValidation->setError('Valeur non retrouvée');
-        $objValidation->setPromptTitle('Choisissez un élément');
-        $objValidation->setPrompt('Veuillez sélectionner une valeur dans la liste');
-        $objValidation->setFormula1('"' . $configs . '"');
 
-        return $sheet;
+    }
+    
+
+    /** @OA\Post(
+     *      path="/capes-search",
+     *      operationId="Cape searching",
+     *      tags={"Cape"},
+     *       security={{"JWT":{}}},
+     *      summary="Return list of Cape respecting term",
+     *      description="Get all filtered capes using term",
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful operation",
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/Cape"),
+     *
+     *         @OA\XmlContent(ref="#/components/schemas/Cape")
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *         description="Body request",
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/TermSearch")
+     *     ),
+     *
+     * @OA\Response(
+     *         response=400,
+     *         description="Bad Request"
+     *     ),
+     * @OA\Response(
+     *         response=419,
+     *         description="Expired session"
+     *     ),
+     * @OA\Response(
+     *         response=404,
+     *         description="Not found"
+     *     ),
+     * @OA\Response(
+     *         response=500,
+     *         description="Server Error"
+     *     )
+     *)
+     */
+    public function search(Request $request)
+    {
+        $message = 'Filtrage des Cape';
+
+        try {
+            $term = $request->term;
+            $result = $this->CapeRepository->search($term);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success('Filtrage effectué avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
 
 
-    public function import(Request $request)
+    
+/** @OA\Post(
+     *      path="/capes",
+     *      operationId="Cape store",
+     *      tags={"Cape"},
+     *       security={{"JWT":{}}},
+     *      summary="Store Cape data",
+     *      description="Create a new Cape",
+     *
+     *       @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/CapeCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Cape"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Cape")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+ */
+
+
+public function exportPDF()
     {
+        $message = 'Enregistrement d\'un Cape';
 
-        set_time_limit(0);
-        $file=$request->file('file');
-        $inputFileType=$file?->getClientOriginalExtension();
+        try {
+            $result = $this->CapeRepository->storeDistricts($request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
 
-        $reader = IOFactory::createReader(Str::title($inputFileType));
-        $reader->setReadDataOnly(TRUE);
-        $spreadsheet = $reader->load($file);
-        $all = $spreadsheet->getSheetNames();
-        foreach ($all as $value) {
-            $currentSheet=$spreadsheet->getSheetByName($value);
-            $highestRow = $currentSheet->getHighestRow(); 
-            $highestColumn = $currentSheet->getHighestColumn(); 
-            $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn); // e.g. 5
+            return Common::successCreate('Cape créé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
 
-
-                        for ($row = 3; $row <= $highestRow; ++$row) {
-
-                            $checkTypeCape= TypeCape::where('name',$currentSheet->getCellByColumnAndRow(9, $row)->getValue()??null)->first();
-                            $checkDistrict= District::where('name',$currentSheet->getCellByColumnAndRow(15, $row)->getValue()??null)->first();
-
-                            if ($checkTypeCape && $checkDepartment && $checkMunicipality && $checkDistrict) {
-                                $checkCape=Requete::where('name',$currentSheet->getCellByColumnAndRow(10, $row)->getValue()??null)->first();
-                                if ($checkCape) {
-                                        $checkCape->update([
-                                            "name"=>$currentSheet->getCellByColumnAndRow(10, $row)->getValue()??null,
-                                            "type_cape_id"=>$checkTypeCape->id,
-                                            "name_pomoter"=>$currentSheet->getCellByColumnAndRow(1, $row)->getValue()??null,
-                                            "firstname_pomoter"=>$currentSheet->getCellByColumnAndRow(2, $row)->getValue()??null,
-                                            "phone_pomoter"=>$currentSheet->getCellByColumnAndRow(3, $row)->getValue()??null,
-                                            "email_pomoter"=>$currentSheet->getCellByColumnAndRow(4, $row)->getValue()??null,
-                                            "name_chief"=>$currentSheet->getCellByColumnAndRow(5, $row)->getValue()??null,
-                                            "phone_chief"=>$currentSheet->getCellByColumnAndRow(8, $row)->getValue()??null,
-                                            "firstname_chief"=>$currentSheet->getCellByColumnAndRow(6, $row)->getValue()??null,
-                                            "email_chief"=>$currentSheet->getCellByColumnAndRow(7, $row)->getValue()??null,
-                                            "email"=>$currentSheet->getCellByColumnAndRow(12, $row)->getValue()??null,
-                                            "phone"=>$currentSheet->getCellByColumnAndRow(13, $row)->getValue()??null,
-                                            "capacity"=>$currentSheet->getCellByColumnAndRow(11, $row)->getValue()??null,
-                                            "town"=>$currentSheet->getCellByColumnAndRow(16, $row)->getValue()??null,
-                                            "address"=>$currentSheet->getCellByColumnAndRow(17, $row)->getValue()??null,
-                                            "status"=>8,
-                                            "district_id"=>$checkDistrict->id,
-                                    ]);
-                                }else {
-                                  $code=Str::uuid();
-
-                                   $req=Requete::create([
-                                    "code"=>$code,
-                                    "name"=>$currentSheet->getCellByColumnAndRow(10, $row)->getValue()??null,
-                                    "type_cape_id"=>$checkTypeCape->id,
-                                    "name_pomoter"=>$currentSheet->getCellByColumnAndRow(1, $row)->getValue()??null,
-                                    "firstname_pomoter"=>$currentSheet->getCellByColumnAndRow(2, $row)->getValue()??null,
-                                    "phone_pomoter"=>$currentSheet->getCellByColumnAndRow(3, $row)->getValue()??null,
-                                    "email_pomoter"=>$currentSheet->getCellByColumnAndRow(4, $row)->getValue()??null,
-                                    "name_chief"=>$currentSheet->getCellByColumnAndRow(5, $row)->getValue()??null,
-                                    "phone_chief"=>$currentSheet->getCellByColumnAndRow(8, $row)->getValue()??null,
-                                    "firstname_chief"=>$currentSheet->getCellByColumnAndRow(6, $row)->getValue()??null,
-                                    "email_chief"=>$currentSheet->getCellByColumnAndRow(7, $row)->getValue()??null,
-                                    "email"=>$currentSheet->getCellByColumnAndRow(12, $row)->getValue()??null,
-                                    "phone"=>$currentSheet->getCellByColumnAndRow(13, $row)->getValue()??null,
-                                    "capacity"=>$currentSheet->getCellByColumnAndRow(11, $row)->getValue()??null,
-                                    "town"=>$currentSheet->getCellByColumnAndRow(16, $row)->getValue()??null,
-                                    "address"=>$currentSheet->getCellByColumnAndRow(17, $row)->getValue()??null,
-                                    "status"=>8,
-                                    "district_id"=>$checkDistrict->id,
-                                   
-                                   ]);
-                                   CAPE::create(
-                                    [
-                                      "status"=>1,
-                                      "requete_id"=>$req->id,
-                                   
-                                    ]
-                                    );
-
-                                
-                                }
-                            }
-                           
-
-                        }
+            return Common::error($th->getMessage(), []);
         }
-
-
-
-
-      return response()->json([
-        "success"=>true,
-        "message"=>"Importation réussie",
-        "data"=>[
-          
-        ]
-    ],200);  
-       
-    }
-
-
-    public function generateUniqueCode()
-    {
-    
-        $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $charactersNumber = strlen($characters);
-        $codeLength = 6;
-        $prefixe = 'CAPE-';
-        $code = '';
-    
-        while (strlen($code) < 6) {
-            $position = rand(0, $charactersNumber - 1);
-            $character = $characters[$position];
-            $code = $prefixe.$code.$character;
-        }
-    
-        if (Requete::where('code', $code)->exists()) {
-            $this->generateUniqueCode();
-        }
-    
-        return $code;
-    
     }
 }

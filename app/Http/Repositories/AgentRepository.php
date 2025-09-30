@@ -49,7 +49,6 @@ class AgentRepository
             ->filter(array_filter($request->all(), function ($k) {
                 return $k != 'page';
             }, ARRAY_FILTER_USE_KEY))
-            ->with('invites')
             ->orderByDesc('created_at');
 
         if (array_key_exists('per_page', $request->all())) {
@@ -74,8 +73,6 @@ class AgentRepository
     public function makeStore($data): Agent
     {
         $model = new Agent($data);
-        $aws= new AwsService();
-        if(request()->file('file'))  $model->file = $aws->upload(request()->file('file'),"Agents")['full_url'];
         $model->save();
 
         return $model;
@@ -87,8 +84,6 @@ class AgentRepository
     public function makeUpdate($id, $data): Agent
     {
         $model = Agent::findOrFail($id);
-        $aws= new AwsService();
-        if(request()->file('file'))  $data['file'] = $aws->upload(request()->file('file'),"Agents")['full_url'];
         $model->update($data);
 
         return $model;

@@ -349,7 +349,10 @@ class UserRepository
 
     public function setStatus($id, $status)
     {
-        return $this->findOrFail($id)->update(['is_active' => $status]);
+        $user = User::findOrFail($id);
+        $user->update(['is_active' => $status]);
+
+        return $user;
     }
 
     /**
@@ -366,4 +369,29 @@ class UserRepository
 
         return $query->get(); // Return the search results
     }
+
+
+    public function signCode(Request $request)
+    {
+        $datas = $request->all();
+        unset($datas['sign_code_confirm']); 
+        $datas['sign_code'] = Hash::make($datas['sign_code']); // hash du code
+
+        $user = Auth::user();
+        $user->update($datas);
+
+        return $user;
+    }
+
+
+    public function changeUserStatus(Request $request)
+    {
+        $user = User::find($request->user_id);
+        $user->status = $request->status;
+        $user->save();
+
+        return $user;
+    }
+
+
 }

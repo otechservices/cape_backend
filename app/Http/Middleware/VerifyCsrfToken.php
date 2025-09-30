@@ -11,5 +11,11 @@ class VerifyCsrfToken extends Middleware
      *
      * @var array<int, string>
      */
+<<<<<<< HEAD
+    protected $except = [
+        //
+    ];
+=======
     protected $except = [];
+>>>>>>> 902833d (Initial commit)
 }

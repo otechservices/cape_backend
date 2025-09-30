@@ -3,44 +3,155 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Backup;
-use Artisan;
+use App\Http\Repositories\BackupControllerRepository;
+use App\Http\Requests\BackupController\StoreBackupControllerRequest;
+use App\Http\Requests\BackupController\UpdateBackupControllerRequest;
+use App\Services\LogService;
+use App\Utilities\Common;
+use OpenApi\Attributes as OA;
 
-class BackupController extends Controller
+
+class BackupControllerController extends Controller
 {
-    public function index()
+     /**
+     * The BackupController repository being queried.
+     *
+     * @var BackupControllerRepository
+     */
+    protected $BackupControllerRepository;
+
+    protected $ls;
+
+    public function __construct(BackupControllerRepository $BackupControllerRepository, LogService $ls)
     {
-        $backups=Backup::all();
-        return response()->json([
-            "success"=>true,
-            "message"=>"Liste des sauvegardes",
-            "data"=>$backups
-        ],200);
+        $this->BackupControllerRepository = $BackupControllerRepository;
+        $this->ls = $ls;
+
+        //$this->middleware('auth:api')->except(['getNotified', 'show']);
+
     }
 
-    public function store(Request $request)
+    /** @OA\Get(
+     *      path="/backups",
+     *      operationId="BackupController list",
+     *      tags={"BackupController"},
+     *       security={{"JWT":{}}},
+     *      summary="Return BackupController data",
+     *      description="Get all backups",
+     *
+     *      @OA\Parameter(
+     *          name="name",
+     *          in="query",
+     *          description="Can be used for filtering data by name",
+     *          required=false,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/BackupController"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/BackupController")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function index(Request $request)
     {
+        $message = 'Récupération de la liste des BackupController';
 
         try {
-            Artisan::call('backup:run');
+            $result = $this->BackupControllerRepository->getAll($request);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
 
-            Backup::create([
-                "name"=>"sauvegarde du ".date('Y-m-d h:i:s')
-            ]);
-            return response()->json([
-                "success"=>true,
-                "message"=>"Enregistrement d'une sauvegarde",
-                "data"=>null
-            ],200);
-        
-        } catch (Exception $th) {
-            return response()->json([
-                "success"=>true,
-                "message"=>"Erreur de sauvegarde",
-                "data"=>null
-            ],500);        }
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
 
-     
+            return Common::error($th->getMessage(), []);
+        }
     }
+
+
+    /** @OA\Post(
+     *      path="/backups",
+     *      operationId="BackupController store",
+     *      tags={"BackupController"},
+     *       security={{"JWT":{}}},
+     *      summary="Store BackupController data",
+     *      description="Create a new BackupController",
+     *
+     *       @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/BackupControllerCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/BackupController"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/BackupController")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function store(StoreBackupControllerRequest $request)
+    {
+        $message = 'Enregistrement d\'un BackupController';
+
+        try {
+            $result = $this->BackupControllerRepository->makeStore($request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
+
+            return Common::successCreate('BackupController créé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
 
 }

@@ -5,9 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Repositories\AgentRepository;
 use App\Http\Requests\Agent\StoreAgentRequest;
 use App\Http\Requests\Agent\UpdateAgentRequest;
-use App\Http\Requests\Agent\GenerateLinkRequest;
-use App\Http\Requests\Agent\VerifyLinkRequest;
-use App\Http\Requests\Agent\ParticipateRequest;
 use App\Services\LogService;
 use App\Utilities\Common;
 use Illuminate\Http\Request;
@@ -34,12 +31,12 @@ class AgentController extends Controller
     }
 
     /** @OA\Get(
-     *      path="/Agents",
+     *      path="/agents",
      *      operationId="Agent list",
      *      tags={"Agent"},
      *       security={{"JWT":{}}},
      *      summary="Return Agent data",
-     *      description="Get all Agents",
+     *      description="Get all agents",
      *
      *      @OA\Parameter(
      *          name="name",
@@ -97,7 +94,7 @@ class AgentController extends Controller
     }
 
     /** @OA\Get(
-     *      path="/Agents/{id}",
+     *      path="/agents/{id}",
      *      operationId="Agent show",
      *      tags={"Agent"},
      *       security={{"JWT":{}}},
@@ -169,7 +166,7 @@ class AgentController extends Controller
     }
 
     /** @OA\Post(
-     *      path="/Agents",
+     *      path="/agents",
      *      operationId="Agent store",
      *      tags={"Agent"},
      *       security={{"JWT":{}}},
@@ -227,7 +224,7 @@ class AgentController extends Controller
     }
 
     /** @OA\Put(
-     *      path="/Agents/{id}",
+     *      path="/agents/{id}",
      *      operationId="Agent update",
      *      tags={"Agent"},
      *       security={{"JWT":{}}},
@@ -296,7 +293,7 @@ class AgentController extends Controller
     }
 
     /** @OA\Delete(
-     *      path="/Agents/{id}",
+     *      path="/agents/{id}",
      *      operationId="Agent Delete",
      *      tags={"Agent"},
      *       security={{"JWT":{}}},
@@ -360,7 +357,7 @@ class AgentController extends Controller
     }
 
     /** @OA\Get(
-     *      path="/Agents/{id}/state/{state}",
+     *      path="/agents/{id}/state/{state}",
      *      operationId="Agent change state",
      *      tags={"Agent"},
      *      security={{"JWT":{}}},
@@ -435,12 +432,12 @@ class AgentController extends Controller
     }
 
     /** @OA\Post(
-     *      path="/Agents-search",
+     *      path="/agents-search",
      *      operationId="Agent searching",
      *      tags={"Agent"},
      *       security={{"JWT":{}}},
      *      summary="Return list of Agent respecting term",
-     *      description="Get all filtered Agents using term",
+     *      description="Get all filtered agents using term",
      *
      *     @OA\Response(
      *         response=200,
@@ -484,70 +481,6 @@ class AgentController extends Controller
             $term = $request->term;
             $result = $this->AgentRepository->search($term);
             $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
-
-            return Common::success('Filtrage effectué avec succès', $result);
-        } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
-
-            return Common::error($th->getMessage(), []);
-        }
-    }
-
-    function generateLink(GenerateLinkRequest $request,$id) {
-        $message = 'Génération de lien de Agent';
-
-        try {
-            $result = $this->AgentRepository->generateLink($id,$request->validated());
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
-
-            return Common::success('Filtrage effectué avec succès', $result);
-        } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
-
-            return Common::error($th->getMessage(), []);
-        }
-    }
-    function verifyLink(VerifyLinkRequest $request) {
-        $message = 'Récupération de fêtes';
-
-        try {
-            $result = $this->AgentRepository->verifyLink ($request->validated());
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
-
-            return Common::success('Filtrage effectué avec succès', $result);
-        } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
-
-            return Common::error($th->getMessage(), []);
-        }
-    }
-    function participate(ParticipateRequest $request) {
-        $message = 'Participation de fêtes';
-
-        try {
-            
-            $result = $this->AgentRepository->participate ($request->validated());
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
-
-            return Common::success('Filtrage effectué avec succès', $result);
-        } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
-
-            return Common::error($th->getMessage(), []);
-        }
-    }
-    function generateMediaLink($id) {
-        $message = 'Génération de lien média';
-
-        try {
-
-            if (!$this->AgentRepository->get($id)) {
-                return Common::error('Aucun Agent n\'existe à cette référence.', []);
-
-            }
-            
-            $result = $this->AgentRepository->generateMediaLink($id);
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($id)]);
 
             return Common::success('Filtrage effectué avec succès', $result);
         } catch (\Throwable $th) {
