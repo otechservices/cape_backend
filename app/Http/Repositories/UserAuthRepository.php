@@ -130,7 +130,7 @@ class UserAuthRepository
     public function user()
     {
 
-        $user = User::with(['roles.permissions', 'settings'])->whereId(Auth::id())->first();
+        $user = User::with(['roles.permissions', 'settings','promoter'])->whereId(Auth::id())->first();
 
         return $user;
 

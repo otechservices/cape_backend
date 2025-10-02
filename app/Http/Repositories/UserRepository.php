@@ -81,35 +81,6 @@ class UserRepository
         }
     }
 
-    /**
-     * Get all users with filtering, pagination, and sorting
-     */
-    public function getAllRH($request)
-    {
-        $per_page = 10;
-        $roleIds = [];
-
-        $req = User::orderByDesc('created_at');
-        $roleIds[] = (int) Setting::where('key', 'role_for_animatrice')->first()?->value;
-        $roleIds[] = (int) Setting::where('key', 'role_for_responsable')->first()?->value;
-        $req->whereHas('userProjects.roles', function ($q) use ($roleIds) {
-            $q->whereIn('id', $roleIds);
-        });
-        if (array_key_exists('project_id', $request->all())) {
-            $project_id = $request->project_id;
-            $req->whereHas('userProjects', function ($q) use ($project_id) {
-                $q->where('project_id', $project_id);
-            });
-        }
-
-        if (array_key_exists('per_page', $request->all())) {
-            $per_page = $request['per_page'];
-
-            return $req->paginate($per_page);
-        } else {
-            return $req->get();
-        }
-    }
 
     /**
      * Get a specific user by id
@@ -132,54 +103,8 @@ class UserRepository
             return null;
         }
 
-        // try {
-        //     $query = self::query();
-        //     if (request()->has('project_id')) {
-        //         $project_id = request()->project_id;
-        //         $query->whereHas('userProjects', function ($q) use ($project_id) {
-        //             $q->where('project_id', $project_id);
-        //             if (request()->has('role')) {
-        //                 $role = request()->role;
-        //                // $q->role($role);
-        //                 $q->whereHas('roles', function ($qu) use ($role) {
-        //                     $qu->where('id', $role);
-        //                 });
-        //             }
-        //         });
-
-        //     }
-
-        //     return $query->findOrFail($id);
-        // } catch (\Throwable $th) {
-        //     info($th->getMessage());
-
-        //     return null;
-        // }
     }
 
-    /**
-     * Get a specific user by id
-     */
-    public function getRH($id)
-    {
-
-        $equipe = $this->es->getEquipe($id);
-
-        if (request()->has('project_id')) {
-            $result = $this->findOrFail($id)->load(['userProjects.roles', 'municipality.department']);
-        } else {
-            $result = $this->findOrFail($id)->load(['userProjects.roles', 'municipality.department']);
-
-        }
-
-        // foreach ($equipe['data'] as $key => $value) {
-        //     $equipe['data'][$key]['municipality'] = Municipality::find($value['municipality_id'])?->load('department');
-        // }
-
-        $result->setAttribute('equipe', $equipe['data']);
-
-        return $result;
-    }
 
     /**
      * Store a new user
