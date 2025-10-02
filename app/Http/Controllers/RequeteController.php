@@ -75,6 +75,10 @@ class RequeteController extends Controller
                 case 'ministre':
                     $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours'])->where('service_id',request()->service_id)->orderBy("id","desc")->get();
                     break;
+
+                case 'Promoteur':
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours'])->where('promoter_id',Auth::user()->promoter_id)->orderBy("id","desc")->get();
+                    break;
                 
                 default:
                    $requetes=[];
@@ -83,7 +87,12 @@ class RequeteController extends Controller
         } 
         
       
-            return response()->json($requetes, 200);
+           return response()->json([
+            "success"=>true,
+            "message"=>"Liste des recommendations",
+            "data"=>$requetes
+        ],200);  
+
     }
     
     static public function store($request)
@@ -280,7 +289,8 @@ class RequeteController extends Controller
             "target" => json_encode($data->targets),
             "status" => $data->has_aggrement ? 8 : 0,
             "district_id" => (int) $data->district_id,
-            "service_id" => (int) $request->service_id
+            "service_id" => (int) $request->service_id,
+            "promoter_id"=>Auth::user()->promoter_id
         ], $dataR));
 
         if (isset($data?->type_garderies)) {
@@ -326,6 +336,7 @@ class RequeteController extends Controller
             "filename" => $recFile,
             "level" => 1,
             "file_id" => null,
+            "promoter_id"=>Auth::user()->promoter_id,
             "requete_id" => $requete->id,
         ]);
 
@@ -403,7 +414,7 @@ class RequeteController extends Controller
                 //'alexiskatel92@gmail.com',
                 [$filePath],
             );
-            if (!$mailResult['success']) {
+            if (!$mailResult) {
                 $allMailsSent = false;
                 Log::error('Échec d\'envoi à ' . $item['email']);
             }
@@ -991,7 +1002,7 @@ class RequeteController extends Controller
                         [$filePath],
                     );
 
-                    if (!$mailResult['success']) {
+                    if (!$mailResult) {
                         $allMailsSent = false;
                         Log::error('Échec d\'envoi à ' . $item['email']);
                     }
@@ -1017,11 +1028,11 @@ class RequeteController extends Controller
                     "success" => false,
                     "message" => $e->getMessage(),
                     "data" => null
-                ], 200);
+                ], 500);
             }
         } else {
 
-            try {
+           try {
                 $requete = Requete::where('code', $request->code)->first();
                 $datas = $request->all();
                 $code = $request->code;
@@ -1111,7 +1122,7 @@ class RequeteController extends Controller
                         [$filePath],
                     );
 
-                    if (!$mailResult['success']) {
+                    if (!$mailResult) {
                         $allMailsSent = false;
                         Log::error('Échec d\'envoi à ' . $item['email']);
                     }
@@ -1125,7 +1136,7 @@ class RequeteController extends Controller
                     Log::error('Échec de l\'envoi du récépissé');
                 }
 
-                if (!$mailResult['success']) {
+                if (!$mailResult) {
                     Log::error('Échec de l\'envoi du récépissé');
                 }
 
@@ -1147,7 +1158,7 @@ class RequeteController extends Controller
                     "success" => false,
                     "message" => $e->getMessage(),
                     "data" => null
-                ]);
+                ],500);
             }
         }
     }

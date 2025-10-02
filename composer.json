@@ -25,6 +25,7 @@
         "phpoffice/phpspreadsheet": "^1.29",
         "predis/predis": "^2.2",
         "sendgrid/php-http-client": "^4.1",
+        "simplesoftwareio/simple-qrcode": "*",
         "sirajcse/laravel-unique-id-generator": "^1.0",
         "spatie/laravel-permission": "^6.9",
         "twilio/sdk": "^8.3",

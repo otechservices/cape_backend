@@ -25,6 +25,8 @@ use Illuminate\Support\Str;
 use JWTAuth;
 use NotificationChannels\Fcm\FcmChannel;
 use NotificationChannels\Twilio\TwilioChannel;
+use Spatie\Permission\Models\Role;
+
 
 class UserAuthRepository
 {
@@ -96,6 +98,10 @@ class UserAuthRepository
         $userData['promoter_id']=$promoter->id;
         $userData['password']= Hash::make($data['password']);
         $user=User::create($userData);
+
+        $role = Role::whereName('Promoteur')->first();
+        $user->assignRole([$role->id]);
+
 
                 DB::commit();
 

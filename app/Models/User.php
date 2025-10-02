@@ -70,6 +70,11 @@ class User extends Authenticatable implements JWTSubject
     }
 
 
+      function sm()  {
+        return $this->belongsTo(SessionMember::class,'session_member_id');
+    }
+
+
 
     /**
      * Specifies the user's FCM token

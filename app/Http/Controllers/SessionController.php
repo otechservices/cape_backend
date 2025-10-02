@@ -231,7 +231,7 @@ class SessionController extends Controller
     {
 
         foreach (json_decode($request->items) as $value) {
-            $member=Member::find($value->id);
+            $member=Member::find($value);
 
             $check= User::where('email',$member->email)->first();
 
@@ -244,13 +244,13 @@ class SessionController extends Controller
             }
         }
         foreach (json_decode($request->items) as $value) {
-            $check=SessionMember::where("session_id",$request->id)->where('member_id',$value->id)->first();
+            $check=SessionMember::where("session_id",$request->id)->where('member_id',$value)->first();
             if ($check == null) {
                 $sm= SessionMember::create([
                     'session_id'=>$request->id,
-                    'member_id'=>$value->id,
+                    'member_id'=>$value,
                 ]);
-                $member=Member::find($value->id);
+                $member=Member::find($value);
                 $password=Str::random(8);
                 $datas["code"]=Str::uuid();
                 $datas["name"]=$member->firstname." ".$member->lastname;
@@ -332,14 +332,14 @@ class SessionController extends Controller
     {
 
         foreach (json_decode($request->items) as $value) {
-           Requete::find($value->id)->update([
+           Requete::find($value)->update([
             'session_id'=>$request->id
         ]);
 
 
         Parcours::create([
             'libelle'=>"Inscription du dossier à la session",
-            'requete_id'=>$value->id,
+            'requete_id'=>$value,
             'user_id'=>Auth::id(),
         ]); 
         }
