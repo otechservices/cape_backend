@@ -66,7 +66,7 @@ class User extends Authenticatable implements JWTSubject
 
 
     function promoter()  {
-        return $this->belongsTo(User::class,'promoter_id');
+        return $this->belongsTo(Promoter::class,'promoter_id');
     }
 
 
