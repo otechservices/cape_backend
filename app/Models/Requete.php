@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use eloquentFilter\QueryFilter\ModelFilters\Filterable;
 
 class Requete extends Model
 {
-    use HasFactory;
+    use HasFactory,Filterable;
     protected $guarded = [];
 
     public function files()
@@ -95,5 +96,10 @@ class Requete extends Model
     public function myAvis()
     {
         return $this->hasOne(Avis::class,'requete_id');
+    }
+
+     public function promoter()
+    {
+        return $this->belongsTo(Promoter::class,'promoter_id');
     }
 }

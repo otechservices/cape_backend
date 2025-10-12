@@ -1399,27 +1399,18 @@ public function inviteStore(Request $request)
         $session=Session::where('is_active',false)->orderBy("id","desc")->first();
         $requetes=Requete::where('session_id', $session->id)->where('is_authorized',true)->get();
         foreach ($requetes as $value) {
-            $check=Cape::where('requete_id',$value->id)->first();
-            if ($check ==null) {
-                $cape=Cape::create([
-                    "requete_id"=>$value->id,
-                    "status"=>1
-                ]);
+                // $cape=Cape::create([
+                //     "requete_id"=>$value->id,
+                //     "status"=>1
+                // ]);
 
-                $refs=Referal::where('requete_id ',$value->id)->get();
+                $refs=Referal::where('requete_id',$value->id)->get();
                 
-                foreach ($refs as  $ref) {
-                    $ref->update(['cape_id'=>$cape->id]);
-                }
+                // foreach ($refs as  $ref) {
+                //     $ref->update(['cape_id'=>$cape->id]);
+                // }
 
-                $password=Str::random(8);
-                $datas["code"]=Str::uuid();
-                $datas["name"]=$value->name_pomoter." ".$value->firstname_pomoter;
-                $datas["email"]=$value->email;
-                $datas["password"]=Hash::make($password);
-                $datas["cape_id"]= $cape->id;
-                $user=User::create($datas);
-                $user->assignRole(Role::whereName('cape')->first());
+                $user=$value?->promoter?->user;
 
                 $recFile=time()."agrement.pdf";
                 $filePath=public_path('docs/'.$value->code."/".$recFile);
@@ -1440,12 +1431,11 @@ public function inviteStore(Request $request)
                     "emails.cape_account",
                     [
                         "name"=>$value->name,
-                        "cape"=>$value,
-                        "password"=>$password
+                        "cape"=>$user,
                     ],
-                    "Compte d'accès CAPE",
-                    $value->name_promoter,
-                    $value->email,
+                    "Décision finale",
+                    $user->lastname. " ". $user->firstname,
+                    $user->email,
                     [$filePath]
                     );
                     Parcours::create([
@@ -1457,7 +1447,7 @@ public function inviteStore(Request $request)
                         "can_closed"=>true,
                         "is_validated"=>true
                     ]);
-            }
+            
 
             
            

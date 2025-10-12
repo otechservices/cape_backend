@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use eloquentFilter\QueryFilter\ModelFilters\Filterable;
 
 class Verification extends Model
 {
@@ -11,7 +12,7 @@ class Verification extends Model
 
     private static $whiteListFilter = ['*'];
 
-    use HasFactory;
+    use HasFactory,Filterable;
 
     protected $fillable = [
         'email',

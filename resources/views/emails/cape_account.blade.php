@@ -14,14 +14,8 @@ Bonjour Monsieur/Madame {{$cape->firstname_pomoter}} {{$cape->name_pomoter}},
 <br>
 ..............................................................................
 <br>
-    Veuillez accéder à l'espace de travail réservé à votre CAPE en cliquant sur le lien suivant: <a href="{{env('APP_FRONT_URL')}}/admin/auth/login">Plateforme numérique en ligne de gestion des centres d'accueil et de protection de l'enfant en République du Bénin</a>
+    Veuillez accéder à l'espace de travail réservé à votre CAPE en cliquant sur le lien suivant: <a href="{{env('APP_FRONT_URL')}}/public/auth/login">Plateforme numérique en ligne de gestion des centres d'accueil et de protection de l'enfant en République du Bénin</a>
     <br>
-    Veuillez vous servir des identifiants suivants pour vous connecter :
-
-        <ul>
-            <li><strong> Email: </strong> {{$cape->email}} </li>
-            <li><strong> Mot de passe: </strong> {{$password}} </li>
-        </ul>
     Cordialement,
 
 

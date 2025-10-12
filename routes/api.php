@@ -60,6 +60,19 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
         Route::get('municipalities-ghm', 'MunicipalityController@indexGhm');
     });
 
+        Route::get('/targets-2', 'TargetController@index');
+    Route::get('/type-data-2', 'TypeCapeController@index');
+    Route::get('/type-garderies-2', 'TypeGarderieController@index');
+    Route::get('/type-infos-2', 'TypeInfoController@index');
+    Route::get('/type-billings-2', 'TypeBillingController@index');
+    Route::get('/services-2', 'ServiceController@index');
+
+
+      Route::apiResources([
+            'actualities' => 'ActualityController',
+            'municipalities' => 'MunicipalityController',
+        ]);
+
     Route::middleware('auth:api')->group(function () {
         Route::get('/me', 'UserAuthController@user');
         Route::get('/logout', 'UserAuthController@logout');
@@ -92,12 +105,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
     Route::get('/files', 'FileController@index');
    // Route::get('/files/{token}', 'FileController@check');
 
-    Route::get('/targets-2', 'TargetController@index');
-    Route::get('/type-data-2', 'TypeCapeController@index');
-    Route::get('/type-garderies-2', 'TypeGarderieController@index');
-    Route::get('/type-infos-2', 'TypeInfoController@index');
-    Route::get('/type-billings-2', 'TypeBillingController@index');
-    Route::get('/services-2', 'ServiceController@index');
+
 
 
         Route::apiResources([
@@ -146,7 +154,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
           "infos"=>"InfoController",
           "services"=>"ServiceController",
           "billings"=>"BillingController",
-          'actualities'=>'ActualityController',
+         // 'actualities'=>'ActualityController',
           'cfes'=>'ControlFileElementController',
           "nature-promotors"=>"NaturePromotorController",
           "type-garderies"=>"TypeGarderieController",

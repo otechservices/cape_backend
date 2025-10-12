@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Repositories\ActivityRepository;
+use App\Http\Repositories\ActualityRepository;
 use App\Http\Requests\Activity\StoreActivityRequest;
 use App\Http\Requests\Activity\UpdateActivityRequest;
 use App\Services\LogService;
@@ -11,23 +11,23 @@ use App\Utilities\Common;
 use OpenApi\Attributes as OA;
 
 
-class ActivityController extends Controller
+class ActualityController extends Controller
 {
      /**
      * The Activity repository being queried.
      *
-     * @var ActivityRepository
+     * @var ActualityRepository
      */
-    protected $ActivityRepository;
+    protected $actualityRepository;
 
     protected $ls;
 
-    public function __construct(ActivityRepository $ActivityRepository, LogService $ls)
+    public function __construct(ActualityRepository $actualityRepository, LogService $ls)
     {
-        $this->ActivityRepository = $ActivityRepository;
+        $this->actualityRepository = $actualityRepository;
         $this->ls = $ls;
 
-        //$this->middleware('auth:api')->except(['getNotified', 'show']);
+        $this->middleware('auth:api')->except(['show','index2']);
 
     }
 
@@ -83,7 +83,7 @@ class ActivityController extends Controller
         $message = 'Récupération de la liste des Activity';
 
         try {
-            $result = $this->ActivityRepository->getAll($request);
+            $result = $this->actualityRepository->getAll($request);
             $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
 
             return Common::success($message, $result);
@@ -146,7 +146,7 @@ class ActivityController extends Controller
         $message = 'Récupération de la liste des Activity';
 
         try {
-            $result = $this->ActivityRepository->getAll($request);
+            $result = $this->actualityRepository->getAll($request);
             $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
 
             return Common::success($message, $result);
@@ -156,6 +156,26 @@ class ActivityController extends Controller
             return Common::error($th->getMessage(), []);
         }
     }
+
+
+     public function show(Request $request,$id)
+    {
+        $message = 'Détails des activités';
+
+        try {
+            $result = $this->actualityRepository->get($id);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
+
+    
 
 
     /** @OA\Post(
@@ -205,7 +225,7 @@ class ActivityController extends Controller
         $message = 'Enregistrement d\'un Activity';
 
         try {
-            $result = $this->ActivityRepository->makeStore($request->validated());
+            $result = $this->actualityRepository->makeStore($request->validated());
             $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
 
             return Common::successCreate('Activity créé avec succès', $result);
@@ -275,7 +295,7 @@ class ActivityController extends Controller
         $message = 'Mise à jour d\'un Activity';
 
         try {
-            $result = $this->ActivityRepository->makeUpdate($id, $request->validated());
+            $result = $this->actualityRepository->makeUpdate($id, $request->validated());
             $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
 
             return Common::success('Mise à jour de Activity effectuée avec succès', $result);
@@ -337,9 +357,9 @@ class ActivityController extends Controller
         $message = 'Suppression de Activity';
 
         try {
-            $recup = $this->ActivityRepository->get($id);
+            $recup = $this->actualityRepository->get($id);
 
-            $result = $this->ActivityRepository->makeDestroy($id);
+            $result = $this->actualityRepository->makeDestroy($id);
             $this->ls->trace(['action_name' => $message, 'description' => json_encode($recup)]);
 
             return Common::successDelete('Activity supprimé avec succès', $result);

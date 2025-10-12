@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use eloquentFilter\QueryFilter\ModelFilters\Filterable;
 use App\Utilities\Core;
 
 
 class Promoter extends Model
 {
-    use HasFactory;
+    use HasFactory,Filterable;
 
     protected $guarded = [];
 
@@ -26,6 +27,14 @@ class Promoter extends Model
             $model->code = (string) Core::generateIncrementUniqueCode('promoters', 4, 'code', 'PM');
         });
     }
+
+
+       public function user()
+    {
+
+        return $this->hasOne(User::class, 'promoter_id');
+    }
+
 
 
 }
