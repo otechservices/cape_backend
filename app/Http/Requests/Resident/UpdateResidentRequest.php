@@ -2,10 +2,7 @@
 
 namespace App\Http\Requests\Resident;
 
-use App\Utilities\Common;
-use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateResidentRequest extends FormRequest
 {
@@ -17,35 +14,33 @@ class UpdateResidentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'required|string|max:191',
-            'subtitle' => 'nullable|string|max:191',
-            'big_photo' => 'required|string',
-            'short_photo' => 'nullable|string',
-            'resume' => 'required|string',
-            'content' => 'required|string',
-            'author' => 'nullable|string|max:191',
-            'is_active' => 'sometimes|boolean',
-            'user_id' => 'required|integer',        ];
-    }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(Common::error($validator->errors()->first(), $validator->errors()));
+            'firstname'   => ['sometimes', 'required', 'string', 'max:100'],
+            'lastname'    => ['sometimes', 'required', 'string', 'max:100'],
+            'birthdate'   => ['sometimes', 'required', 'date', 'before:today'],
+            'birthplace'  => ['sometimes', 'required', 'string', 'max:150'],
+            'address'     => ['sometimes', 'required', 'string', 'max:255'],
+            'sex'         => ['sometimes', 'required', 'in:Masculin,Féminin'],
+            'size'        => ['nullable', 'numeric', 'min:0'],
+            'weight'      => ['nullable', 'numeric', 'min:0'],
+        ];
     }
 
     public function messages(): array
     {
         return [
-            'title.required' => 'Le titre est requis.',
-            'subtitle.string' => 'Le sous-titre doit être une chaîne de caractères.',
-            'big_photo.required' => 'La big photo est requis.',
-            'short_photo.required' => 'La short_photo est requis.',
-            'resume.required' => 'Le résumé est requis.',
-            'content.required' => 'Le contenu est requis.',
-            'author.string' => 'Le nom de l\'auteur doit être une chaîne de caractères.',
-            'user_id.required' => 'L\'ID de l\'utilisateur est requis.',
+            'firstname.required'   => 'Le prénom est obligatoire.',
+            'lastname.required'    => 'Le nom de famille est obligatoire.',
+            'birthdate.required'   => 'La date de naissance est obligatoire.',
+            'birthdate.date'       => 'La date de naissance doit être une date valide.',
+            'birthdate.before'     => 'La date de naissance doit être antérieure à aujourd’hui.',
+            'birthplace.required'  => 'Le lieu de naissance est obligatoire.',
+            'address.required'     => 'L’adresse est obligatoire.',
+            'sex.required'         => 'Le sexe est obligatoire.',
+            'sex.in'               => 'Le sexe doit être Masculin ou Féminin.',
+            'size.numeric'         => 'La taille doit être un nombre.',
+            'size.min'             => 'La taille doit être supérieure ou égale à 0.',
+            'weight.numeric'       => 'Le poids doit être un nombre.',
+            'weight.min'           => 'Le poids doit être supérieur ou égal à 0.',
         ];
     }
-
-    protected function prepareForValidation() {}
 }

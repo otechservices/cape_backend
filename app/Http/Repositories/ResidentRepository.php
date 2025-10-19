@@ -43,8 +43,8 @@ class ResidentRepository
     {
         $per_page = 10;
 
-        // Construction de la requête avec filtrage et tri
-        $req = Resident::where('cape_id', Auth::user()->cape->id)
+        // Construction de la requête avec filtrage et tri  
+        $req = Resident::where('promoter_id', Auth::user()->promoter_id)
             ->ignoreRequest(['per_page'])
             ->filter(array_filter($request->all(), function ($k) {
                 return $k != 'page';
@@ -74,14 +74,12 @@ class ResidentRepository
     /**
      * Crée une nouvelle fête.
      */
-    public function makeStore(Request $request): Resident
+    public function makeStore($data)
     {
-        $datas = $request->all();
-        $datas['birthdate'] = date_create($datas['birthdate']);
-        $datas['cape_id'] = Auth::user()->cape->id;
+        $data['promoter_id'] = Auth::user()->promoter_id;
 
         // Création du résident
-        $resident = new Resident($datas);
+        $resident = new Resident($data);
         $resident->save();
 
         // Retour direct du modèle
@@ -90,12 +88,10 @@ class ResidentRepository
     /**
      * Met à jour une fête.
      */
-    public function makeUpdate(Request $request, $id): Resident
+    public function makeUpdate($id,$data)
     {
-        $datas = $request->all();
-        $datas['birthdate'] = date_create($datas['birthdate']);
         $resident = Resident::findOrFail($id);
-        $resident->update($datas);
+        $resident->update($data);
         return $resident;
     }
 

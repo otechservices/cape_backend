@@ -4,121 +4,496 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Staff;
+use App\Http\Repositories\StaffRepository;
+use App\Http\Requests\Staff\StoreStaffRequest;
+use App\Http\Requests\Staff\UpdateStaffRequest;
+use App\Services\LogService;
+use App\Utilities\Common;
+use OpenApi\Attributes as OA;
 use Auth;
+
+
 
 class StaffController extends Controller
 {
     
-
-  
-
-      /**
-     * Display a listing of the resource.
+ /**
+     * The Staff repository being queried.
      *
-     * @return \Illuminate\Http\Response
+     * @var StaffRepository
      */
-    public function index()
+    protected $staffRepository;
+
+    protected $ls;
+
+    public function __construct(StaffRepository $staffRepository, LogService $ls)
     {
-        
-        $staffs=Staff::where('cape_id',Auth::user()->cape_id)->get();
-        return response()->json([
-            "success"=>true,
-            "message"=>"Liste des personnels",
-            "data"=>$staffs
-        ],200);
+        $this->staffRepository = $staffRepository;
+        $this->ls = $ls;
+
+        //$this->middleware('auth:api')->except(['getNotified', 'show']);
+
     }
 
-    /**
-     * Store a newly created resource in storage.
+    /** @OA\Get(
+     *      path="/agents",
+     *      operationId="Staff list",
+     *      tags={"Staff"},
+     *       security={{"JWT":{}}},
+     *      summary="Return Staff data",
+     *      description="Get all agents",
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     *      @OA\Parameter(
+     *          name="name",
+     *          in="query",
+     *          description="Can be used for filtering data by name",
+     *          required=false,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Staff"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Staff")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function store(Request $request)
+    public function index(Request $request)
     {
-        $datas = $request->all();
-        $datas['birthdate'] =date_create($datas['birthdate']);
-        $datas['cape_id'] =Auth::user()->cape->id;
+        $message = 'Récupération de la liste des Staff';
 
-        $staffs=Staff::create($datas);
+        try {
+            $result = $this->staffRepository->getAll($request);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Enregistrement d'un personnel",
-            "data"=>$staffs
-        ],200);
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    /**
-     * Display the specified resource.
+    /** @OA\Get(
+     *      path="/agents/{id}",
+     *      operationId="Staff show",
+     *      tags={"Staff"},
+     *       security={{"JWT":{}}},
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *  @OA\Parameter(
+     *          name="project_id",
+     *          in="query",
+     *          description="Project ID",
+     *
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="Staff ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      summary="Return one Staff data",
+     *      description="Get Staff by ID",
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Staff"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Staff")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $staffs=Staff::find($id);
-        return response()->json([
-            "success"=>true,
-            "message"=>"Récupération d'un personnel",
-            "data"=>$staffs
-        ],200);
+        $message = 'Récupération d\'un Staff';
+
+        try {
+            $result = $this->staffRepository->get($id);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($result)]);
+
+            return Common::success('Staff trouvé', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    /**
-     * Update the specified resource in storage.
+    /** @OA\Post(
+     *      path="/agents",
+     *      operationId="Staff store",
+     *      tags={"Staff"},
+     *       security={{"JWT":{}}},
+     *      summary="Store Staff data",
+     *      description="Create a new Staff",
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *       @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/StaffCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Staff"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Staff")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function update(Request $request, $id)
+    public function store(StoreStaffRequest $request)
     {
-        $datas=$request->all();
-       
-        $staffs=Staff::find($id);
-        $datas['birthdate'] =date_create($datas['birthdate']);
+        $message = 'Enregistrement d\'un Staff';
 
-        $staffs->update($datas);
+        try {
+            $result = $this->staffRepository->makeStore($request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
 
-        $staffs=Staff::find($id);
+            return Common::successCreate('Staff créé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Modification d'un péridiocité",
-            "data"=>$staffs
-        ],200);
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
+    /** @OA\Put(
+     *      path="/agents/{id}",
+     *      operationId="Staff update",
+     *      tags={"Staff"},
+     *       security={{"JWT":{}}},
+     *      summary="Update one Staff data",
+     *      description="Update Staff by ID",
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="Staff ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/StaffCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Staff"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Staff")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function update(UpdateStaffRequest $request, $id)
+    {
+        $message = 'Mise à jour d\'un Staff';
+
+        try {
+            $result = $this->staffRepository->makeUpdate($id, $request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
+
+            return Common::success('Mise à jour de Staff effectuée avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
+    /** @OA\Delete(
+     *      path="/agents/{id}",
+     *      operationId="Staff Delete",
+     *      tags={"Staff"},
+     *       security={{"JWT":{}}},
+     *      summary="Delete Staff data",
+     *      description="Delete Staff by ID",
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="Staff ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=204,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/DeleteResponseData"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/DeleteResponseData")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
     public function destroy($id)
     {
-        $staffs=Staff::find($id);
-        $staffs->delete();
+        $message = 'Suppression de Staff';
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Suppression d'un personnel",
-            "data"=>null
-        ],200);
+        try {
+            $recup = $this->staffRepository->get($id);
+
+            $result = $this->staffRepository->makeDestroy($id);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($recup)]);
+
+            return Common::successDelete('Staff supprimé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
-    public function setStatus($id,$status)
+
+    /** @OA\Get(
+     *      path="/agents/{id}/state/{state}",
+     *      operationId="Staff change state",
+     *      tags={"Staff"},
+     *      security={{"JWT":{}}},
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="Staff ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\Parameter(
+     *          name="state",
+     *          in="path",
+     *          description="Staff state",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      summary="Change Staff state",
+     *      description="Change Staff state by ID",
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Staff"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Staff")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function changeState($id, $state)
     {
-        $staffs=Staff::find($id);
-        $staffs->update(['is_active' =>$status]);
-        return response()->json([
-            "success"=>true,
-            "message"=>"Status mis à jour avec succès",
-            "data"=>null
-        ],200);
+        $message = 'Changement de l\'état d\'un Staff';
+
+        try {
+            $result = $this->staffRepository->setStatus($id, $state);
+            $statusMessage = $state == 1 ? 'activé' : 'désactivé';
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($result)]);
+
+            return Common::success("Staff $statusMessage avec succès", $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+
     }
 
+    /** @OA\Post(
+     *      path="/agents-search",
+     *      operationId="Staff searching",
+     *      tags={"Staff"},
+     *       security={{"JWT":{}}},
+     *      summary="Return list of Staff respecting term",
+     *      description="Get all filtered agents using term",
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful operation",
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/Staff"),
+     *
+     *         @OA\XmlContent(ref="#/components/schemas/Staff")
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *         description="Body request",
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/TermSearch")
+     *     ),
+     *
+     * @OA\Response(
+     *         response=400,
+     *         description="Bad Request"
+     *     ),
+     * @OA\Response(
+     *         response=419,
+     *         description="Expired session"
+     *     ),
+     * @OA\Response(
+     *         response=404,
+     *         description="Not found"
+     *     ),
+     * @OA\Response(
+     *         response=500,
+     *         description="Server Error"
+     *     )
+     *)
+     */
+    public function search(Request $request)
+    {
+        $message = 'Filtrage des Staff';
 
+        try {
+            $term = $request->term;
+            $result = $this->staffRepository->search($term);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success('Filtrage effectué avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
 
 
 }

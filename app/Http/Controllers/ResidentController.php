@@ -4,119 +4,496 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Resident;
+use App\Http\Repositories\ResidentRepository;
+use App\Http\Requests\Resident\StoreResidentRequest;
+use App\Http\Requests\Resident\UpdateResidentRequest;
+use App\Services\LogService;
+use App\Utilities\Common;
+use OpenApi\Attributes as OA;
 use Auth;
+
+
 
 class ResidentController extends Controller
 {
     
-  
-
-      /**
-     * Display a listing of the resource.
+ /**
+     * The Resident repository being queried.
      *
-     * @return \Illuminate\Http\Response
+     * @var ResidentRepository
      */
-    public function index()
+    protected $residentRepository;
+
+    protected $ls;
+
+    public function __construct(ResidentRepository $residentRepository, LogService $ls)
     {
-        $residents=Resident::where('cape_id',Auth::user()->cape->id)->get();
-        return response()->json([
-            "success"=>true,
-            "message"=>"Liste des personnels",
-            "data"=>$residents
-        ],200);
+        $this->residentRepository = $residentRepository;
+        $this->ls = $ls;
+
+        //$this->middleware('auth:api')->except(['getNotified', 'show']);
+
     }
 
-    /**
-     * Store a newly created resource in storage.
+    /** @OA\Get(
+     *      path="/agents",
+     *      operationId="Resident list",
+     *      tags={"Resident"},
+     *       security={{"JWT":{}}},
+     *      summary="Return Resident data",
+     *      description="Get all agents",
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     *      @OA\Parameter(
+     *          name="name",
+     *          in="query",
+     *          description="Can be used for filtering data by name",
+     *          required=false,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Resident"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Resident")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function store(Request $request)
+    public function index(Request $request)
     {
-        $datas = $request->all();
-        $datas['birthdate'] =date_create($datas['birthdate']);
-        $datas['cape_id'] =Auth::user()->cape->id;
+        $message = 'Récupération de la liste des Resident';
 
-        $residents=Resident::create($datas);
+        try {
+            $result = $this->residentRepository->getAll($request);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Enregistrement d'un personnel",
-            "data"=>$residents
-        ],200);
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    /**
-     * Display the specified resource.
+    /** @OA\Get(
+     *      path="/agents/{id}",
+     *      operationId="Resident show",
+     *      tags={"Resident"},
+     *       security={{"JWT":{}}},
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *  @OA\Parameter(
+     *          name="project_id",
+     *          in="query",
+     *          description="Project ID",
+     *
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="Resident ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      summary="Return one Resident data",
+     *      description="Get Resident by ID",
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Resident"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Resident")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $residents=Resident::find($id);
-        return response()->json([
-            "success"=>true,
-            "message"=>"Récupération d'un personnel",
-            "data"=>$residents
-        ],200);
+        $message = 'Récupération d\'un Resident';
+
+        try {
+            $result = $this->residentRepository->get($id);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($result)]);
+
+            return Common::success('Resident trouvé', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    /**
-     * Update the specified resource in storage.
+    /** @OA\Post(
+     *      path="/agents",
+     *      operationId="Resident store",
+     *      tags={"Resident"},
+     *       security={{"JWT":{}}},
+     *      summary="Store Resident data",
+     *      description="Create a new Resident",
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *       @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/ResidentCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Resident"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Resident")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function update(Request $request, $id)
+    public function store(StoreResidentRequest $request)
     {
-        $datas=$request->all();
-       
-        $residents=Resident::find($id);
-        $datas['birthdate'] =date_create($datas['birthdate']);
+        $message = 'Enregistrement d\'un Resident';
 
-        $residents->update($datas);
+        try {
+            $result = $this->residentRepository->makeStore($request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
 
-        $residents=Resident::find($id);
+            return Common::successCreate('Resident créé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Modification d'un pensionnaire",
-            "data"=>$residents
-        ],200);
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
+    /** @OA\Put(
+     *      path="/agents/{id}",
+     *      operationId="Resident update",
+     *      tags={"Resident"},
+     *       security={{"JWT":{}}},
+     *      summary="Update one Resident data",
+     *      description="Update Resident by ID",
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="Resident ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/ResidentCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Resident"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Resident")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function update(UpdateResidentRequest $request, $id)
+    {
+        $message = 'Mise à jour d\'un Resident';
+
+        try {
+            $result = $this->residentRepository->makeUpdate($id, $request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
+
+            return Common::success('Mise à jour de Resident effectuée avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
+    /** @OA\Delete(
+     *      path="/agents/{id}",
+     *      operationId="Resident Delete",
+     *      tags={"Resident"},
+     *       security={{"JWT":{}}},
+     *      summary="Delete Resident data",
+     *      description="Delete Resident by ID",
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="Resident ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=204,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/DeleteResponseData"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/DeleteResponseData")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
     public function destroy($id)
     {
-        $residents=Resident::find($id);
-        $residents->delete();
+        $message = 'Suppression de Resident';
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Suppression d'un personnel",
-            "data"=>null
-        ],200);
+        try {
+            $recup = $this->residentRepository->get($id);
+
+            $result = $this->residentRepository->makeDestroy($id);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($recup)]);
+
+            return Common::successDelete('Resident supprimé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
-    public function setStatus($id,$status)
+
+    /** @OA\Get(
+     *      path="/agents/{id}/state/{state}",
+     *      operationId="Resident change state",
+     *      tags={"Resident"},
+     *      security={{"JWT":{}}},
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="Resident ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\Parameter(
+     *          name="state",
+     *          in="path",
+     *          description="Resident state",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      summary="Change Resident state",
+     *      description="Change Resident state by ID",
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/Resident"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/Resident")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function changeState($id, $state)
     {
-        $residents=Resident::find($id);
-        $residents->update(['is_active' =>$status]);
-        return response()->json([
-            "success"=>true,
-            "message"=>"Status mis à jour avec succès",
-            "data"=>null
-        ],200);
+        $message = 'Changement de l\'état d\'un Resident';
+
+        try {
+            $result = $this->residentRepository->setStatus($id, $state);
+            $statusMessage = $state == 1 ? 'activé' : 'désactivé';
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($result)]);
+
+            return Common::success("Resident $statusMessage avec succès", $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+
     }
 
+    /** @OA\Post(
+     *      path="/agents-search",
+     *      operationId="Resident searching",
+     *      tags={"Resident"},
+     *       security={{"JWT":{}}},
+     *      summary="Return list of Resident respecting term",
+     *      description="Get all filtered agents using term",
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful operation",
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/Resident"),
+     *
+     *         @OA\XmlContent(ref="#/components/schemas/Resident")
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *         description="Body request",
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/TermSearch")
+     *     ),
+     *
+     * @OA\Response(
+     *         response=400,
+     *         description="Bad Request"
+     *     ),
+     * @OA\Response(
+     *         response=419,
+     *         description="Expired session"
+     *     ),
+     * @OA\Response(
+     *         response=404,
+     *         description="Not found"
+     *     ),
+     * @OA\Response(
+     *         response=500,
+     *         description="Server Error"
+     *     )
+     *)
+     */
+    public function search(Request $request)
+    {
+        $message = 'Filtrage des Resident';
 
+        try {
+            $term = $request->term;
+            $result = $this->residentRepository->search($term);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success('Filtrage effectué avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
 
 
 }

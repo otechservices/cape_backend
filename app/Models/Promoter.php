@@ -11,6 +11,7 @@ use App\Utilities\Core;
 class Promoter extends Model
 {
     use HasFactory,Filterable;
+private static $whiteListFilter = ['*'];
 
     protected $guarded = [];
 

@@ -6,147 +6,493 @@ use Illuminate\Http\Request;
 use App\Models\File;
 use App\Models\Service;
 use App\Models\RequeteFile;
+use App\Http\Repositories\FileRepository;
+use App\Http\Requests\File\StoreFileRequest;
+use App\Http\Requests\File\UpdateFileRequest;
+use App\Services\LogService;
+use App\Utilities\Common;
+use OpenApi\Attributes as OA;
+
 use Auth;
+
 
 class FileController extends Controller
 {
-
-    public function __construct() {
-      
-        $this->middleware('auth', ['except' => ['index','show','store']]);
-    }
-      /**
-     * Display a listing of the resource.
+ /**
+     * The File repository being queried.
      *
-     * @return \Illuminate\Http\Response
+     * @var FileRepository
      */
-    public function index()
+    protected $fileRepository;
+
+    protected $ls;
+
+    public function __construct(FileRepository $fileRepository, LogService $ls)
     {
+        $this->fileRepository = $fileRepository;
+        $this->ls = $ls;
 
-        $checkService=Service::where('name','like','%'.request()->type.'%')->first();
+        //$this->middleware('auth:api')->except(['getNotified', 'show']);
 
-        if ( $checkService) {
-            $file=File::with("TypeFile")->where('service_id',$checkService->id)->where('is_published',true)->get();
-        }else{
-           // if(Auth::user()!= null){
-                $file=File::with(["TypeFile",'type'])->get();
+    }
 
-            // }else{
-            //     $file=[];
-            // }
+    /** @OA\Get(
+     *      path="/agents",
+     *      operationId="File list",
+     *      tags={"File"},
+     *       security={{"JWT":{}}},
+     *      summary="Return File data",
+     *      description="Get all agents",
+     *
+     *      @OA\Parameter(
+     *          name="name",
+     *          in="query",
+     *          description="Can be used for filtering data by name",
+     *          required=false,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/File"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/File")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function index(Request $request)
+    {
+        $message = 'Récupération de la liste des File';
+
+        try {
+            $result = $this->fileRepository->getAll($request);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
         }
-       
-        return response()->json([
-            "success"=>true,
-            "message"=>"Liste des périodicités",
-            "data"=>$file
-        ],200);
     }
 
-    /**
-     * Store a newly created resource in storage.
+    /** @OA\Get(
+     *      path="/agents/{id}",
+     *      operationId="File show",
+     *      tags={"File"},
+     *       security={{"JWT":{}}},
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        $datas = $request->all();
-        
-        $file=File::create($datas);
-
-        return response()->json([
-            "success"=>true,
-            "message"=>"Enregistrement d'une périodicité",
-            "data"=>$file
-        ],200);
-    }
-
-    /**
-     * Display the specified resource.
+     *  @OA\Parameter(
+     *          name="project_id",
+     *          in="query",
+     *          description="Project ID",
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="File ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      summary="Return one File data",
+     *      description="Get File by ID",
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/File"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/File")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $check=RequeteFile::with(['deliver','requete'])->where('token',$id)->first();
+        $message = 'Récupération d\'un File';
 
-        if ($check) {
-            return response()->json([
-                "success"=>true,
-                "message"=>"Document inexistant",
-                "data"=>$check
-            ],200);
-        } else {
-            return response()->json([
-                "success"=>true,
-                "message"=>"Document inexistant",
-                "data"=>null
-            ],500);
+        try {
+            $result = $this->fileRepository->get($id);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($result)]);
+
+            return Common::success('File trouvé', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
         }
-        
     }
 
-    /**
-     * Update the specified resource in storage.
+    /** @OA\Post(
+     *      path="/agents",
+     *      operationId="File store",
+     *      tags={"File"},
+     *       security={{"JWT":{}}},
+     *      summary="Store File data",
+     *      description="Create a new File",
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *       @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/FileCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/File"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/File")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
-    public function update(Request $request, $id)
+    public function store(StoreFileRequest $request)
     {
-        $datas=$request->all();
-       
-        $file=File::find($id);
+        $message = 'Enregistrement d\'un File';
 
-        $file->update($datas);
+        try {
+            $result = $this->fileRepository->makeStore($request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
 
-        $file=File::find($id);
+            return Common::successCreate('File créé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Modification d'une péridiocité",
-            "data"=>$file
-        ],200);
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
+    /** @OA\Put(
+     *      path="/agents/{id}",
+     *      operationId="File update",
+     *      tags={"File"},
+     *       security={{"JWT":{}}},
+     *      summary="Update one File data",
+     *      description="Update File by ID",
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="File ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\RequestBody(
+     *          description="body request",
+     *          required=true,
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/FileCreate")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/File"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/File")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function update(UpdateFileRequest $request, $id)
+    {
+        $message = 'Mise à jour d\'un File';
+
+        try {
+            $result = $this->fileRepository->makeUpdate($id, $request->validated());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
+
+            return Common::success('Mise à jour de File effectuée avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
+    /** @OA\Delete(
+     *      path="/agents/{id}",
+     *      operationId="File Delete",
+     *      tags={"File"},
+     *       security={{"JWT":{}}},
+     *      summary="Delete File data",
+     *      description="Delete File by ID",
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="File ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=204,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/DeleteResponseData"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/DeleteResponseData")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
      */
     public function destroy($id)
     {
-        $file=File::find($id);
-        $file->delete();
+        $message = 'Suppression de File';
 
-        return response()->json([
-            "success"=>true,
-            "message"=>"Suppression d'une périodicité",
-            "data"=>null
-        ],200);
+        try {
+            $recup = $this->fileRepository->get($id);
+
+            $result = $this->fileRepository->makeDestroy($id);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($recup)]);
+
+            return Common::successDelete('File supprimé avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
 
-    public function check($token)
+    /** @OA\Get(
+     *      path="/agents/{id}/state/{state}",
+     *      operationId="File change state",
+     *      tags={"File"},
+     *      security={{"JWT":{}}},
+     *
+     *      @OA\Parameter(
+     *          name="id",
+     *          in="path",
+     *          description="File ID",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *
+     *      @OA\Parameter(
+     *          name="state",
+     *          in="path",
+     *          description="File state",
+     *          required=true,
+     *
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      summary="Change File state",
+     *      description="Change File state by ID",
+     *
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *
+     *          @OA\JsonContent(ref="#/components/schemas/File"),
+     *
+     *          @OA\XmlContent(ref="#/components/schemas/File")
+     *      ),
+     *
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      ),
+     *      @OA\Response(
+     *          response=419,
+     *          description="Expired session"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not found"
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Server Error"
+     *      )
+     * )
+     */
+    public function changeState($id, $state)
     {
-        $check=RequeteFile::with(['devliver','requete'])->where('token',$token)->first();
+        $message = 'Changement de l\'état d\'un File';
 
-        if ($token) {
-            return response()->json([
-                "success"=>true,
-                "message"=>"Document inexistant",
-                "data"=>$token
-            ],200);
-        } else {
-            return response()->json([
-                "success"=>true,
-                "message"=>"Document inexistant",
-                "data"=>null
-            ],500);
+        try {
+            $result = $this->fileRepository->setStatus($id, $state);
+            $statusMessage = $state == 1 ? 'activé' : 'désactivé';
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($result)]);
+
+            return Common::success("File $statusMessage avec succès", $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
         }
-        
+
+    }
+
+    /** @OA\Post(
+     *      path="/agents-search",
+     *      operationId="File searching",
+     *      tags={"File"},
+     *       security={{"JWT":{}}},
+     *      summary="Return list of File respecting term",
+     *      description="Get all filtered agents using term",
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful operation",
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/File"),
+     *
+     *         @OA\XmlContent(ref="#/components/schemas/File")
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *         description="Body request",
+     *         required=true,
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/TermSearch")
+     *     ),
+     *
+     * @OA\Response(
+     *         response=400,
+     *         description="Bad Request"
+     *     ),
+     * @OA\Response(
+     *         response=419,
+     *         description="Expired session"
+     *     ),
+     * @OA\Response(
+     *         response=404,
+     *         description="Not found"
+     *     ),
+     * @OA\Response(
+     *         response=500,
+     *         description="Server Error"
+     *     )
+     *)
+     */
+    public function search(Request $request)
+    {
+        $message = 'Filtrage des File';
+
+        try {
+            $term = $request->term;
+            $result = $this->fileRepository->search($term);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success('Filtrage effectué avec succès', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
     }
 }

@@ -5,7 +5,9 @@ namespace App\Http\Repositories;
 use App\Traits\Repository;
  use App\Models\File;
 use App\Models\Cape;
+use App\Models\Service;
 use App\Utilities\FileStorage;
+
 
 use Auth;
 
@@ -41,36 +43,34 @@ class FileRepository
      */
     public function getAll($request)
     {
-        $type = request()->type;
-        $per_page = 10;
+        $type = request()->input('type');
+        $perPage = request()->input('per_page', 10);
 
-        $checkService = Service::where('name', 'like', '%' . $type . '%')->first();
-
-        if ($checkService) {
-            $req = File::with("TypeFile")
-                ->where('service_id', $checkService->id)
-                ->where('is_published', true)
-                ->ignoreRequest(['per_page'])
-                ->filter(array_filter(request()->all(), function ($k) {
-                    return $k != 'page';
-                }, ARRAY_FILTER_USE_KEY))
-                ->orderByDesc('created_at');
-        } else {
-            $req = File::with(["TypeFile", 'type'])
-                ->ignoreRequest(['per_page'])
-                ->filter(array_filter(request()->all(), function ($k) {
-                    return $k != 'page';
-                }, ARRAY_FILTER_USE_KEY))
-                ->orderByDesc('created_at');
+        $checkService = null;
+        if (!empty($type)) {
+            $checkService = Service::where('name', 'like', "%{$type}%")->first();
         }
 
-        // Pagination
-        if (array_key_exists('per_page', request()->all())) {
-            $per_page = request()->per_page;
-            return $req->paginate($per_page);
-        } else {
-            return $req->get();
-        }
+        // Base query
+        $req = File::with(['TypeFile', 'type'])
+            ->when($checkService, function ($q) use ($checkService) {
+                $q->where('service_id', $checkService->id);
+            })
+            // Appliquer is_active si présent
+            ->when(request()->filled('is_active'), function ($q) {
+                $q->where('is_active', request()->boolean('is_active'));
+            })
+            // Appliquer is_published si présent (si tu veux garder ce filtre optionnel)
+            ->when(request()->filled('is_published'), function ($q) {
+                $q->where('is_published', request()->boolean('is_published'));
+            })
+            ->ignoreRequest(['per_page', 'type'])
+            ->orderByDesc('created_at');
+
+        // Pagination ou collection complète
+        return request()->has('per_page') ? $req->paginate($perPage) : $req->get();
+
+
 
     }
 

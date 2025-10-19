@@ -9,6 +9,7 @@ use eloquentFilter\QueryFilter\ModelFilters\Filterable;
 class Billing extends Model
 {
     use HasFactory,Filterable;
+private static $whiteListFilter = ['*'];
     protected $guarded = [];
 
     public function responses()

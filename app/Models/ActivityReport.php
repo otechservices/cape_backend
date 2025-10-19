@@ -9,12 +9,20 @@ use eloquentFilter\QueryFilter\ModelFilters\Filterable;
 class ActivityReport extends Model
 {
     use HasFactory,Filterable;
+private static $whiteListFilter = ['*'];
     protected $guarded = [];
 
-    public function cape()
+    public function centre()
     {
-        return $this->belongsTo(Cape::class,'cape_id');
+        return $this->belongsTo(Requete::class,'centre_id');
     }
+
+
+    public function promoter()
+    {
+        return $this->belongsTo(Promoter::class,'promoter_id');
+    }
+   
    
 
     public function responses()

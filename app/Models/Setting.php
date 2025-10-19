@@ -9,6 +9,7 @@ use eloquentFilter\QueryFilter\ModelFilters\Filterable;
 class Setting extends Model
 {
     use HasFactory,Filterable;
+private static $whiteListFilter = ['*'];
 
     protected $fillable = [
         'key',

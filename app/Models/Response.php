@@ -9,6 +9,7 @@ use eloquentFilter\QueryFilter\ModelFilters\Filterable;
 class Response extends Model
 {
     use HasFactory,Filterable;
+private static $whiteListFilter = ['*'];
 
     protected $guarded = [];
     protected $table="reponses";

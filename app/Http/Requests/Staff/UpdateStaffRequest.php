@@ -2,50 +2,62 @@
 
 namespace App\Http\Requests\Staff;
 
-use App\Utilities\Common;
-use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class UpdateStaffRequest extends FormRequest
 {
+    /**
+     * Détermine si l'utilisateur est autorisé à effectuer cette requête.
+     */
     public function authorize(): bool
     {
-        return true;
+        return true; // Adapter selon tes règles d'autorisation
     }
 
+    /**
+     * Règles de validation.
+     */
     public function rules(): array
     {
-        return [
-            'title' => 'required|string|max:191',
-            'subtitle' => 'nullable|string|max:191',
-            'big_photo' => 'required|string',
-            'short_photo' => 'nullable|string',
-            'resume' => 'required|string',
-            'content' => 'required|string',
-            'author' => 'nullable|string|max:191',
-            'is_active' => 'sometimes|boolean',
-            'user_id' => 'required|integer',        ];
-    }
+        $staffId = $this->route('staff'); // récupère l'ID du staff depuis la route
 
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(Common::error($validator->errors()->first(), $validator->errors()));
-    }
-
-    public function messages(): array
-    {
         return [
-            'title.required' => 'Le titre est requis.',
-            'subtitle.string' => 'Le sous-titre doit être une chaîne de caractères.',
-            'big_photo.required' => 'La big photo est requis.',
-            'short_photo.required' => 'La short_photo est requis.',
-            'resume.required' => 'Le résumé est requis.',
-            'content.required' => 'Le contenu est requis.',
-            'author.string' => 'Le nom de l\'auteur doit être une chaîne de caractères.',
-            'user_id.required' => 'L\'ID de l\'utilisateur est requis.',
+            'firstname'   => ['required', 'string', 'max:100'],
+            'lastname'    => ['required', 'string', 'max:100'],
+            'birthdate'   => ['required', 'date', 'before:today'],
+            'birthplace'  => ['required', 'string', 'max:150'],
+            'address'     => ['required', 'string', 'max:255'],
+            'phone'       => ['required', 'regex:/^[0-9]{8,15}$/'],
+            'email'       => [
+                'required',
+                'email',
+                'max:150',
+                Rule::unique('staff', 'email')->ignore($staffId)
+            ],
+            'job'         => ['nullable', 'string', 'max:150'],
         ];
     }
 
-    protected function prepareForValidation() {}
+    /**
+     * Messages d’erreur personnalisés.
+     */
+    public function messages(): array
+    {
+        return [
+            'firstname.required'  => 'Le prénom est obligatoire.',
+            'lastname.required'   => 'Le nom de famille est obligatoire.',
+            'birthdate.required'  => 'La date de naissance est obligatoire.',
+            'birthdate.date'      => 'La date de naissance doit être une date valide.',
+            'birthdate.before'    => 'La date de naissance doit être antérieure à aujourd’hui.',
+            'birthplace.required' => 'Le lieu de naissance est obligatoire.',
+            'address.required'    => 'L’adresse est obligatoire.',
+            'phone.required'      => 'Le numéro de téléphone est obligatoire.',
+            'phone.regex'         => 'Le numéro de téléphone doit contenir entre 8 et 15 chiffres.',
+            'email.required'      => 'L’adresse e-mail est obligatoire.',
+            'email.email'         => 'L’adresse e-mail doit être valide.',
+            'email.unique'        => 'Cette adresse e-mail est déjà utilisée par un autre membre du personnel.',
+            'job.string'          => 'Le métier doit être une chaîne de caractères valide.',
+        ];
+    }
 }

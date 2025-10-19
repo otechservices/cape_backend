@@ -17,6 +17,7 @@ class UpdateActivityReportRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'centre_id' => 'nullable|exists:requetes,id',
             'description' => 'nullable|string',
             'activity_report_filename' => 'required|string',
             'financial_report_filename' => 'required|string',

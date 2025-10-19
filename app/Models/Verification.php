@@ -10,10 +10,6 @@ class Verification extends Model
 {
     public $timestamps = true;
 
-    private static $whiteListFilter = ['*'];
-
-    use HasFactory,Filterable;
-
     protected $fillable = [
         'email',
         'phone',

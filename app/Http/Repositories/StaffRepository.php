@@ -43,7 +43,7 @@ class StaffRepository
     {
         $per_page = 10;
 
-        $req = Staff::where('cape_id', Auth::user()->cape_id)
+        $req = Staff::where('promoter_id', Auth::user()->promoter_id)
             ->ignoreRequest(['per_page'])
             ->filter(array_filter($request->all(), function ($k) {
                 return $k != 'page';
@@ -71,11 +71,8 @@ class StaffRepository
      */
     public function makeStore($data): Staff
     {
-        $datas = $request->all();
-        $datas['birthdate'] = date_create($datas['birthdate']);
-        $datas['cape_id'] = Auth::user()->cape->id;
-
-        $staff = new Staff($datas);
+        $data['birthdate'] = date_create($data['birthdate']);
+        $staff = new Staff($data);
         $staff->save();
 
         return $staff;
@@ -84,12 +81,11 @@ class StaffRepository
     /**
      * Met à jour une fête.
      */
-    public function makeUpdate(Request $request, $id): Staff
+    public function makeUpdate($id,$data)
     {
-        $datas = $request->all();
         $staff = Staff::findOrFail($id);
-        $datas['birthdate'] = date_create($datas['birthdate']);
-        $staff->update($datas);
+        $data['birthdate'] = date_create($data['birthdate']);
+        $staff->update($data);
         return $staff;
     }
 

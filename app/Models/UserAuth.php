@@ -9,4 +9,5 @@ use eloquentFilter\QueryFilter\ModelFilters\Filterable;
 class UserAuth extends Model
 {
     use HasFactory,Filterable;
+private static $whiteListFilter = ['*'];
 }

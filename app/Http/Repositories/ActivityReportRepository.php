@@ -4,7 +4,7 @@ namespace App\Http\Repositories;
 
 use App\Traits\Repository;
  use App\Models\ActivityReport;
-use App\Models\Cape;
+use App\Models\Requete;
 use App\Utilities\FileStorage;
 
 use Auth;
@@ -44,8 +44,8 @@ class ActivityReportRepository
         $per_page = 10;
 
         // Commencer la requête de base avec les relations et filtres
-        $req = ActivityReport::with(['responses', 'requete.TypeCape'])
-            ->ignoreRequest(['per_page']) // on ignore per_page
+        $req = ActivityReport::with(['responses', 'centre.TypeCape'])
+            ->ignoreRequest(['per_page','service_id']) // on ignore per_page
             ->filter(array_filter($request->all(), function ($k) {
                 return $k != 'page';
             }, ARRAY_FILTER_USE_KEY))
@@ -95,7 +95,7 @@ class ActivityReportRepository
                 break;
 
             case 'cape':
-                $req = $req->where('cape_id', Auth::user()->cape_id);
+                $req = $req->where('promoter_id', Auth::user()->promoter_id);
                 break;
 
             default:
@@ -118,7 +118,7 @@ class ActivityReportRepository
 
     function getForCape() 
     {
-        $activity_report=ActivityReport::with(["cape.requete","responses"])->where('cape_id',Auth::user()->cape_id)->get();
+        $activity_report=ActivityReport::with(["centre","responses"])->where('promoter_id',Auth::user()->promoter_id)->get();
         return $activity_report;
     }
 
@@ -127,7 +127,7 @@ class ActivityReportRepository
      */
     public function get($id)
     {
-        return $this->findOrFail($id);
+        return $this->findOrFail($id);  
     }
 
     /**
@@ -135,12 +135,11 @@ class ActivityReportRepository
      */
     public function makeStore($data): ActivityReport
     {
-        $datas = $request->all();
-        $code=Auth::user()->cape->requete->code;
-        $datas["activity_report_filename"]= FileStorage::setFile("doc_store",request()->file('activity_report_filename'),$code."/reports",time()."-rapport_activité");
-        $datas["financial_report_filename"]= FileStorage::setFile("doc_store",request()->file('financial_report_filename'),$code."/reports",time()."-rapport_financier");
-        $datas['cape_id']=Auth::user()->cape_id;
-        $activity_report=ActivityReport::create($datas);
+        $code=Requete::find($data['centre_id'])?->code;
+        $data["activity_report_filename"]= FileStorage::setFile("doc_store",request()->file('activity_report_filename'),$code."/reports",time()."-rapport_activité");
+        $data["financial_report_filename"]= FileStorage::setFile("doc_store",request()->file('financial_report_filename'),$code."/reports",time()."-rapport_financier");
+        $data['promoter_id']=Auth::user()->promoter_id;
+        $activity_report=ActivityReport::create($data);
 
         return $activity_report;
     }
@@ -152,10 +151,10 @@ class ActivityReportRepository
     {
        
         $activity_report=ActivityReport::find($id);
-      if(request()->file('activity_report_filename'))  $datas["activity_report_filename"]= FileStorage::setFile("doc_store",request()->file('activity_report_filename'),$code."/reports",time()."-rapport_activité");
-        if(request()->file('financial_report_filename'))$datas["financial_report_filename"]= FileStorage::setFile("doc_store",request()->file('financial_report_filename'),$code."/reports",time()."-rapport_financier");
+      if(request()->file('activity_report_filename'))  $data["activity_report_filename"]= FileStorage::setFile("doc_store",request()->file('activity_report_filename'),$code."/reports",time()."-rapport_activité");
+        if(request()->file('financial_report_filename'))$data["financial_report_filename"]= FileStorage::setFile("doc_store",request()->file('financial_report_filename'),$code."/reports",time()."-rapport_financier");
 
-        $activity_report->update($datas);
+        $activity_report->update($data);
 
         $activity_report=ActivityReport::find($id);
 
@@ -235,10 +234,10 @@ class ActivityReportRepository
 
     public function exportPDF()
     {
-        $datas=ActivityReport::all();
+        $data=ActivityReport::all();
 
         $pdf=Pdf::loadView('pdf.activity_report', [
-            "datas"=>$datas,
+            "datas"=>$data,
         ]);
 
         return $pdf->download('liste_cps.pdf');

@@ -10,6 +10,7 @@ use eloquentFilter\QueryFilter\ModelFilters\Filterable;
 class RequeteFile extends Model
 {
     use HasFactory,Filterable;
+private static $whiteListFilter = ['*'];
     protected $guarded = [];
 
 

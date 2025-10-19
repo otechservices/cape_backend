@@ -91,6 +91,11 @@ class RequeteRepository
                     $requetes = $query->get();
                 }
             }
+        }else{
+          $requetes=   Requete::with(['parcours.user', 'TypeCape', 'service', 'lastParcours'])
+                        ->ignoreRequest(['per_page'])
+                        ->orderByDesc('id')
+                        ->get();
         }
         return $requetes;
     }

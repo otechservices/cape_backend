@@ -17,11 +17,11 @@ class StoreActivityReportRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'centre_id' => 'nullable|exists:requetes,id',
             'description' => 'nullable|string',
-            'activity_report_filename' => 'required|string',
-            'financial_report_filename' => 'required|string',
+            'activity_report_filename' => 'required',
+            'financial_report_filename' => 'required',
             'status' => 'nullable|integer',
-            'cape_id' => 'required|integer',
             'is_transmitted' => 'nullable|boolean',        ];
     }
 
