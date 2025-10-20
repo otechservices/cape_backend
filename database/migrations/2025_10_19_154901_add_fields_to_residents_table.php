@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('residents', function (Blueprint $table) {
-                        $table->dropColumn('cape_id');
+                //$table->dropColumn('cape_id');
 
-                 $table->unsignedBigInteger('promoter_id')->nullable();
+                // $table->unsignedBigInteger('promoter_id')->nullable();
 
         });
     }
