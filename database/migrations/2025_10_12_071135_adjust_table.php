@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
           Schema::table('logs', function (Blueprint $table) {
-           $table->unsignedBigInteger('dony_by')->nullable()->change();
+           $table->unsignedBigInteger('done_by')->nullable()->change();
 
         });
 

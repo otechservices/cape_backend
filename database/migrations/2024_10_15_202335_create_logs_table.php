@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('logs', function (Blueprint $table) {
-            // $table->id();
-            // $table->string('action_name');
-            // $table->longText('description');
-            // $table->foreignId('done_by')->constrained('users')->onDelete('cascade');
-            // $table->timestamps();
+            $table->id();
+            $table->string('action_name');
+            $table->longText('description');
+            $table->foreignId('done_by')->constrained('users')->onDelete('cascade');
+            $table->timestamps();
         });
     }
 
