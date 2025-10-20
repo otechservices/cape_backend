@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('activity_reports', function (Blueprint $table) {
-                                    $table->dropColumn('cape_id');
+            $table->dropForeign(['cape_id']); // Supprime la contrainte FK
+            $table->dropColumn('cape_id');   
 
            $table->unsignedBigInteger('centre_id')->nullable();
             $table->unsignedBigInteger('promoter_id')->nullable();
