@@ -1280,7 +1280,7 @@ class RequeteController extends Controller
 
 public function inviteStore(Request $request)
     {
-        try {
+        //try {
             $requete = Requete::find($request->id);
 
             $checkFileTreatedValid = RequeteFile::where('requete_id', $requete->id)->where('is_treated', true)->where('is_valid', false)->where('file_id', "!=", null)
@@ -1327,14 +1327,14 @@ public function inviteStore(Request $request)
                 "message" => "Invitation envoyé avec succès",
                 "data" => null
             ], 200);
-        } catch (\Exception $e) {
-            Log::error($e);
-            return response()->json([
-                "success" => false,
-                "message" => $e->getMessage(),
-                "data" => null
-            ], 200);
-        }
+        // } catch (\Exception $e) {
+        //     Log::error($e);
+        //     return response()->json([
+        //         "success" => false,
+        //         "message" => $e->getMessage(),
+        //         "data" => null
+        //     ], 200);
+        // }
     }
 
 
