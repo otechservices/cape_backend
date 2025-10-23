@@ -102,7 +102,7 @@ class RequeteController extends Controller
     static public function store($request)
 {
     if ($request->input('codeForRecepisse')) {
-        try {
+      //  try {
             $requete = Requete::where('code', $request->input('codeForRecepisse'))->first();
             $requeteFile = RequeteFile::where('requete_id', $requete->id)->where('reference', 'Récépissé inscription')->first();
 
@@ -191,9 +191,9 @@ class RequeteController extends Controller
                     "data" => null
                 ], 500);
             }
-        } catch (\Exception $th) {
-            Log::error($th);
-        }
+        // } catch (\Exception $th) {
+        //     Log::error($th);
+        // }
 
 
     } else {
