@@ -104,7 +104,7 @@ class RequeteController extends Controller
     if ($request->input('codeForRecepisse')) {
         try {
             $requete = Requete::where('code', $request->input('codeForRecepisse'))->first();
-            $requeteFile = RequeteFile::where('requete_id', $requete->id)->where('reference', 'Récépicé inscription')->first();
+            $requeteFile = RequeteFile::where('requete_id', $requete->id)->where('reference', 'Récépissé inscription')->first();
 
             $service = Service::find((int) $requete->service_id);
 
@@ -336,7 +336,7 @@ class RequeteController extends Controller
         $filePath = public_path('docs/' . $code . "/" . $recFile);
         RequeteFile::create([
             "type" => "PDF",
-            "reference" => "Récépicé inscription",
+            "reference" => "Récépissé inscription",
             "filename" => $recFile,
             "level" => 1,
             "file_id" => null,

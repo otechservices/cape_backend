@@ -246,6 +246,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
       Route::delete('/sessions/remove-member/{id}', 'SessionController@removeMember');
       Route::delete('/sessions/remove-requete/{id}', 'SessionController@removeRequete');
       Route::post('/sessions/store-requetes/all', 'SessionController@storeRequetes');
+      Route::post('/sessions/store-requetes-notes/all', 'SessionController@enregistrerNotes');
       Route::get('/sessions/requests/all', 'SessionController@getSessionRequests');
       Route::get('/sessions/set-status/{id}/{state}', 'SessionController@setStatus');
       Route::get('/sessions/set-status-member/{id}/{state}', 'SessionController@setStatutMember');

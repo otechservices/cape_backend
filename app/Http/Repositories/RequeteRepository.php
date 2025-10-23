@@ -117,7 +117,7 @@ class RequeteRepository
             try {
                 $requete = Requete::where('code', $request->input('codeForRecepisse'))->first();
                 $requeteFile = RequeteFile::where('requete_id', $requete->id)
-                    ->where('reference', 'Récépicé inscription')->first();
+                    ->where('reference', 'Récépissé inscription')->first();
 
                 $service = Service::find((int) $requete->service_id);
 
@@ -243,7 +243,7 @@ class RequeteRepository
             $filePath = public_path('docs/' . $code . "/" . $recFile);
             $requeteFile = new RequeteFile([
                 "type" => "PDF",
-                "reference" => "Récépicé inscription",
+                "reference" => "Récépissé inscription",
                 "filename" => $recFile,
                 "level" => 1,
                 "file_id" => null,

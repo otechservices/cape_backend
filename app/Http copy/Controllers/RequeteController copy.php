@@ -214,7 +214,7 @@ class RequeteController extends Controller
                 $filePath=public_path('docs/'.$code."/".$recFile);
                 RequeteFile::create([
                     "type"=>"PDF",
-                    "reference"=>"Récépicé inscription",
+                    "reference"=>"Récépissé inscription",
                     "filename"=>$recFile,
                     "level"=>1,
                     "file_id"=>null,

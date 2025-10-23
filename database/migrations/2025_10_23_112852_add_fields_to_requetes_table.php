@@ -11,8 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('referals', function (Blueprint $table) {
-                 $table->unsignedBigInteger('requete_id')->nullable();
+        Schema::table('requetes', function (Blueprint $table) {
+            $table->float('note_session')->nullable();
+            $table->float('note_terrain')->nullable();
+            $table->float('note_finale')->nullable();
 
         });
     }
@@ -22,7 +24,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('referals', function (Blueprint $table) {
+        Schema::table('requetes', function (Blueprint $table) {
             //
         });
     }

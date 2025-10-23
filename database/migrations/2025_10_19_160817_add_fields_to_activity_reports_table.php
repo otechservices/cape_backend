@@ -15,8 +15,8 @@ return new class extends Migration
             $table->dropForeign(['cape_id']); // Supprime la contrainte FK
             $table->dropColumn('cape_id');   
 
-        //    $table->unsignedBigInteger('centre_id')->nullable();
-        //     $table->unsignedBigInteger('promoter_id')->nullable();
+           $table->unsignedBigInteger('centre_id')->nullable();
+            $table->unsignedBigInteger('promoter_id')->nullable();
 
         });
     }
