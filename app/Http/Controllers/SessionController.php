@@ -383,13 +383,13 @@ class SessionController extends Controller
         $request->validate([
             '*.id' => 'required|exists:requetes,id',
             '*.note_terrain' => 'required|numeric|min:0|max:100',
-            '*.note_globale' => 'required|numeric|min:0|max:100',
+            '*.note_finale' => 'required|numeric|min:0|max:100',
         ]);
 
         foreach ($request->all() as $item) {
             Requete::where('id', $item['id'])->update([
                 'note_terrain' => $item['note_terrain'],
-                'note_globale' => $item['note_globale'],
+                'note_finale' => $item['note_finale'],
             ]);
         }
 
