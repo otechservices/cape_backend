@@ -379,21 +379,20 @@ class SessionController extends Controller
 
     function enregistrerNotes(Request $request) {
 
+      // Validation du payload
         $request->validate([
-            'data' => 'required|array',
-            'data.*.id' => 'required|exists:requetes,id',
-            'data.*.note_terrain' => 'required|numeric|min:0|max:100',
-            'data.*.note_globale' => 'required|numeric|min:0|max:100',
+            '*.id' => 'required|exists:requetes,id',
+            '*.note_terrain' => 'required|numeric|min:0|max:100',
+            '*.note_globale' => 'required|numeric|min:0|max:100',
         ]);
 
-        foreach ($request->data as $item) {
+        foreach ($request->all() as $item) {
             Requete::where('id', $item['id'])->update([
                 'note_terrain' => $item['note_terrain'],
                 'note_globale' => $item['note_globale'],
             ]);
         }
 
-        
          return response()->json([
             "success"=>true,
             "message"=>"Status mis à jour avec succès",
