@@ -45,8 +45,6 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
 
     Route::get('/download-cape-import-file', 'CapeController@downloadImportFile');
 
-    Route::post('/messages', 'MessageController@store');
-
     Route::get('/nature-promotors2', 'NaturePromotorController@index');
 
     
@@ -71,6 +69,8 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
       Route::apiResources([
             'actualities' => 'ActualityController',
             'municipalities' => 'MunicipalityController',
+            "messages"=>"MessageController",
+
         ]);
 
     Route::middleware('auth:api')->group(function () {
@@ -148,7 +148,6 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
           "unite-admins"=>"UniteAdminController",
           "sanctions"=>"SanctionController",
           "controls"=>"ControlController",
-          "messages"=>"MessageController",
           "type-infos"=>"TypeInfoController",
           "type-billings"=>"TypeBillingController",
           "infos"=>"InfoController",
