@@ -4,7 +4,6 @@ namespace App\Http\Repositories;
 
 use App\Traits\Repository;
  use App\Models\Cape;
-use App\Models\Cape;
 use App\Utilities\FileStorage;
 
 use Auth;
