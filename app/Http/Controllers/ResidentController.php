@@ -98,6 +98,61 @@ class ResidentController extends Controller
         }
     }
 
+
+       public function getAbandons(Request $request)
+    {
+        $message = 'Récupération de la liste des Resident';
+
+        try {
+            $result = $this->residentRepository->getAbandons($request);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
+        public function setAbandon(Request $request,$id)
+    {
+        $message = 'Récupération de la liste des Resident';
+
+        try {
+            $result = $this->residentRepository->setAbandon($request,$id);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
+    public function getExports(Request $request)
+    {
+        $message = 'Récupération de la liste des Resident';
+
+        try {
+            $result = $this->residentRepository->getExports($request);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
+
+            return Common::success($message, $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
+
+
+    
+
+
+    
+
     /** @OA\Get(
      *      path="/agents/{id}",
      *      operationId="Resident show",

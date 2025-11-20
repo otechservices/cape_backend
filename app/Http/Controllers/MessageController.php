@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Message;
+use App\Mail\ContactFormMail;
+use Mail;
 
 class MessageController extends Controller
 {
@@ -43,6 +45,9 @@ class MessageController extends Controller
         unset($datas['conditions']);
         
         $file=Message::create($datas);
+
+        $to=env('MAIL_FROM_ADDRESS');
+        Mail::to($to)->send(new ContactFormMail($datas));
 
         return response()->json([
             "success"=>true,

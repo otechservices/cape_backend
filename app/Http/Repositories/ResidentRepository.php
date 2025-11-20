@@ -6,8 +6,7 @@ use App\Traits\Repository;
  use App\Models\Resident;
 use App\Models\Cape;
 use App\Utilities\FileStorage;
-
-use Auth;
+use Auth,Str,Pdf;
 
 class ResidentRepository
 {
@@ -46,6 +45,7 @@ class ResidentRepository
         // Construction de la requête avec filtrage et tri  
         $req = Resident::where('promoter_id', Auth::user()->promoter_id)
             ->ignoreRequest(['per_page'])
+            ->with('promoter','centre')
             ->filter(array_filter($request->all(), function ($k) {
                 return $k != 'page';
             }, ARRAY_FILTER_USE_KEY))
@@ -61,6 +61,45 @@ class ResidentRepository
 
         // Retour des données directement (pas de JSON)
         return $residents;
+    }
+
+    function getAbandons($request) {
+        
+          $req = Resident::ignoreRequest(['per_page'])
+            ->with('promoter','centre')
+            ->filter(array_filter($request->all(), function ($k) {
+                return $k != 'page';
+            }, ARRAY_FILTER_USE_KEY))
+            ->where('abandon',true)
+            ->orderByDesc('created_at');
+
+        return $req->get();
+
+    }
+
+    function setAbandon($request,$id)  {
+        $resident = Resident::findOrFail($id);
+        $directory=$resident->centre?->code;
+        $filename=Str::slug($resident?->lastname." ".$resident?->firstname);
+        $filename= FileStorage::setFile("doc_store",$request->file('abandon_file'),$directory,$filename);
+        $resident->abandon=true;
+        $resident->abandon_file=$directory."/".$filename;
+        $resident->save();
+
+        return true;
+    }
+
+    function getExports() {
+         $filePath="docs/liste_des_enfants_abandonnes".time().".pdf";
+         $residents = Resident::with('promoter','centre')
+            ->where('abandon',true)
+            ->orderByDesc('created_at')->get();
+        
+         Pdf::loadView('emails.abandon_list', [
+            "residents"=>$residents
+        ])->save($filePath);
+
+         return  $filePath;
     }
 
     /**

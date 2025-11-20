@@ -52,25 +52,12 @@ class UserRepository
     {
         $per_page = 10;
 
-        $req = User::ignoreRequest(['per_page', 'categorie', 'role'])
+        $req = User::ignoreRequest(['per_page',  'role'])
             ->filter(array_filter($request->all(), function ($k) {
                 return $k != 'page';
             }, ARRAY_FILTER_USE_KEY))
             ->with('roles')
             ->orderByDesc('created_at');
-
-        // if (array_key_exists('project_id', $request->all())) {
-        //     $project_id = $request->project_id;
-        //     $req->whereHas('userProjects', function ($q) use ($project_id) {
-        //         $q->where('project_id', $project_id);
-        //         if (request()->has('role')) {
-        //             $role = request()->role;
-        //             $q->whereHas('roles', function ($qu) use ($role) {
-        //                 $qu->where('id', $role);
-        //             });
-        //         }
-        //     });
-        // }
 
         if (array_key_exists('per_page', $request->all())) {
             $per_page = $request['per_page'];
@@ -88,20 +75,8 @@ class UserRepository
     public function get($id)
     {
 
-        try {
-            if (request()->has('project_id')) {
-                return $this->whereHas('userProject', function ($q) {
-                    $q->where('project_id', request()->project_id);
-                })->findOrFail($id)->load('userProject.roles');
-            } else {
-                return $this->findOrFail($id);
+                 return $this->findOrFail($id);
 
-            }
-        } catch (\Throwable $th) {
-            info($th->getMessage());
-
-            return null;
-        }
 
     }
 
@@ -116,25 +91,16 @@ class UserRepository
             $data['photo'] = 'avatars/'.$filename;
         }
 
-        if (request()->hasFile('cv')) {
-            $filename = FileStorage::setFile('public', request()->file('cv'), 'avatars', Str::slug($data['lastname'].'.'.$data['firstname'].'.'.time()));
-            $data['cv'] = 'cv/'.$filename;
-        }
         $role = $data['role'];
-        $projectId = $data['project_id'];
         unset($data['role']);
-        unset($data['project_id']);
         $password = Str::random(8);
         $data['password'] = Hash::make($password);
+        $data['name']=$data['lastname']." ".$data['firstname'];
         $model = new User($data);
         $model->save();
 
         $role = Role::firstOrCreate(['name' => $role]);
-        $userProject = UserProject::create([
-            'user_id' => $model->id,
-            'project_id' => $projectId,
-        ]);
-        $userProject->assignRole($role);
+        $model->assignRole($role);
 
         Mailer::sendSimple('emails.new_account', ['user' => $model, 'password' => $password], 'Identifiant de connexion', $model->name, $model->email);
 
@@ -142,81 +108,7 @@ class UserRepository
         return $model;
     }
 
-    /**
-     * Store a new user
-     */
-    public function makeStore2($data): User
-    {
-        if (request()->hasFile('photo')) {
-            $filename = FileStorage::setFile('public', request()->file('photo'), 'avatars', Str::slug($data['lastname'].'.'.$data['firstname'].'.'.time()));
-            $data['photo'] = 'avatars/'.$filename;
-        }
-
-        if (request()->hasFile('cv')) {
-            $filename = FileStorage::setFile('public', request()->file('cv'), 'avatars', Str::slug($data['lastname'].'.'.$data['firstname'].'.'.time()));
-            $data['cv'] = 'cv/'.$filename;
-        }
-        $role = (int) Setting::where('key', 'role_for_animatrice')->first()?->value;
-        $statutAgentId = (int) Setting::where('key', 'statut_agent_for_animatrice')->first()?->value;
-        $projectId = $data['project_id'];
-        $data['statut_agent_id'] = $statutAgentId;
-        unset($data['role']);
-        unset($data['project_id']);
-        $password = Str::random(8);
-        $data['password'] = Hash::make($password);
-        $model = new User($data);
-        $model->save();
-
-        $role = Role::find($role);
-        $userProject = UserProject::create([
-            'user_id' => $model->id,
-            'project_id' => $projectId,
-        ]);
-        $userProject->assignRole($role);
-
-        Mailer::sendSimple('emails.new_account', ['user' => $model, 'password' => $password], 'Identifiant de connexion', $model->name, $model->email);
-
-        // SendEmailJob::dispatch($model, $password);
-        return $model;
-    }
-
-    public function makeStorePR($data): User
-    {
-
-        $role = (int) Setting::where('key', 'role_for_pr')->first()?->value;
-        $statutAgentId = (int) Setting::where('key', 'statut_agent_for_pr')->first()?->value;
-        $projectId = $data['project_id'];
-        $data['statut_agent_id'] = $statutAgentId;
-        unset($data['role']);
-        unset($data['project_id']);
-
-        $check_user = User::where('email', $data['email'])->first();
-
-        if ($check_user == null) {
-            $password = Str::random(8);
-            $data['password'] = Hash::make($password);
-            $model = new User($data);
-            $model->save();
-
-            $role = Role::find($role);
-            $userProject = UserProject::create([
-                'user_id' => $model->id,
-                'project_id' => $projectId,
-            ]);
-            $userProject->assignRole($role);
-
-            Mailer::sendSimple('emails.new_account', ['user' => $model, 'password' => $password], 'Identifiant de connexion', $model->name, $model->email);
-
-            // SendEmailJob::dispatch($model, $password);
-        } else {
-            unset($data['password']);
-            $model = $check_user;
-            $model->update($data);
-        }
-
-        return $model;
-    }
-
+    
     /**
      * Update an existing user
      */
@@ -230,29 +122,8 @@ class UserRepository
             $data['photo'] = 'avatars/'.$filename;
         }
 
-        if (request()->hasFile('cv')) {
-            $filename = FileStorage::setFile('public', request()->file('cv'), 'avatars', Str::slug($data['lastname'].'.'.$data['firstname'].'.'.time()));
-            $data['cv'] = 'cv/'.$filename;
-        }
-
-        $oldStatus = $model->statut_agent_id;
-
-        // if (array_key_exists('projects',$data)) {
-        //     $project=$data['projects'];
-        //     unset($data['projects']);
-        // }
-
         $model->update($data);
 
-        if ($oldStatus != $data['statut_agent_id']) {
-            ChangeStatutAgentEvent::dispatch($model, $oldStatus, $data['statut_agent_id']);
-        }
-
-        // $model->projects()->detach();
-
-        // foreach ($project as $projectId) {
-        //     UserProject::create(['project_id'=>$projectId,'user_id'=>$model->id]);
-        // }
         return $model;
     }
 

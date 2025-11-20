@@ -2,7 +2,7 @@
 <html>
 <head>
     <link rel="stylesheet" href={{ asset("css/style.css") }}>
-    <title>{{SettingData('name')  }}</title>
+    <title>Plateforme de Gestion des Structures de Protection de l'Enfant</title>
     <style>
         .main{
             padding: 15px 5px;
@@ -27,17 +27,17 @@
 
 <body>
     <header class="text-center">
-        <img src= {{ asset("Images/logo.png")}}   alt="">
+        <img src= {{ asset("Images/logo-masm-2.png")}}   alt="">
     </header>
    <section class="main">
     @yield('body-content')
    </section>
    <footer class="text-center">
-    <p> {{ SettingData("address") }}</p>
+    <p> masm.dfea@gouv.bj</p>
     <p>République du Bénin</p>
     <br>
-    <p>{{ SettingData('phone') }}</p>
-   <p > <a class="fct-text-bleu-azur" target="_blank" href="{{SettingData('site')  }}">{{SettingData('site')  }}</a></p>
+    <p>+229 0121321943</p>
+   <p > <a class="fct-text-bleu-azur" target="_blank" href="https://cape.social.gouv.bj">Plateforme de Gestion des Structures de Protection de l'Enfant</a></p>
   </footer>
 </body>
 </html>

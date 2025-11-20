@@ -26,7 +26,7 @@ class UpdateRoleRequest extends FormRequest
     {
         return [
             'name' => 'sometimes|string|max:255|unique:roles,name,'.$this->route('role'), // Exclut le rôle actuel lors de la mise à jour
-            'guard_name' => 'sometimes|string|max:255',
+            // 'guard_name' => 'sometimes|string|max:255',
             'permissions' => 'nullable|array',
         ];
     }

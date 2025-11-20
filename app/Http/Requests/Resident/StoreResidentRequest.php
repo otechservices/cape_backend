@@ -13,6 +13,7 @@ class StoreResidentRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'centre_id' => 'nullable|exists:requetes,id',
             'firstname'   => ['required', 'string', 'max:100'],
             'lastname'    => ['required', 'string', 'max:100'],
             'birthdate'   => ['required', 'date', 'before:today'],

@@ -13,5 +13,13 @@ private static $whiteListFilter = ['*'];
     protected $guarded = [];
 
 
+
+    function centre() {
+        return $this->belongsTo(Requete::class,'centre_id');
+    }
+
+        function promoter() {
+        return $this->belongsTo(Promoter::class,'promoter_id');
+    }
  
 }

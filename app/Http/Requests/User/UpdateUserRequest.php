@@ -25,20 +25,10 @@ class UpdateUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => 'required|email|unique:users,id,email',
+              'email' => 'required|email|unique:users,email',
             'firstname' => 'required|string|max:100',
             'lastname' => 'required|string|max:100',
-            'birthdate' => 'required|date',
-            'birthplace' => 'required|string|max:255',
-            'address' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            // 'photo' => 'nullable|file|mimes:jpg,bmp,png,webp,jpeg',
-            'photo' => 'nullable|string',
-            'projects' => 'nullable|array',
-            'municipality_id' => 'required|integer|exists:municipalities,id',
-            'spoken_languages' => 'required|array',
-            'understood_languages' => 'required|array',
-            'statut_agent_id' => 'required|integer',
+            'role' => 'required',
         ];
     }
 

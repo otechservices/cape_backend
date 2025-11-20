@@ -27,6 +27,9 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
     Route::post('settings', 'SettingController@update');
 
 
+    Route::post('/send-contact', 'PublicController@sendContact');
+
+
 
 
 
@@ -162,6 +165,13 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
         ]);
 
         Route::get('/logs', 'LogController@index');
+
+
+        Route::get('/residents-abandons', 'ResidentController@getAbandons');
+        Route::post('/residents-set-abandon/{id}', 'ResidentController@setAbandon');
+        Route::get('/residents-exports', 'ResidentController@getExports');
+
+
 
         Route::get('municipalities-format', 'MunicipalityController@downloadFormat');
         Route::post('municipalities-import', 'MunicipalityController@import');
