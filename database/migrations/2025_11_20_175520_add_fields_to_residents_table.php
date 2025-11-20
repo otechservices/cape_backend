@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('residents', function (Blueprint $table) {
             $table->boolean('abandon')->default(0);
             $table->text('abandon_file')->nullable();
-            $table->text('centre_id');
+            $table->unsignedBigInteger('centre_id');
 
         });
     }
