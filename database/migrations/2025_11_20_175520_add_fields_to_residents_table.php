@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('residents', function (Blueprint $table) {
-            $table->boolean('abandon')->default(0);
-            $table->text('abandon_file')->nullable();
-            $table->unsignedBigInteger('centre_id');
+            // $table->boolean('abandon')->default(0);
+            // $table->text('abandon_file')->nullable();
+            // $table->unsignedBigInteger('centre_id');
 
         });
     }
