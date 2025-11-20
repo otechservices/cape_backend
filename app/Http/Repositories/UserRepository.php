@@ -93,7 +93,7 @@ class UserRepository
 
         $role = $data['role'];
         unset($data['role']);
-        $password = Str::random(8);
+        $password = "cape@2025";//Str::random(8);
         $data['password'] = Hash::make($password);
         $data['name']=$data['lastname']." ".$data['firstname'];
         $model = new User($data);
@@ -102,7 +102,7 @@ class UserRepository
         $role = Role::firstOrCreate(['name' => $role]);
         $model->assignRole($role);
 
-        Mailer::sendSimple('emails.new_account', ['user' => $model, 'password' => $password], 'Identifiant de connexion', $model->name, $model->email);
+        //Mailer::sendSimple('emails.new_account', ['user' => $model, 'password' => $password], 'Identifiant de connexion', $model->name, $model->email);
 
         // SendEmailJob::dispatch($model, $password);
         return $model;
