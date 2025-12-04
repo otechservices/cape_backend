@@ -12,9 +12,8 @@ class OTPService
 
     protected $errorMsg;
 
-    public function __construct(TwilioService $twService)
+    public function __construct()
     {
-        $this->twService = $twService;
         $this->errorMsg = 'Un code est déjà envoyé à ce destinaire par numéro et/ou email. Ce code expirera dans 5 min';
     }
 
