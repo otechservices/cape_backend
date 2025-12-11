@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Mail;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,11 +20,3 @@ Route::get('/', function () {
 });
 
 
-Route::get('/test-mail', function () {
-    Mail::raw('Bonjour — test rapide depuis Laravel!', function ($message) {
-        $message->to('ornihouss1@gmail.com')
-                ->subject('Test rapide Laravel');
-    });
-
-    return 'Mail envoyé (ou loggé selon configuration)';
-});
