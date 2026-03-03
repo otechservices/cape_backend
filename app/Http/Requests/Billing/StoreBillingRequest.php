@@ -21,8 +21,8 @@ class StoreBillingRequest extends FormRequest
             'name' => 'required|string',
             'email' => 'required|email',
             'content' => 'required|string',
-            'token' => 'required|string',
-            'is_open' => 'required|boolean',
+            // 'token' => 'required|string',
+            // 'is_open' => 'required|boolean',
             'type_billing_id' => 'required|integer',
             ];
     }

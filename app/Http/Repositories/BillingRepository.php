@@ -4,6 +4,8 @@ namespace App\Http\Repositories;
 
 use App\Traits\Repository;
  use App\Models\Billing;
+ use App\Utilities\Mailer;
+use Str,Auth;
 
 
 class BillingRepository
@@ -68,14 +70,13 @@ class BillingRepository
     /**
      * Crée une nouvelle fête.
      */
-    public function makeStore(Request $request): Billing
+    public function makeStore($datas)
     {
-        $datas = $request->all();
 
         // Génération du token
         $token = Str::random(40) . time();
         $datas['token'] = $token;
-
+        $datas['user_id']=Auth::id();
         // Création du modèle
         $billing = new Billing($datas);
         $billing->save();
@@ -85,8 +86,8 @@ class BillingRepository
             'emails.support',
             ["token" => $token],
             "Demande d'assistance",
-            $request->name,
-            $request->email
+             $datas['name'],
+            $datas['email']
         );
 
         // Retour direct du modèle

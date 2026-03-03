@@ -189,7 +189,20 @@ class UserAuthRepository
             $data['photo'] = 'avatars/'.$filename;
         }
 
-        $user->update($data);
+        $user->promoter->update([
+            "lastname"=>$data['lastname'],
+            "firstname"=>$data['firstname'],
+            "phone"=>$data['phone'],
+            "email"=>$data['email'],
+
+        ]);
+
+        $user->update([
+            "lastname"=>$data['lastname'],
+            "firstname"=>$data['firstname'],
+            "email"=>$data['email'],
+
+        ]);
 
         return $user;
     }
@@ -272,164 +285,5 @@ class UserAuthRepository
         DB::delete($q, [$data['token']]);
 
         return $user;
-    }
-
-    public function getBrowser(Request $request)
-    {
-        $userAgent = $request->header('User-Agent');
-
-        $agent = new \Jenssegers\Agent\Agent;
-        $agent->setUserAgent($userAgent);
-
-        return $agent->browser();
-    }
-
-    public function notify($request)
-    {
-
-        $canal = $request->canal;
-        if (array_search('PUSH', $canal) != null) {
-            $canal[array_search('PUSH', $canal)] = FcmChannel::class;
-        }
-        if (array_search('SMS', $canal) != null) {
-            $canal[array_search('SMS', $canal)] = TwilioChannel::class;
-        }
-        info($canal);
-
-        try {
-            switch ($request->category) {
-                case 'election-pr-closed':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new ElectionPrClosedNotification($canal, $request->title, $request->content));
-                    break;
-                case 'next-activity':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new ElectionPrClosedNotification($canal, $request->title, $request->content));
-                    break;
-                case 'alert-competion-register-closing':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'alert-competion-step-closing':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'change-pr-state':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'etablissement-election-pr-done':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'add-pr-question':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'add-evaluation-re':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'add-pr-question-animatrice':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'add-pr-question-re':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'feedback-pr-question':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'feedback-status-pr-question-animatrice':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'feedback-status-pr-question':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'feedback-status-pr-question-responsable':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'add-plan-action':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'add-point-capitalisation':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'add-supervision-activite':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'add-monthly-report':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'comment-monthly-report':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 're-comment-monthly-report':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'alert-gap-negative':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'alert-officer-payment':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'evaluation-animarice-done':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'evaluation-animarice-validated':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'evaluation-re-done':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'evaluation-pr-done':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-                case 'prime-pr':
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content, $request->file));
-                    break;
-                case 'change-status-agent':
-                    info($request->users);
-                    $users = User::whereIn('id', $request->users)->get();
-                    Notification::send($users, new DefaultNotification($canal, $request->title, $request->content));
-                    break;
-
-                default:
-                    // code...
-                    break;
-            }
-
-            return true;
-        } catch (\Throwable $th) {
-            throw $th;
-        }
-    }
-
-    public function addPushToken($data)
-    {
-        return User::find($data['user_id'])->update(['push_token' => $data['push_token']]);
-    }
-
-    public function deletePushToken($id)
-    {
-        return User::find($id)->update(['push_token' => null]);
     }
 }
