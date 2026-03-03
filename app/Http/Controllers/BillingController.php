@@ -333,13 +333,13 @@ class BillingController extends Controller
      *      )
      * )
      */
-    public function storeResponse(StoreBillingRequest $request)
+    public function storeResponse(Request $request)
     {
         $message = 'Enregistrement d\'un Billing';
 
         try {
-            $result = $this->BillingRepository->storeResponse($request->validated());
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->validated())]);
+            $result = $this->BillingRepository->storeResponse($request->all());
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode($request->all())]);
 
             return Common::successCreate('Billing créé avec succès', $result);
         } catch (\Throwable $th) {

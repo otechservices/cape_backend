@@ -18,6 +18,7 @@ class StoreBillingResponseRequest extends FormRequest
     {
         return [
             'content'    => 'required|string',
+            'sens'=>'required|in:in,out',
             'billing_id' => 'required|integer|exists:billings,id',        ];
     }
 

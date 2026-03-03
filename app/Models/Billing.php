@@ -22,4 +22,9 @@ private static $whiteListFilter = ['*'];
         return $this->belongsTo(TypeBilling::class,'type_billing_id');
     }
 
+     public function user()
+    {
+        return $this->belongsTo(User::class,'user_id');
+    }
+
 }

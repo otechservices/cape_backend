@@ -21,7 +21,7 @@ class EServiceController extends Controller
             {
                 //try {
        
-                $code=$request->code;
+                $code=isset(json_decode($request->data)->code)? json_decode($request->data)->code:null;
 
                 if ($code==null) {
                     return RequeteController::store($request);

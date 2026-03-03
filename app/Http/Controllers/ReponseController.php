@@ -52,19 +52,20 @@ class ReponseController extends Controller
 
         Parcours::create(['libelle'=>"Demande mise en attente pour complément d'information.Motif: ".$request->observation,'requete_id'=>$request->id,'user_id'=>Auth::id()]);
 
-        $token=Str::random(60);
+       // $token=Str::random(60);
         Mailer::sendSimple(
             "emails.update",
             [
+                'req'=>$req,
                 'code'=>$req->code,
-                'token'=>$token,
+               // 'token'=>$token,
                 'motif'=>$request->observation
             ],
             "Avis sur demande d'autorisation ".$req->service?->name,
             $req->name_promoter,
             $req->email);
 
-            $req->update(["status"=>1,"token"=> $token]);
+            $req->update(["status"=>1]);
 
         return response()-> json(["status" => true, "message" => ""],200);
 

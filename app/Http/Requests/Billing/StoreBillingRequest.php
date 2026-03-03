@@ -18,12 +18,10 @@ class StoreBillingRequest extends FormRequest
     {
         return [
             'object' => 'required|string',
-            'name' => 'required|string',
-            'email' => 'required|email',
             'content' => 'required|string',
-            // 'token' => 'required|string',
-            // 'is_open' => 'required|boolean',
+            'user_id' => 'required|integer|exists:users,id',
             'type_billing_id' => 'required|integer',
+            'priorite' => 'required|in:Urgente,Normale,Faible',
             ];
     }
 

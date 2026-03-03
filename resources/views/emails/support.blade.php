@@ -8,14 +8,11 @@
 </head>
 <body>
 
-Bonjour cher promoteur,
+Bonjour Support,
 <br>
 
-Votre demande d'assitance a été bien pris en compte.
+Vous avez une demande d'assistance de: <strong>{{$user?->lastname}} {{$user?->firstname}}</strong>
 <br>
-Veuillez suivre votre demande en cliquant <a href="{{env('APP_FRONT_URL')}}/billings-details/{{$token}}">ici</a>
-<br>
-
 Cordialement,
 
 

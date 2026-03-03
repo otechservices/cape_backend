@@ -17,8 +17,12 @@ class UpdateBillingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => 'sometimes|required|string|max:50',
-            'identite' => 'sometimes|required|string|max:255',
+           'object' => 'required|string',
+            'content' => 'required|string',
+            'user_id' => 'required|integer|exists:users,id',
+            'type_billing_id' => 'required|integer',
+            'priorite' => 'required|in:Urgente,Normale,Faible',
+
         ];
     }
 

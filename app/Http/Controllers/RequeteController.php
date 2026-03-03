@@ -460,113 +460,163 @@ class RequeteController extends Controller
 
     static public function update($request)
     {
-        $requete=Requete::whereCode($request->code)->first();
-        $code = $request->code;
-        $service =Service::find((int)$request->service_id);
+         $data = json_decode($request->data);
 
-        if($service==null){
-         return response()->json([
-             "success"=>true,
-             "message"=>"Veuillez contacter l'administrateur! Service non reconnu",
-             "data"=>null
-         ],500);
-        }
+if (!$data || !isset($data->code)) {
+    return response()->json([
+        "success" => false,
+        "message" => "Données invalides",
+        "data" => null
+    ], 400);
+}
 
-        $filename=$requete->zone_file;
-        if ($request->file('zone_file')) {
-            $filename= FileStorage::setFile("doc_store",$request->file('zone_file'),$code,time());
-        }
+$requete = Requete::whereCode($data->code)->first();
 
-        $filename2=$requete->registered_proof;
-        if ($request->file('registered_proof')) {
-            $filename2= FileStorage::setFile("doc_store",$request->file('registered_proof'),$code,time());
-        }
+if (!$requete) {
+    return response()->json([
+        "success" => false,
+        "message" => "Requête introuvable",
+        "data" => null
+    ], 404);
+}
 
+$service = Service::find((int)($request->service_id ?? 0));
 
-        $consent_file=$requete->consent_file;
-        if ($request->file('consent_file')) {
-            $consent_file= FileStorage::setFile("doc_store",$request->file('consent_file'),$code,time());
+if (!$service) {
+    return response()->json([
+        "success" => false,
+        "message" => "Veuillez contacter l'administrateur ! Service non reconnu",
+        "data" => null
+    ], 500);
+}
 
-        }
-        $data=json_decode($request->data);
+$code = $data->code;
 
+/* =======================
+   GESTION DES FICHIERS
+======================= */
 
-      
-        if ($request->file('files')) {
-            $unzipper  = new Unzip();
-            $filenames = $unzipper->extract($request->file('files'),public_path('docs/'.$request->code));
-            $fileInputs=$request->fileInputs;
-            $i=0;
-            foreach ($filenames as $value) {
-                //$filename= FileStorage::setFile("doc_store",$value,$code,time());
-                RequeteFile::create([
-                    "type"=>"PDF",
-                    "level"=>0,
-                    "reference"=>$fileInputs[$i],
-                    "filename"=>$value,
-                    "requete_id"=>$requete->id,
-                ]);
-                $i++;
-            }
-        }
-      
-        $requete->update([
-            "name"=>$data->name,
-            "type_cape_id"=>isset($data->type_cape_id)?(int)$data->type_cape_id:null,
-           // "type_garderie_id"=>isset($data->type_garderie_id)?(int)$data->type_garderie_id:null,
-            "name_pomoter"=>$data->name_pomoter,
-            "firstname_pomoter"=>$data->firstname_pomoter??null,
-            "phone_pomoter"=>$data->phone_pomoter??null,
-            "email_pomoter"=>$data->email_pomoter??null,
-            "name_chief"=>$data->name_chief??$data->name_pomoter,
-            "phone_chief"=>$data->phone_chief??$data->name_pomoter,
-            "firstname_chief"=>$data->firstname_chief,
-            "email_chief"=>$data->email_chief,
-            "email"=>$data->email,
-            "phone"=>$data->phone,
-            "capacity"=>$data->capacity,
-            "coords"=>$data->coords,
-            "zone_file"=>$filename,
-            "town"=>$data->town,
-            "address"=>$data->address,
-            "social_reason"=>isset($data->social_reason)?$data->social_reason:null,
-            "registered_number"=>isset($data->registered_number)?$data->registered_number :null,
-            "registered_date"=>isset($data->registered_date)?date_create($data->registered_date):null,
-            "nature_promotor_id"=>$data->nature_promotor_id,
-            "registered_proof"=>$filename2??null,
-            "has_consent"=>isset($data->has_consent)?$data->has_consent:null,
-            "head_office"=>isset($data->head_office) ?$data->head_office:null,
-            "pomoter_is_director"=>$data->chief_is_directeor,
-            "consent_file"=>$consent_file,
-            "target"=>json_encode($data->targets),
-            "district_id"=> (int)$data->district_id,
-            "service_id"=> (int)$request->service_id,
-           "status"=>3,
-           "token"=>null
-       ]);
+$zoneFile = $requete->zone_file;
+if ($request->file('zone_file')) {
+    $zoneFile = FileStorage::setFile("doc_store", $request->file('zone_file'), $code, time());
+}
 
-      
+$registeredProof = $requete->registered_proof;
+if ($request->file('registered_proof')) {
+    $registeredProof = FileStorage::setFile("doc_store", $request->file('registered_proof'), $code, time());
+}
 
-        Parcours::create([
-            'libelle'=>"Dossier mise à jour par le centre ".$data->name,
-            'requete_id'=>$requete->id,
+$consentFile = $requete->consent_file;
+if ($request->file('consent_file')) {
+    $consentFile = FileStorage::setFile("doc_store", $request->file('consent_file'), $code, time());
+}
+
+/* =======================
+   ZIP MULTI-FICHIERS
+======================= */
+
+if ($request->file('files')) {
+
+    $unzipper  = new Unzip();
+    $extractPath = public_path('docs/' . $code);
+
+    $filenames = $unzipper->extract($request->file('files'), $extractPath);
+
+    $fileInputs = $request->fileInputs ?? [];
+
+    foreach ($filenames as $index => $value) {
+
+        RequeteFile::create([
+            "type" => "PDF",
+            "level" => 0,
+            "reference" => $fileInputs[$index] ?? null,
+            "filename" => $value,
+            "requete_id" => $requete->id,
         ]);
-
-
-        Mailer::sendSimple(
-            "emails.update_success",
-            [],
-            "Mise à jour dossier effectué",
-            $data->name_pomoter,
-            $data->email);
-
-         
-        return response()->json([
-            "success"=>true,
-            "message"=>"Mise à jour de dossier pour demande d'autorisation effectué",
-            "data"=>null
-        ],200);
     }
+}
+
+/* =======================
+   UPDATE REQUETE
+======================= */
+
+$requete->update([
+
+    "name" => $data->name ?? null,
+    "type_cape_id" => isset($data->type_cape_id) ? (int)$data->type_cape_id : null,
+
+    "name_pomoter" => $data->name_pomoter ?? null,
+    "firstname_pomoter" => $data->firstname_pomoter ?? null,
+    "phone_pomoter" => $data->phone_pomoter ?? null,
+    "email_pomoter" => $data->email_pomoter ?? null,
+
+    "name_chief" => $data->name_chief ?? $data->name_pomoter ?? null,
+    "firstname_chief" => $data->firstname_chief ?? null,
+    "phone_chief" => $data->phone_chief ?? $data->phone_pomoter ?? null,
+    "email_chief" => $data->email_chief ?? null,
+
+    "email" => $data->email ?? null,
+    "phone" => $data->phone ?? null,
+    "capacity" => $data->capacity ?? null,
+    "coords" => $data->coords ?? null,
+
+    "zone_file" => $zoneFile,
+    "registered_proof" => $registeredProof,
+    "consent_file" => $consentFile,
+
+    "town" => $data->town ?? null,
+    "address" => $data->address ?? null,
+    "head_office" => $data->head_office ?? null,
+
+    "social_reason" => $data->social_reason ?? null,
+    "registered_number" => $data->registered_number ?? null,
+
+    "registered_date" => isset($data->registered_date)
+        ? \Carbon\Carbon::parse($data->registered_date)
+        : null,
+
+    "nature_promotor_id" => $data->nature_promotor_id ?? null,
+
+    "has_consent" => $data->has_consent ?? false,
+    "pomoter_is_director" => $data->chief_is_directeor ?? false,
+
+    "target" => isset($data->targets) ? json_encode($data->targets) : null,
+
+    "district_id" => isset($data->district_id) ? (int)$data->district_id : null,
+    "service_id" => (int)$request->service_id,
+
+    "status" => 3,
+    "token" => null
+]);
+
+/* =======================
+   PARCOURS
+======================= */
+
+Parcours::create([
+    'libelle' => "Dossier mis à jour par le centre : " . ($data->name ?? ''),
+    'requete_id' => $requete->id,
+]);
+
+/* =======================
+   EMAIL
+======================= */
+
+if (!empty($data->email)) {
+    Mailer::sendSimple(
+        "emails.update_success",
+        [],
+        "Mise à jour dossier effectuée",
+        $data->name_pomoter ?? '',
+        $data->email
+    );
+}
+
+return response()->json([
+    "success" => true,
+    "message" => "Mise à jour de dossier effectuée avec succès",
+    "data" => null
+], 200);    }
 
 
     public function showResult($code)

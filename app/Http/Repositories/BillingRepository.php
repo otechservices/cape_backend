@@ -4,6 +4,7 @@ namespace App\Http\Repositories;
 
 use App\Traits\Repository;
  use App\Models\Billing;
+ use App\Models\BillingResponse;
  use App\Utilities\Mailer;
 use Str,Auth;
 
@@ -42,11 +43,17 @@ class BillingRepository
     {
         $per_page = 10;
 
-        $req = Billing::ignoreRequest(['per_page'])
-            ->filter(array_filter($request->all(), function ($k) {
-                return $k != 'page';
-            }, ARRAY_FILTER_USE_KEY))
+        if (Auth::user()?->roles()?->first()?->name == "admin") {
+               $req = Billing::ignoreRequest(['per_page'])
+            ->with('type')
             ->orderByDesc('created_at');
+        }else{
+            $req = Billing::ignoreRequest(['per_page'])
+            ->with(['type','responses'])
+            ->where('user_id',Auth::id())
+            ->orderByDesc('created_at');
+        }
+     
 
         if (array_key_exists('per_page', $request->all())) {
             $per_page = $request['per_page'];
@@ -74,9 +81,9 @@ class BillingRepository
     {
 
         // Génération du token
-        $token = Str::random(40) . time();
-        $datas['token'] = $token;
-        $datas['user_id']=Auth::id();
+       // $token = Str::random(40) . time();
+       // $datas['token'] = $token;
+        //$datas['user_id']=Auth::id();
         // Création du modèle
         $billing = new Billing($datas);
         $billing->save();
@@ -84,10 +91,10 @@ class BillingRepository
         // Envoi de l'email
         Mailer::sendSimple(
             'emails.support',
-            ["token" => $token],
+            ['user'=> $billing->user],
             "Demande d'assistance",
-             $datas['name'],
-            $datas['email']
+            "MASM CAPE",
+            env('MAIL_FROM_ADDRESS')
         );
 
         // Retour direct du modèle
@@ -96,9 +103,8 @@ class BillingRepository
     }
 
 
-    public function storeResponse(Request $request)
+    public function storeResponse($datas)
     {
-        $datas = $request->all();
 
         $billing = new BillingResponse($datas);
         $billing->save();

@@ -27,7 +27,17 @@ Vous procéderez donc à une nouvelle demande.
 <br>
 
 Veuillez cliquer sur le lien suivant pour nécessaire à faire:
-<a href="{{env('APP_FRONT_URL')}}/requete/updating/{{$token}}/{{$code}}">Page de mise à jour </a>
+
+@if($req?->type_cape_id==1)
+
+<a href="{{env('APP_FRONT_URL')}}/promoter/inscription-cape/{{$code}}">Page de mise à jour </a>
+
+@else
+<a href="{{env('APP_FRONT_URL')}}/promoter/inscription-garderie/{{$code}}">Page de mise à jour </a>
+
+
+@endif
+
 
 Cordialement,
 
