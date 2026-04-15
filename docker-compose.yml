@@ -1,0 +1,18 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: laravel_backend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9001:9000"
+    volumes:
+      - /home/cape/data-cape/storage:/var/www/storage
+      - /home/cape/data-cape/public:/var/www/public
+    networks:
+     - app-network
+  
+networks:
+  app-network:
+    driver: bridge
