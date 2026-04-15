@@ -5,8 +5,6 @@ RUN apt-get update && apt-get install -y \
     curl \
     unzip \
     zip \
-    nano \
-    vim \
     libpng-dev \
     libjpeg62-turbo-dev \
     libfreetype6-dev \
@@ -16,9 +14,7 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     libicu-dev \
     libmagickwand-dev \
-    default-mysql-client \
-    nodejs \
-    npm
+    default-mysql-client 
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 
@@ -36,11 +32,12 @@ RUN docker-php-ext-install \
     sockets \
     opcache
 
-RUN pecl install redis imagick \
-    && docker-php-ext-enable redis imagick
+RUN pecl install imagick \
+    && docker-php-ext-enable imagick
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+COPY . .
 WORKDIR /var/www
 
 EXPOSE 9000
