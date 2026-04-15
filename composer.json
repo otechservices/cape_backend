@@ -9,7 +9,7 @@
         "aws/aws-sdk-php": "^3.338",
         "barryvdh/laravel-dompdf": "^3.1",
         "darkaonline/l5-swagger": "^8.6",
-        "guzzlehttp/guzzle": "^7.9",
+        "guzzlehttp/guzzle": "^7.10",
         "jenssegers/agent": "^2.6",
         "laravel-notification-channels/fcm": "^4.5",
         "laravel/framework": "^10.10",
@@ -28,6 +28,7 @@
         "simplesoftwareio/simple-qrcode": "*",
         "sirajcse/laravel-unique-id-generator": "^1.0",
         "spatie/laravel-permission": "^6.9",
+        "symfony/mailgun-mailer": "^7.1",
         "twilio/sdk": "^8.3",
         "vladimir-yuldashev/laravel-queue-rabbitmq": "^14.1"
     },
