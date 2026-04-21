@@ -176,8 +176,9 @@
             <li>Département : {{$cape?->district->municipality?->department?->name}}</li>
             <li>Commune : {{$cape?->district->municipality?->name}}</li>
             <li>Arrondissement  : {{$cape?->district?->name}}</li>
-            <li>Quartier/Village  : {{$cape?->address}}</li>
-            <li>Dont le promoteur est  : {{$cape?->name_pomoter}}</li>
+            <li>Quartier/Village  : {{$cape?->town}}</li>
+            <li>Adresse précise : {{$cape?->address}}</li>
+            <li>Dont le promoteur est  : {{$cape?->promoter?->lastname}} {{$cape?->promoter?->firstname}}</li>
 
         </ul>
 
