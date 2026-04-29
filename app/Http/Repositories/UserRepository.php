@@ -135,6 +135,27 @@ class UserRepository
         return $this->findOrFail($id)->delete();
     }
 
+    public function resetPasswordByAdmin($id)
+    {
+        $user = User::findOrFail($id);
+        $password = Str::random(10);
+
+        $user->update([
+            'password' => Hash::make($password),
+            'is_first_connexion' => true,
+        ]);
+
+        Mailer::sendSimple(
+            'emails.admin_reset_password',
+            ['user' => $user, 'password' => $password],
+            'Réinitialisation de votre mot de passe',
+            $user->name,
+            $user->email
+        );
+
+        return $user;
+    }
+
     /**
      * Get the latest users
      */

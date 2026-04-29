@@ -230,6 +230,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
 
         Route::get('users/{id}/state/{state}', 'UserController@changeState');
         Route::post('users-search', 'UserController@search');
+        Route::post('users/{id}/reset-password', 'UserController@resetPasswordByAdmin');
 
 
 

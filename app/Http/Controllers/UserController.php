@@ -821,4 +821,20 @@ class UserController extends Controller
             return Common::error($th->getMessage(), []);
         }
     }
+
+    public function resetPasswordByAdmin($id)
+    {
+        $message = 'Réinitialisation du mot de passe par l\'administrateur';
+
+        try {
+            $result = $this->userRepository->resetPasswordByAdmin($id);
+            $this->ls->trace(['action_name' => $message, 'description' => "User ID: $id"]);
+
+            return Common::success('Mot de passe réinitialisé. Un email a été envoyé à l\'utilisateur.', $result);
+        } catch (\Throwable $th) {
+            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+
+            return Common::error($th->getMessage(), []);
+        }
+    }
 }
