@@ -79,7 +79,7 @@ class RequeteController extends Controller
 
                 case 'Promoteur':
                     
-                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours','files.file.TypeFile','files2'])->where('promoter_id',Auth::user()->promoter_id)->orderBy("id","desc")->get();
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours','files.file.TypeFile','files2','reponses.user'])->where('promoter_id',Auth::user()->promoter_id)->orderBy("id","desc")->get();
                     break;
                 
                 default:
@@ -87,7 +87,7 @@ class RequeteController extends Controller
                     break;
             }
         } else{
-                                $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours','files.file.TypeFile','files2'])->where('promoter_id',Auth::user()->promoter_id)->orderBy("id","desc")->get();
+                                $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours','files.file.TypeFile','files2','reponses.user'])->where('promoter_id',Auth::user()->promoter_id)->orderBy("id","desc")->get();
 
         }
         

@@ -1,33 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
-</head>
-<body>
+@extends('emails.base')
 
-Cher promoteur de CAPE,
-<br>
-Votre Centre n'a pas reçu l'autorisation après la session de validation.
-<br>
-Veuillez prendre en compte ces différentes observations
-<br>
-<strong><u><b>Observation générale</b></u></strong>
-<br>
-{{$observation}}
-<br>
-<strong><u><b>Observations secondaires</b></u></strong>
-<br>
-<ol>
-    @foreach($motifs as $motif)
-    <li>{{$motif->observation}}</li>
+@section('body-content')
 
-    @endforeach
-</ol>
-<br>
-Cordialement,
-    
-</body>
-</html>
+<p>Cher promoteur,</p>
+
+<p>
+    Nous avons le regret de vous informer que votre dossier de demande d'autorisation
+    n'a pas obtenu l'autorisation à l'issue de la session de validation.
+</p>
+
+<p><strong>Motif du rejet :</strong></p>
+
+<div style="
+    background-color: #fff1f2;
+    border-left: 4px solid #ef4444;
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin: 12px 0;
+    font-size: 14px;
+    line-height: 1.6;
+">
+    {!! $motif !!}
+</div>
+
+<p>
+    Pour toute question relative à cette décision, nous vous invitons à contacter
+    le service compétent aux coordonnées mentionnées ci-dessous.
+</p>
+
+<p style="margin-top: 24px;">Cordialement,<br><strong>L'équipe CAPE</strong></p>
+
+@endsection

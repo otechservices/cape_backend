@@ -1,47 +1,67 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
-</head>
-<body>
+@extends('emails.base')
 
-Bonjour cher promoteur de centre,
-<br>
+@section('body-content')
 
-Votre dossier nécessite une mise à jour.
-<br>
+<p>Bonjour <strong>{{$req?->name_promoter ?? 'cher promoteur'}}</strong>,</p>
 
-Motif : <br>
-{{$motif}}
-<br>
+<p>
+    Nous avons bien reçu votre dossier de demande d'autorisation
+    <strong>(Réf. : {{$code ?? '—'}})</strong>.
+    Après examen, il nécessite un complément d'information avant de poursuivre son instruction.
+</p>
 
-Pour rappel, le code de votre demande est {{$code ??"Code"}}
+<p><strong>Motif de la mise en attente :</strong></p>
 
-<br>
+<div style="
+    background-color: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin: 12px 0;
+    font-size: 14px;
+    line-height: 1.6;
+">
+    {!! $motif !!}
+</div>
 
-Nous vous informons que tout soumission de dossier mise en attente pour complément doit avoir une retour sous jour(s) sans quoi, elle est annulée.
-Vous procéderez donc à une nouvelle demande.
-<br>
+<p>
+    Nous vous invitons à vous connecter à la plateforme afin de mettre à jour votre dossier
+    dans les meilleurs délais. Passé ce délai sans retour de votre part, la demande sera automatiquement annulée
+    et vous devrez procéder à une nouvelle soumission.
+</p>
 
-Veuillez cliquer sur le lien suivant pour nécessaire à faire:
+<p style="margin-top: 20px;">
+    @if($req?->type_cape_id == 1)
+        <a href="{{ env('APP_FRONT_URL') }}/promoter/inscription-cape/{{$code}}"
+           style="
+               display: inline-block;
+               background-color: #1e3a5f;
+               color: #ffffff;
+               padding: 10px 22px;
+               border-radius: 5px;
+               text-decoration: none;
+               font-weight: bold;
+               font-size: 14px;
+           ">
+            Mettre à jour mon dossier
+        </a>
+    @else
+        <a href="{{ env('APP_FRONT_URL') }}/promoter/inscription-garderie/{{$code}}"
+           style="
+               display: inline-block;
+               background-color: #1e3a5f;
+               color: #ffffff;
+               padding: 10px 22px;
+               border-radius: 5px;
+               text-decoration: none;
+               font-weight: bold;
+               font-size: 14px;
+           ">
+            Mettre à jour mon dossier
+        </a>
+    @endif
+</p>
 
-@if($req?->type_cape_id==1)
+<p style="margin-top: 24px;">Cordialement,<br><strong>L'équipe CAPE</strong></p>
 
-<a href="{{env('APP_FRONT_URL')}}/promoter/inscription-cape/{{$code}}">Page de mise à jour </a>
-
-@else
-<a href="{{env('APP_FRONT_URL')}}/promoter/inscription-garderie/{{$code}}">Page de mise à jour </a>
-
-
-@endif
-
-
-Cordialement,
-
-
-    
-</body>
-</html>
+@endsection
