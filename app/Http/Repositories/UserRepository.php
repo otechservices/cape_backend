@@ -122,7 +122,22 @@ class UserRepository
             $data['photo'] = 'avatars/'.$filename;
         }
 
+        $role = null;
+        if (array_key_exists('role', $data)) {
+            $role = $data['role'];
+            unset($data['role']);
+        }
+
+        if (! empty($data['lastname']) && ! empty($data['firstname'])) {
+            $data['name'] = $data['lastname'].' '.$data['firstname'];
+        }
+
         $model->update($data);
+
+        if ($role) {
+            $role = Role::firstOrCreate(['name' => $role]);
+            $model->syncRoles([$role]);
+        }
 
         return $model;
     }
