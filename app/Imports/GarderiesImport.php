@@ -64,12 +64,23 @@ class GarderiesImport implements ToCollection, WithHeadingRow
                 $district_id = $district->id;
             }
 
-                $requete = Requete::where('name', $denomination)->first();
+            // Une ligne sans dénomination n'est pas exploitable : on l'ignore
+            // plutôt que de créer un enregistrement fantôme nommé 'N/A'.
+            $denomination = $denomination ? trim($denomination) : null;
+            if (empty($denomination)) {
+                continue;
+            }
+
+            // Rapprochement restreint aux garderies : sans le filtre sur
+            // type_cape_id, un CAPE homonyme serait écrasé.
+            $requete = Requete::where('name', $denomination)
+                ->where('type_cape_id', 2)
+                ->first();
 
             // Préparer les données
             $data = [
-                'code' => $code ?? 'GARD-'.Str::upper(Str::random(6)),
-                'name' => $denomination ?? 'N/A',
+                'code' => $requete->code ?? 'GARD-'.Str::upper(Str::random(6)),
+                'name' => $denomination,
                 'address' => $adresse,
                 'email' => $email,
                 'phone' => $phone,
@@ -85,17 +96,10 @@ class GarderiesImport implements ToCollection, WithHeadingRow
             // Nettoyage : retirer clés nulles (si tu préfères enregistrer NULL explicitement, supprime la ligne suivante)
             $data = array_filter($data, function ($v) { return !($v === null && $v !== 0); });
 
-            // Update or create
             if ($requete) {
-                info('ici');
                 $requete->update($data);
             } else {
-
-                if (!empty($denomination)) {
-                                    info('ici2');
-
                 Requete::create($data);
-                }
             }
         }
     }

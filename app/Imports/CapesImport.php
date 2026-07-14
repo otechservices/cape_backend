@@ -84,15 +84,23 @@ class CapesImport implements ToCollection, WithHeadingRow
                 $district_id = $district->id;
             }
 
-            // Recherche d'un enregistrement existant :
-            // Priorité : code -> (name + promoteur) -> email -> phone
-                           $requete = Requete::where('name', $capeName)->first();
+            // Une ligne sans dénomination n'est pas exploitable : on l'ignore
+            // plutôt que de créer un enregistrement fantôme nommé 'N/A'.
+            $capeName = $capeName ? trim($capeName) : null;
+            if (empty($capeName)) {
+                continue;
+            }
 
+            // Rapprochement d'un enregistrement existant, restreint aux CAPE :
+            // sans le filtre sur type_cape_id, une garderie homonyme serait écrasée.
+            $requete = Requete::where('name', $capeName)
+                ->where('type_cape_id', 1)
+                ->first();
 
             // Préparer données à créer / mettre à jour
             $data = [
-                'code' => $code ?? 'CAPE-'.Str::upper(Str::random(6)),
-                'name' => $capeName ?? 'N/A',
+                'code' => $requete->code ?? 'CAPE-'.Str::upper(Str::random(6)),
+                'name' => $capeName,
                 'name_pomoter' => $promoteurFull ?? null,
                 'firstname_pomoter' => $firstname_promoter ?? null,
                 'email' => $email,
@@ -114,17 +122,10 @@ class CapesImport implements ToCollection, WithHeadingRow
             });
 
            
-            // Update or create
             if ($requete) {
-                info('ici');
                 $requete->update($data);
             } else {
-
-                if (!empty($capeName)) {
-                                    info('ici2');
-
                 Requete::create($data);
-                }
             }
         }
     }

@@ -21,6 +21,8 @@ use Str,File,Auth,Hash,QrCode,Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Cape;
 use App\Models\RequeteTypeGarderie;
+use App\Exports\RequetesExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Log;
 
 /** status check
@@ -1718,7 +1720,89 @@ public function inviteStore(Request $request)
                 "data"=>null
             ], 500);
         }
-       
-      
+
+
+    }
+
+    /**
+     * Filtres de recherche pilotés par l'utilisateur métier, partagés par
+     * l'aperçu à l'écran et l'export : le fichier produit correspond donc
+     * toujours à la liste affichée.
+     */
+    private function searchFilters(Request $request): array
+    {
+        return $request->only([
+            'service_id', 'department_id', 'status', 'agrement', 'enquete',
+            'search', 'date_from', 'date_to',
+        ]);
+    }
+
+    /**
+     * Aperçu de la liste filtrée (alimente l'écran de recherche/export).
+     */
+    public function search(Request $request)
+    {
+        $query = Requete::applyFilters($this->searchFilters($request))
+            ->with(['TypeCape', 'service', 'district.cps', 'district.Municipality.Department'])
+            ->orderBy('name');
+
+        return response()->json([
+            "success" => true,
+            "message" => "Liste des dossiers",
+            "data" => $query->get(),
+        ], 200);
+    }
+
+    /**
+     * Export Excel de la liste filtrée.
+     */
+    public function export(Request $request)
+    {
+        $filename = 'dossiers_cape_'.date('d_m_Y_His').'.xlsx';
+
+        return Excel::download(new RequetesExport($this->searchFilters($request)), $filename);
+    }
+
+    /**
+     * Transfère un dossier vers un autre arrondissement.
+     *
+     * L'arrondissement détermine le CPS et le DDASM compétents. Le
+     * rapprochement textuel des imports peut se tromper de cible, et un centre
+     * peut aussi déménager : ce transfert permet de corriger le rattachement
+     * sans repasser par un import.
+     */
+    public function transferDistrict(Request $request)
+    {
+        $request->validate([
+            'requete_id' => 'required|exists:requetes,id',
+            'district_id' => 'required|exists:districts,id',
+            'motif' => 'nullable|string|max:255',
+        ]);
+
+        $requete = Requete::findOrFail($request->requete_id);
+        $district = District::with('cps', 'Municipality')->findOrFail($request->district_id);
+
+        $ancien = $requete->district()->with('cps')->first();
+
+        $requete->update([
+            'district_id' => $district->id,
+            'town' => $district->Municipality?->name ?? $requete->town,
+        ]);
+
+        Parcours::create([
+            'libelle' => 'Transfert : '
+                .($ancien?->name ?? 'arrondissement non renseigné')
+                .' → '.$district->name
+                .' (CPS : '.($district->cps?->name ?? 'non rattaché').')'
+                .($request->motif ? ' — '.$request->motif : ''),
+            'requete_id' => $requete->id,
+            'user_id' => Auth::id(),
+        ]);
+
+        return response()->json([
+            "success" => true,
+            "message" => "Dossier transféré vers ".$district->name,
+            "data" => $requete->load('district.cps', 'district.Municipality.Department'),
+        ], 200);
     }
 }

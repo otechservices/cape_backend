@@ -23,4 +23,10 @@ private static $whiteListFilter = ['*'];
     {
         return $this->belongsTo(Municipality::class,'municipality_id');
     }
+
+    /** Dossiers rattachés à cet arrondissement : empêche de purger un arrondissement encore utilisé. */
+    public function districtRequetes()
+    {
+        return $this->hasMany(Requete::class,'district_id');
+    }
 }

@@ -289,6 +289,9 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
       Route::post('/requetes/session/decision', 'RequeteController@setDecision');
       Route::get('/requetes/session/decision', 'RequeteController@getDecision');
       Route::get('/requetes/get-pending-validation/all', 'RequeteController@getPendingValidation');
+      Route::get('/requetes/search/all', 'RequeteController@search');
+      Route::get('/requetes/search/export', 'RequeteController@export');
+      Route::post('/requetes/transfer-district', 'RequeteController@transferDistrict');
 
 
       Route::post('/responses/step/need-correction', 'ReponseController@needCorrection');

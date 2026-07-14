@@ -12,6 +12,102 @@ class Requete extends Model
 private static $whiteListFilter = ['*'];
     protected $guarded = [];
 
+    /** Dossier arrivé au bout du circuit de la plateforme. */
+    public const STATUS_AUTORISE = 8;
+
+    /** CAPE/Garderie déjà agréé avant la plateforme, chargé par import Excel. */
+    public const STATUS_AGREE_IMPORTE = 9;
+
+    /**
+     * Un dossier est agréé s'il a été autorisé via la plateforme
+     * (agrément délivré) ou s'il provient de l'import des agréments existants.
+     */
+    public function scopeAgree($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('status', self::STATUS_AGREE_IMPORTE)
+                ->orWhere('status', self::STATUS_AUTORISE)
+                ->orWhere('has_agreemant', 1)
+                ->orWhere('is_authorized', 1)
+                ->orWhereHas('Cape');
+        });
+    }
+
+    /**
+     * Dossiers déposés sur la plateforme et pas encore agréés.
+     *
+     * Les conditions sont formulées en positif plutôt qu'en négation du scope
+     * `agree` : `has_agreemant` et `is_authorized` sont NULL sur la quasi-totalité
+     * des lignes, or en SQL `NOT (... OR NULL)` vaut NULL et écarterait donc
+     * toutes les lignes.
+     *
+     * Les lignes sans dénomination sont exclues : ce sont des résidus d'import,
+     * pas des dossiers réels.
+     */
+    public function scopeNonAgree($query)
+    {
+        return $query
+            ->whereNotIn('status', [self::STATUS_AUTORISE, self::STATUS_AGREE_IMPORTE])
+            ->where(fn ($q) => $q->whereNull('has_agreemant')->orWhere('has_agreemant', '<>', 1))
+            ->where(fn ($q) => $q->whereNull('is_authorized')->orWhere('is_authorized', '<>', 1))
+            ->whereDoesntHave('Cape')
+            ->whereNotNull('name')
+            ->where('name', '<>', 'N/A');
+    }
+
+    public function getIsAgreeAttribute(): bool
+    {
+        return in_array($this->status, [self::STATUS_AGREE_IMPORTE, self::STATUS_AUTORISE], true)
+            || $this->has_agreemant == 1
+            || $this->is_authorized == 1;
+    }
+
+    /**
+     * Filtres pilotés par l'utilisateur métier. La liste affichée à l'écran et
+     * le fichier exporté passent tous deux par ici : l'export correspond donc
+     * toujours exactement à ce qui est filtré.
+     *
+     * @param  array  $filters  service_id, department_id, status, agrement
+     *                          ('agree'|'non_agree'), search, date_from, date_to
+     */
+    public function scopeApplyFilters($query, array $filters)
+    {
+        $query->when($filters['agrement'] ?? null, function ($q, $agrement) {
+            $agrement === 'agree' ? $q->agree() : $q->nonAgree();
+        });
+
+        $query->when($filters['service_id'] ?? null,
+            fn ($q, $id) => $q->where('service_id', $id));
+
+        $query->when($filters['status'] ?? null, function ($q, $status) {
+            is_array($status) ? $q->whereIn('status', $status) : $q->where('status', $status);
+        });
+
+        $query->when($filters['department_id'] ?? null, fn ($q, $id) => $q->whereHas(
+            'district.Municipality', fn ($m) => $m->where('department_id', $id)
+        ));
+
+        // Présence du rapport d'enquête sociale : permet de repérer d'un coup
+        // d'œil les dossiers pour lesquels l'enquête reste à mener.
+        $query->when($filters['enquete'] ?? null, function ($q, $enquete) {
+            $q->where('has_cps_file', $enquete === 'avec' ? 1 : 0);
+        });
+
+        $query->when($filters['search'] ?? null, fn ($q, $term) => $q->where(
+            fn ($s) => $s->where('name', 'like', "%$term%")
+                ->orWhere('code', 'like', "%$term%")
+                ->orWhere('name_pomoter', 'like', "%$term%")
+        ));
+
+        $query->when($filters['date_from'] ?? null,
+            fn ($q, $date) => $q->whereDate('created_at', '>=', $date));
+
+        $query->when($filters['date_to'] ?? null,
+            fn ($q, $date) => $q->whereDate('created_at', '<=', $date));
+
+        return $query;
+    }
+
     public function files()
     {
         return $this->hasMany(RequeteFile::class,'requete_id')->where('level',0);
