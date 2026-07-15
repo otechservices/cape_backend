@@ -10,7 +10,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class ImportAgrees extends Command
 {
     protected $signature = 'import:agrees
-                            {file=storage/app/imports/capes_agrees_a_valider.csv : Fichier CSV/Excel validé}
+                            {file=capes_agrees_a_valider.csv : Fichier CSV/Excel validé (à la racine du projet par défaut)}
                             {--promoter_id=1 : Promoteur par défaut, en attendant le rattachement réel}
                             {--force : Écrit réellement en base (sans cette option, simple simulation)}';
 
@@ -19,6 +19,12 @@ class ImportAgrees extends Command
     public function handle()
     {
         $file = $this->argument('file');
+
+        // Un chemin relatif est résolu depuis la racine du projet, afin que la
+        // commande fonctionne quel que soit le répertoire d'appel.
+        if (! str_starts_with($file, '/')) {
+            $file = base_path($file);
+        }
 
         if (! file_exists($file)) {
             $this->error("Fichier introuvable : $file");

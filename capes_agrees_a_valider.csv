@@ -1,0 +1,183 @@
+﻿numero,denomination,service,type_cape,departement,commune,arrondissement,localisation,telephone1,telephone2,email,nom_promoteur,reference_agrement,annee_agrement,A_COMPLETER
+1,Crèche Garderie ROYAUME DES ANGES,Garderie,Crèches et garderies,Littoral,Cotonou,,"Haie vive, Cotonou",0166456969,,,,,,arrondissement
+2,Les p’tites mains,CAPE,,Littoral,Cotonou,,"Gbèdagba, Cotonou",0195959954,0163588869,,,,,"arrondissement, type_cape(sous-categorie)"
+3,Les joyeuses coccinelles,CAPE,,Littoral,Cotonou,,"Cité houéyiho, Cotonou",0197226299,,,,,,"arrondissement, type_cape(sous-categorie)"
+4,Les Lucioles,CAPE,,Littoral,Cotonou,,"Maro militaire, Cotonou",0162316409,,,,,,"arrondissement, type_cape(sous-categorie)"
+5,Crèche Garderie GRACE DIVINE,Garderie,Crèches et garderies,Littoral,Cotonou,,"Vodjè, Cotonou",0196727635,,,,,,arrondissement
+6,Centre joie infantile de l’Association des Messagers de la Paix,CAPE,,Littoral,Cotonou,,"Fidjrossè centre, Cotonou",0166419526,,,,,,"arrondissement, type_cape(sous-categorie)"
+7,Orphelinat Saint Joseph,CAPE,,Littoral,Cotonou,,"Akpakpa, Cotonou",0162356594,,,,,,"arrondissement, type_cape(sous-categorie)"
+8,Centre Terres Rouges,CAPE,,Littoral,Cotonou,,"Cadjèhoun, Cotonou",0197894271,0197077310,,,,,"arrondissement, type_cape(sous-categorie)"
+9,Centre d'Accueil des Orphelins et EnfantsVulnérables « OHANA >>,CAPE,,Littoral,Cotonou,,"Cotonou, Vèdoko",0167277115,,,,,,"arrondissement, type_cape(sous-categorie)"
+10,CALEDHE,CAPE,,Littoral,Cotonou,,Cotonou,0197379753,,,,,,"arrondissement, type_cape(sous-categorie)"
+11,L'ile des Doudous,CAPE,,Littoral,Cotonou,,Cotonou,0196527893,,,,,,"arrondissement, type_cape(sous-categorie)"
+12,Crèche Multi Accueil Les Bisounours,Garderie,Crèches et garderies,Littoral,Cotonou,,Cotonou,0195124908,,,,,,arrondissement
+13,Orphelinat Assafwa,CAPE,,Littoral,Cotonou,,Cotonou,0162694896,,,,,,"arrondissement, type_cape(sous-categorie)"
+14,"ANIHOUVI, la maison la petite enfance""",CAPE,,Littoral,Cotonou,,Cotonou,0167599439,,,,,,"arrondissement, type_cape(sous-categorie)"
+15,Au Paradis des bouts de choux,CAPE,,Littoral,Cotonou,,Cotonou,0196147439,,,,,,"arrondissement, type_cape(sous-categorie)"
+16,Garderie Eden,Garderie,Crèches et garderies,Littoral,Cotonou,,Cotonou,0196719998,,,,,,arrondissement
+17,La POUPONNIERE DES ANGES,CAPE,,Littoral,Cotonou,,"Cotonou, Agla",0196047379,,,,,,"arrondissement, type_cape(sous-categorie)"
+18,"Crèche Garderie ""Les Petits semeurs""",Garderie,Crèches et garderies,Littoral,Cotonou,,"Cotonou, Saint Michel",0190349959,,,,,,arrondissement
+19,Mes Premiers Pas,CAPE,,Littoral,Cotonou,,Cotonou,0197725726,,,,,,"arrondissement, type_cape(sous-categorie)"
+20,Les P'tites Frimousses,CAPE,,Littoral,Cotonou,,Cotonou,0197127980,0195058348,,,,,"arrondissement, type_cape(sous-categorie)"
+21,VIPP Interstis,CAPE,,Littoral,Cotonou,,Cotonou,,,,,,,"arrondissement, telephone, type_cape(sous-categorie)"
+22,Mon ange gardien,CAPE,,Littoral,Cotonou,,Cotonou,0197281302,,,,,,"arrondissement, type_cape(sous-categorie)"
+23,Les Titounis,CAPE,,Littoral,Cotonou,,Cotonou,0160606262,,,,,,"arrondissement, type_cape(sous-categorie)"
+24,LOVE BABIES,CAPE,,Littoral,Cotonou,,Cotonou,0197482884,,,,,,"arrondissement, type_cape(sous-categorie)"
+25,« Schnecknhaus »,CAPE,,Littoral,Cotonou,,Cotonou,0196589977,,,,,,"arrondissement, type_cape(sous-categorie)"
+26,Tutto-Bambino,CAPE,,Littoral,Cotonou,,Cotonou,0165144444,0196976863,,,,,"arrondissement, type_cape(sous-categorie)"
+27,Berceau d'amour,CAPE,,Littoral,Cotonou,,Cotonou,,,,,,,"arrondissement, telephone, type_cape(sous-categorie)"
+28,Foyer « Paix et Joie »,CAPE,,Littoral,Cotonou,,Cotonou,0196231918,0161763241,,,,,"arrondissement, type_cape(sous-categorie)"
+29,Les Tubbies,CAPE,,Littoral,Cotonou,,Cotonou,0166527299,,,,,,"arrondissement, type_cape(sous-categorie)"
+30,Les petits cœurs,CAPE,,Littoral,Cotonou,,Cotonou,0166265260,,,,,,"arrondissement, type_cape(sous-categorie)"
+31,La souris verte,CAPE,,Littoral,Cotonou,,Cotonou,0197143185,164205555,,,,,"arrondissement, type_cape(sous-categorie)"
+32,La maison du Soleil,CAPE,,Littoral,Cotonou,,Cotonou,0167190477,,,,,,"arrondissement, type_cape(sous-categorie)"
+33,Foyer Laura Vicuna,CAPE,,Littoral,Cotonou,,Cotonou,0121382139,,,,,,"arrondissement, type_cape(sous-categorie)"
+34,Les Petits Sentiers,CAPE,,Littoral,Cotonou,,Cotonou,0164300101,,,,,,"arrondissement, type_cape(sous-categorie)"
+35,Centre de Promotion Féminine de DAVOUGON,CAPE,,Littoral,,,Abomey,0195259723,0164996565,,,,,"commune, arrondissement, type_cape(sous-categorie)"
+36,Foyer Maman Marguerite,CAPE,,Littoral,Cotonou,,"Hindé,Cotonou, Littoral.",0163000517,,,,,,"arrondissement, type_cape(sous-categorie)"
+37,DJIDJOE,CAPE,,Littoral,Cotonou,,"Sègbèya, Cotonou, Littoral.",0161696961,,,,,,"arrondissement, type_cape(sous-categorie)"
+38,LA FARANDOLE,CAPE,,Littoral,Cotonou,,"Sègbèya, Cotonou, Littoral, Maison AKPOKLI John C/0270.",0195334646,0196434141,,,,,"arrondissement, type_cape(sous-categorie)"
+39,LE CALINET,CAPE,,Littoral,Cotonou,,"Kpondéhou, Cotonou, Littoral",0196866463,,,,,,"arrondissement, type_cape(sous-categorie)"
+40,LES ANGES ET ARCHANGES,CAPE,,Littoral,Cotonou,,"Maro-Militaire-Toxi Labo, Cotonou, Littoral.",0197479904,,,,,,"arrondissement, type_cape(sous-categorie)"
+41,LES NOUNOUS,CAPE,,Littoral,Cotonou,,"Akpakpa Place Lénine, Cotonou, Littoral.",0197673784,,,,,,"arrondissement, type_cape(sous-categorie)"
+42,Ile aux oiseaux,CAPE,,Littoral,Cotonou,,"Zongo -Ehuzu, lot 102, Cotonou, Littoral.",0165186486,,,,,,"arrondissement, type_cape(sous-categorie)"
+43,Dortoir de nuit des filles Houéfa,CAPE,,Littoral,Cotonou,,"Hindé, 6ème arrondissement, Cotonou",0197894271,,,,,,"arrondissement, type_cape(sous-categorie)"
+44,Foyer Sonagnon,CAPE,,Littoral,Cotonou,,"Quartier Gbégamey, 11ème arrondissement, Cotonou",0161057832,0197682230,,,,,"arrondissement, type_cape(sous-categorie)"
+45,Dortoir de nuit des garçons,CAPE,,Littoral,Cotonou,,"Gbèdjromèdé, 6ème arrondissement, Cotonou",0197894271,,,,,,"arrondissement, type_cape(sous-categorie)"
+46,Maison communautaire,CAPE,,Littoral,Cotonou,,"Aïdjèdo, Cotonou",0197894271,,,,,,"arrondissement, type_cape(sous-categorie)"
+47,Mes p’tits Trésors,CAPE,,Littoral,Cotonou,,"Quartier Gbèdjromèdé, Cotonou",0166698374,,,,,,"arrondissement, type_cape(sous-categorie)"
+48,Schneckenhaus,CAPE,,Littoral,Cotonou,,"Fidjrossè-centre, lot 1719 ‘F’, Cotonou",0196589977,0169597777,,,,,"arrondissement, type_cape(sous-categorie)"
+49,Iles aux trésors,CAPE,,Littoral,Cotonou,,"Quartier Ahogbohouè, 13ème arrondissement, Cotonou",0166303501,,,,,,"arrondissement, type_cape(sous-categorie)"
+50,Trésor Divin,CAPE,,Littoral,Cotonou,,"Vêdoko midédji, Cotonou",0166651672,,,,,,"arrondissement, type_cape(sous-categorie)"
+51,Nos petits Trésors,CAPE,,Littoral,Cotonou,,"Quartier Fidjrossè plage, 12ème arrondissement, Cotonou",0167110353,,,,,,"arrondissement, type_cape(sous-categorie)"
+52,Sainte Bernadette des sœurs ‘filles Notre Dame de Lourdes’,CAPE,,Littoral,Cotonou,,"Djidjè, 6ème arrondissement, Cotonou",0162850861,0195509907,,,,,"arrondissement, type_cape(sous-categorie)"
+53,Centre Ylang Ylang,CAPE,,Atlantique,Allada,Allada,Allada,0163691464,0152750846,,,,,type_cape(sous-categorie)
+54,Fontaine Divine,CAPE,,Atlantique,Tori-Bossito,Tori-Bossito,Tori-Bossito,0195567029,0197125499,,,,,type_cape(sous-categorie)
+55,Orphelinat Sainte famille Maison des enfants,CAPE,,Atlantique,Abomey-Calavi,Abomey-Calavi,Abomey-Calavi,0195369986,0168913230,,,,,type_cape(sous-categorie)
+56,Centre des Sourds ‘’ Les Merveilles’’,CAPE,,Atlantique,Zè,Zè,Zè,,,,,,,"telephone, type_cape(sous-categorie)"
+57,Orphelinat Dr Léon Obayomi Sacramento (LOS),CAPE,,Atlantique,Zè,Zè,Zè,0197643510,0194958331,,,,,type_cape(sous-categorie)
+58,Carrefour d'écoute et d'orientation Sainte Josephine Bakhita d’Akassato,CAPE,,Atlantique,Abomey-Calavi,Abomey-Calavi,Abomey-Calavi,0199987675,0196305929,,,,,type_cape(sous-categorie)
+59,Carrefour d'écoute et d'orientation JOSEPH du Regard d’amour,CAPE,,Atlantique,Abomey-Calavi,Abomey-Calavi,Abomey-Calavi,0199987675,0196305929,,,,,type_cape(sous-categorie)
+60,Bergerie de Dieu Cité d’espoir,CAPE,,Atlantique,Abomey-Calavi,Abomey-Calavi,Abomey-Calavi,0154749549,,,,,,type_cape(sous-categorie)
+61,"""Les petites Frimousses""",CAPE,,Atlantique,Abomey-Calavi,Abomey-Calavi,Abomey-Calavi,0196356007,0195774295,,,,,type_cape(sous-categorie)
+62,La Merveille,CAPE,,Atlantique,Abomey-Calavi,Abomey-Calavi,Abomey-Calavi,0197040419,0164075740,,,,,type_cape(sous-categorie)
+63,La Maison de la Joie,CAPE,,Atlantique,Ouidah,,Ouidah,0166854926,0196433229,,,,,"arrondissement, type_cape(sous-categorie)"
+64,Orphelinat La Vallée de Bénédiction Béraka de Kpovié,CAPE,,Atlantique,Ouidah,Pahou,"Quartier Kpovié arrondissement, Pahou, Ouidah",0194708083,0196341772,,,,,type_cape(sous-categorie)
+65,"Centre Saint Paul, Ami des Aveugles de Tori (CSP AAT)",CAPE,,Atlantique,,,"Laho, Tori",0167920307,,,,,,"commune, arrondissement, type_cape(sous-categorie)"
+66,CAPE Cœur de Compassion,CAPE,,Atlantique,Zè,Zè,"Village Akpali kpèvi, Zè",0197589845,,,,,,type_cape(sous-categorie)
+67,CAPE Pouponnière Notre Dame des Apôtres de Ouidah,CAPE,,Atlantique,Ouidah,,"Quartier Gbènan-nord, 2ème arrondissement, Ouidah",0151516249,,,,,,"arrondissement, type_cape(sous-categorie)"
+68,Centre Maria Goretti de Sô Tchanhoué,CAPE,,Atlantique,Sô-Ava,Sô-Ava,Arrondissement de Sô-tchanhoué Sô-ava,0196356180,,,,,,type_cape(sous-categorie)
+69,Orphelinat Amour et Manon,CAPE,,Atlantique,Kpomassè,Kpomassè,"Maison RECO, village Houégan, Kpomassè",0140606912,0197833195,,,,,type_cape(sous-categorie)
+70,Centre DIBC ‘’ ASSROTINSA’’,CAPE,,Atlantique,Ouidah,,"Quartier Gbènan Nord, 2ème arrondissement, Ouidah",0197948945,0195357531,,,,,"arrondissement, type_cape(sous-categorie)"
+71,Maison de Ahoué- Noukoui,CAPE,,Atlantique,Abomey-Calavi,Abomey-Calavi,"Quartier Togbin, arrondissement de Godomey, Abomey-Calavi",0166933620,,,,,,type_cape(sous-categorie)
+72,La Maison des Espoirs,CAPE,,Atlantique,Ouidah,Pahou,"Maison ZACCAGNA, Quartier Kpodovi, arrondissement de Pahou, Ouidah",0151594795,,,,,,type_cape(sous-categorie)
+73,Orphelinat Sainte Marie de Toligbé,CAPE,,Atlantique,Ouidah,Houakpè-Daho,"Quartier Toligbé, arrondissement Houakpè-daho, Ouidah",0140886690,,,,,,type_cape(sous-categorie)
+74,CAPE Patricia VANDEWIJER,CAPE,,Atlantique,Abomey-Calavi,Abomey-Calavi,"Arrondissement Hêvié, Abomey-Calavi",0197111447,,,,,,type_cape(sous-categorie)
+75,CAPE REMAR,CAPE,,Atlantique,Ouidah,,"Ganlononcodji, Ouidah",0197474393,,,,,,"arrondissement, type_cape(sous-categorie)"
+76,Orphelinat Espoir d’enfant Bénin (OEEB),CAPE,,Atlantique,Ouidah,,"Quartier Kpassè, 3ème arrondissement, Ouidah",0197019386,,,,,,"arrondissement, type_cape(sous-categorie)"
+77,L’Arche des bouts de choux,CAPE,,Atlantique,Abomey-Calavi,Abomey-Calavi,"Quartier Zoundja-kpèvi, Abomey-Calavi",0161107455,0196377727,,,,,type_cape(sous-categorie)
+78,Bon Arbre,CAPE,,Atlantique,Ouidah,Pahou,"Pahou re M/ADJOVI, Pascal, Ouidah, Atlantique.",0166581688,,,,,,type_cape(sous-categorie)
+79,Cœurs unis,CAPE,,Atlantique,Tori-Bossito,Tori-Bossito,"Aïdohoué, Tori -Bossito, Atlantique",0197935977,0196834649,,,,,type_cape(sous-categorie)
+80,Centre Claudia,CAPE,,Atlantique,Abomey-Calavi,Abomey-Calavi,"Ouèga, Agué, Togba, e d’Abomey-Calavi, Atlantique.",0196819106,,,,,,type_cape(sous-categorie)
+81,Foyer de l’enfance,CAPE,,Atlantique,Zè,Hèkanmé,"Hèkanmè, Zè, Atlantique",0190349871,0197887788,,,,,type_cape(sous-categorie)
+82,Saint Nicolas de Dagleta,CAPE,,Atlantique,Allada,Allada,"Sékou, Allada",0162873907,0195053404,,,,,type_cape(sous-categorie)
+83,"Un enfant, une vie’’",CAPE,,Atlantique,Kpomassè,Kpomassè,"Gbètozo, Kpomassè, Atlantique.",0150903185,,,,,,type_cape(sous-categorie)
+84,Mes P’tits Mignons,CAPE,,Atlantique,Abomey-Calavi,Abomey-Calavi,"Calavi, pavés SOS, Abomey-Calavi, l’Atlantique.",0195923858,,,,,,type_cape(sous-categorie)
+85,Plaisirs d’enfance,CAPE,,Atlantique,Abomey-Calavi,Abomey-Calavi,"Aitchedji, maison LIMOAN, Abomey-Calavi, Atlantique",0167477109,,,,,,type_cape(sous-categorie)
+86,Esperanza,CAPE,,Atlantique,Abomey-Calavi,Abomey-Calavi,"Cité la joie, Abomey-Calavi",0160379394,,,,,,type_cape(sous-categorie)
+87,Village d'Enfant SOS Abomey Calavi,CAPE,,Atlantique,Abomey-Calavi,Abomey-Calavi,"Agori, Abomey-Calavi",0166433331,,,,,,type_cape(sous-categorie)
+88,Crèche Garderie JARDIN DES ANGES,Garderie,Crèches et garderies,Atlantique,Abomey-Calavi,Abomey-Calavi,"Akassato, Abomey-Calavi",0195799455,,,,,,
+89,Claudio MIGNECO,CAPE,,Atlantique,Abomey-Calavi,Abomey-Calavi,"Agassa godomey, Abomey-Calavi",0167237372,0197072498,,,,,type_cape(sous-categorie)
+90,Orphelinat Maison Fifamè,CAPE,,Atlantique,Allada,Allada,"Alomé, Allada",0160705454,,,,,,type_cape(sous-categorie)
+91,Refuge de l’enfant Benedetta Bartolozzi,CAPE,,Atlantique,Toffo,,"Ouègbo, Toffo",0197072498,0194078500,,,,,"arrondissement, type_cape(sous-categorie)"
+92,Mamidouce (garderie),Garderie,Crèches et garderies,Atlantique,Abomey-Calavi,Abomey-Calavi,Abomey-Calavi,0161201732,,,,,,
+93,Maison d'Accueil Fifatin CASA GRANDE,CAPE,,Atlantique,Allada,Allada,Allada,0194953904,,,,,,type_cape(sous-categorie)
+94,Centre Vidjingni Les Archanges,CAPE,,Atlantique,Kpomassè,Kpomassè,Kpomassè,016042322,,,,,,type_cape(sous-categorie)
+95,Centre de Protection de l'Enfance St Joseph,CAPE,,Atlantique,Toffo,,Toffo,0152528778,,,,,,"arrondissement, type_cape(sous-categorie)"
+96,"Centre de Récupération, d'Education Nutritionnelle et d'Accueil d'Enfants en Situation Difficile SSPH/OCPSP à AZOWLISSE",CAPE,,Ouémé,,,Azowlissè,0165442175,,,,,,"commune, arrondissement, type_cape(sous-categorie)"
+97,Crèche Garderie LA SOURCE D'AMOUR,Garderie,Crèches et garderies,Ouémé,Porto-Novo,,"Dowa, Porto-Novo",0164800027,0197170001,,,,,arrondissement
+98,Orphelinat Sainte Famille,CAPE,,Ouémé,Sèmè-Kpodji,Sèmè-Kpodji,"Djeffa, Sèmè-Kpodji",0162946660,0160600554,,,,,type_cape(sous-categorie)
+99,Association regard du Cœur YETEN,CAPE,,Ouémé,Avrankou,Avrankou,"Gbozoumè, Avrankou",0165745447,,,,,,type_cape(sous-categorie)
+100,Orphelinat Jean TEKO,CAPE,,Ouémé,Dangbo,Dangbo,"Agbodo/Honmè, Dangbo",0161209259,0161195066,,,,,type_cape(sous-categorie)
+101,Centre des aveugles Père Paul Rival « Allo yon»,CAPE,,Ouémé,Adjohoun,Adjohoun,Adjohoun,0197474686,,,,,,type_cape(sous-categorie)
+102,Anfani,CAPE,,Ouémé,Akpro-Missérété,Akpro-Missérété,Akpro-Missérété,0197485243,,,,,,type_cape(sous-categorie)
+103,La Passerelle,CAPE,,Ouémé,Akpro-Missérété,Akpro-Missérété,Akpro-Missérété,0197874883,,,,,,type_cape(sous-categorie)
+104,MèreBrandis,CAPE,,Ouémé,Bonou,Bonou,Bonou,0196965929,,,,,,type_cape(sous-categorie)
+105,St Jean-Paul II,CAPE,,Ouémé,Dangbo,Dangbo,Dangbo,0163718100,,,,,,type_cape(sous-categorie)
+106,Les Petites Pousses,CAPE,,Ouémé,Sèmè-Kpodji,Sèmè-Kpodji,Sèmè-Kpodji,0195869668,,,,,,type_cape(sous-categorie)
+107,Foyer Ste Augustine de Tohouè,CAPE,,Ouémé,Sèmè-Kpodji,Sèmè-Kpodji,Sèmè-Kpodji,0195846973,,,,,,type_cape(sous-categorie)
+108,Centre DIDIER LE BIHAN des enfants à déficience intellectuelle,CAPE,,Ouémé,Adjohoun,Adjohoun,"Houèkpa-kpota, Adjohoun, Ouémé, Kpota",0154275164,0197014645,,,,,type_cape(sous-categorie)
+109,Le centre d’accueil des enfants scolarisables Notre Dame de toutes grâces accueille,CAPE,,Ouémé,Adjarra,,"Housinvié, Adjarra, Ouémé.",0152681565,,,,,,"arrondissement, type_cape(sous-categorie)"
+110,Orphelinat Béthel,CAPE,,Ouémé,Adjarra,,"Housinvié, Adjarra, Ouémé.",0197135374,,,,,,"arrondissement, type_cape(sous-categorie)"
+111,Notre Dame de la Miséricorde,CAPE,,Ouémé,Adjarra,,"Adjina, Adjarra, Ouémé.",0167229544,,,,,,"arrondissement, type_cape(sous-categorie)"
+112,Orphelinat Saint Gérard Maiella,CAPE,,Ouémé,Porto-Novo,,"Koutongbé, Porto-Novo, Ouémé,",0169386833,0151360104,,,,,"arrondissement, type_cape(sous-categorie)"
+113,VIHINTIN,CAPE,,Ouémé,Porto-Novo,,"Koutongbé, maison NOUNAWON, Porto-Novo, Ouémé.",0196311335,,,,,,"arrondissement, type_cape(sous-categorie)"
+114,Foyer Oasis Tokpota,CAPE,,Ouémé,Porto-Novo,,Porto-Novo,0197574300,0190494351,,,,,"arrondissement, type_cape(sous-categorie)"
+115,Centre Magone de l’Association Foyer Don Bosco,CAPE,,Ouémé,Porto-Novo,,Porto-Novo,0195425477,0194898763,,,,,"arrondissement, type_cape(sous-categorie)"
+116,Foyer de transit « EstebanPuig » de Catchi de l’Association Foyer Don Bosco,CAPE,,Ouémé,Porto-Novo,,Porto-Novo,0120224350,0120247065,,,,,"arrondissement, type_cape(sous-categorie)"
+117,Orphelinat Ahmadiya,CAPE,,Ouémé,Porto-Novo,,Porto-Novo,0197972301,,,,,,"arrondissement, type_cape(sous-categorie)"
+118,Orphelinat Chez Papa Geoff,CAPE,,Ouémé,Bonou,Affamè,"Arrondissement d’Affamè, Bonou",0197547178,0160729291,,,,,type_cape(sous-categorie)
+119,Overcomer’s  Orphanage’,CAPE,,Ouémé,Porto-Novo,,"Quartier Tokpota-zèbè, 5ème arrondissement, Porto-Novo",0197164818,,,,,,"arrondissement, type_cape(sous-categorie)"
+120,Centre Nuance Bénin,CAPE,,Ouémé,Porto-Novo,,"Maison AHOUANCHEDE, quartier Djègan kpèvi, Porto-Novo",0197448271,,,,,,"arrondissement, type_cape(sous-categorie)"
+121,Foyer Ste Thérèse d'Avila,CAPE,,Plateau,Kétou,Kétou,Kétou,0197254239,0166286197,,,,,type_cape(sous-categorie)
+122,Al-Amal l'Espoir,CAPE,,Plateau,Pobè,Pobè,Pobè,0160685243,,,,,,type_cape(sous-categorie)
+123,Orphelinat St Augustin de Sakété,CAPE,,Plateau,Sakété,,Sakété,0194069262,,,,,,"arrondissement, type_cape(sous-categorie)"
+124,Orphelinat/Internat Père Thomas Mouléro DJOGBENOU,CAPE,,Plateau,Sakété,Takon,"Takon, Sakété",0197016905,0195634615,,,,,type_cape(sous-categorie)
+125,Les chants des oiseaux de Pobè,CAPE,,Plateau,Pobè,Pobè,"Pobè-Nord, Pobè",0166114967,0169213947,,,,,type_cape(sous-categorie)
+126,Casa Famiglia Shalom Ruggero e Ricardo Di-Flavio de Lokossa,CAPE,,Mono,Lokossa,Lokossa,"Agonvè, Lokossa",0195796704,,,,,,type_cape(sous-categorie)
+127,La Maison de la Joie,CAPE,,Mono,Athiémé,Athiémé,Athiémé,0197143444,,,,,,type_cape(sous-categorie)
+128,Saints Innocents,CAPE,,Mono,Bopa,Bopa,Bopa,0166286197,,,,,,type_cape(sous-categorie)
+129,La Providence,CAPE,,Mono,Lokossa,Lokossa,Lokossa,0166074135,,,,,,type_cape(sous-categorie)
+130,Béthel House,CAPE,,Mono,Comè,Comè,"Comè Djacoté, Mono.",0195119105,,,,,,type_cape(sous-categorie)
+131,’Centre EPHATTA de formation des Sourds et malentendants,CAPE,,Mono,Houéyogbé,Houéyogbé,"Hindé, Sè, C Houéyogbé, Mono.",0151080483,0197885852,,,,,type_cape(sous-categorie)
+132,Le sourire de Cécilia,CAPE,,Mono,Comè,Comè,"Hongodé, Comè, Mono",0196096194,,,,,,type_cape(sous-categorie)
+133,Orphelinat les meilleurs cœurs solidaires,CAPE,,Mono,Grand-Popo,Grand-Popo,"Grand-Popo, Mono.",0197921110,0196918595,,,,,type_cape(sous-categorie)
+134,CAPE Bénin Vignon,CAPE,,Mono,Houéyogbé,Houéyogbé,"Dahè, Houéyogbé, Mono.",0197692954,,,,,,type_cape(sous-categorie)
+135,NONZO BENIN,CAPE,,Couffo,,,TOVIKLEIN 1,0195668282,,,,,,"commune, arrondissement, type_cape(sous-categorie)"
+136,L'Orphelinat Al-Bahr L'Excellence,CAPE,,Couffo,Djakotomey,,Djakotomey,0162694895,,,,,,"arrondissement, type_cape(sous-categorie)"
+137,Orphelido,CAPE,,Couffo,Dogbo,Tota,"Village Tota-kpodji, Arrondissement de Tota, Dogbo",0190133513,0197058791,,,,,type_cape(sous-categorie)
+138,La maison de l’espoir,CAPE,,Couffo,Toviklin,Houédogli,"Houédogli, Toviklin",016713391821,0140891831,,,,,type_cape(sous-categorie)
+139,Notre Dame de la consolation,CAPE,,Couffo,Aplahoué,Aplahoué,"Quartier, Kpacomé, arrondissement Azovè, Aplahoué",0167452541,0164580704,,,,,type_cape(sous-categorie)
+140,Chez les amis,CAPE,,Mono,Lokossa,Lokossa,"Togueme Kokossou, Lokossa, Mono",0197423915,,,,,,type_cape(sous-categorie)
+141,Centre d’Accueil et de Réinsertion Familiale,CAPE,,Zou,Abomey,,"Agnangnan, Abomey",0167527619,,,,,,"arrondissement, type_cape(sous-categorie)"
+142,Orphelinat Saint Enfant Jésus d’Abomey,CAPE,,Zou,Abomey,,"Houndjroto, Abomey",0197726778,,,,,,"arrondissement, type_cape(sous-categorie)"
+143,Centre de Formation Féminine et Sociale Sainte Famille,CAPE,,Zou,Bohicon,,Bohicon,0197172524,,,,,,"arrondissement, type_cape(sous-categorie)"
+144,La terre d'abondance,CAPE,,Zou,Bohicon,,Bohicon,0194795320,,,,,,"arrondissement, type_cape(sous-categorie)"
+145,MAISON DES ENFANTS,CAPE,,Zou,,,Zagnanando,0161402224,,,,,,"commune, arrondissement, type_cape(sous-categorie)"
+146,Orphelinat 'LA MAISON DE L'ESPOIR,CAPE,,Zou,Abomey,,Abomey,0166065040,,,,,,"arrondissement, type_cape(sous-categorie)"
+147,CEFODEC,CAPE,,Zou,Agbangnizoun,Agbangnizoun,Agbangnizoun,0195420347,,,,,,type_cape(sous-categorie)
+148,CAPE Africa Vie-Gnon,CAPE,,Zou,Bohicon,,"Agbanweme, Maison SOGLO, Bohicon 1, Bohicon",016246271421,0195565677,,,,,"arrondissement, type_cape(sous-categorie)"
+149,Orphelinat DADA AKAO,CAPE,,Zou,Covè,,"Aizondo, Covè, Zou",0197433304,019015668282,,,,,"arrondissement, type_cape(sous-categorie)"
+150,Badano Chiara Luce,CAPE,,Zou,Bohicon,,"Quartier Houndonho, en face de l’école Saint Augustin, Bohicon",0195266904,0161975154,,,,,"arrondissement, type_cape(sous-categorie)"
+151,Orphelinat de Savalou,CAPE,,Collines,Savalou,,"Dénou Rue, Konkondji, Savalou",0197719775,,,,,,"arrondissement, type_cape(sous-categorie)"
+152,Ong « Village Béthanie »,CAPE,,Collines,,,"Kpékoutè, Dassa",0166020580,,,,,,"commune, arrondissement, type_cape(sous-categorie)"
+153,Orphelinat XéwaSowè,CAPE,,Collines,Glazoué,Kpakpaza,"Sowè, Kpakpaza, Glazoué",0197415677,0168356606,,,,,type_cape(sous-categorie)
+154,Village d’Enfants SOS DassaZoumè,CAPE,,Collines,,,"Issalou, Dassa",0194636231,0166529208,,,,,"commune, arrondissement, type_cape(sous-categorie)"
+155,Orphelinat « Cité de la Joie » de Perma,CAPE,,Atacora,Natitingou,Perma,"Natitingou, arrondissement de Perma",0194069262,0121301283,,,,,type_cape(sous-categorie)
+156,Les Saints Innocents de Natitingou,CAPE,,Atacora,Natitingou,,Natitingou,0195569441,,,,,,"arrondissement, type_cape(sous-categorie)"
+157,Centre d’Accueil Sainte Thérèse de l’Enfant Jésus de Toucountouna,CAPE,,Atacora,Toucountouna,Toucountouna,Toucountouna,0197254239,,,,,,type_cape(sous-categorie)
+158,Orphelinat Tabaaku des Sœurs de Saint Augustin de Boukoumbé,CAPE,,Atacora,,,"Boucoumbé, KOUSSOCOUANGO, quartier Zongo",0196805343,0194069262,,,,,"commune, arrondissement, type_cape(sous-categorie)"
+159,Village d’Enfants SOS Natitingou,CAPE,,Atacora,Natitingou,,"Natitingou, Ouroubouga",0197727226,,,,,,"arrondissement, type_cape(sous-categorie)"
+160,Centre socioéducatif As-Salam « la paix »,CAPE,,Atacora,Natitingou,,Natitingou,0166302303,,,,,,"arrondissement, type_cape(sous-categorie)"
+161,Centre d'accueil BIRIM,CAPE,,Donga,Djougou,,Djougou,0166747376,,,,,,"arrondissement, type_cape(sous-categorie)"
+162,Centre socioéducatif AN-Nadjah,CAPE,,Donga,Djougou,,Djougou,0162680518,,,,,,"arrondissement, type_cape(sous-categorie)"
+163,Centre socioéducatif Al-houda,CAPE,,Borgou,Parakou,,Parakou,0162689587,,,,,,"arrondissement, type_cape(sous-categorie)"
+164,Foyer Saint Joseph de l'Association Emilie de Villeneuve de Parakou,CAPE,,Borgou,Parakou,,Parakou,0195204955,,,,,,"arrondissement, type_cape(sous-categorie)"
+165,Garderie les bulles de joie,Garderie,Crèches et garderies,Borgou,Parakou,,Parakou,0197919452,,,,,,arrondissement
+166,Association pour la Promotion de l’Enfance Malheureuse (APEM),CAPE,,Borgou,Parakou,,Parakou,0197163554,,,,,,"arrondissement, type_cape(sous-categorie)"
+167,Orphelinat SABOUYO,CAPE,,Borgou,Parakou,,"Banikanni, Parakou",197482442,0197542391,,,,,"arrondissement, type_cape(sous-categorie)"
+168,Maison de la Paix Saint François d’Assise,CAPE,,Borgou,Parakou,,"1er arrondissement, quartier Tourou, Parakou",0197057060,0198795500,,,,,"arrondissement, type_cape(sous-categorie)"
+169,Orphelinat Sainte Thérèse de l’enfant Jésus de Tchatchou,CAPE,,Borgou,Tchaourou,Tchaourou,"Arrondissement de Tchatchou, Tchaourou",0197041658,,,,,,type_cape(sous-categorie)
+170,CAPE Notre Dame Des Enfants,CAPE,,Borgou,N'dali,N'Dali,N’Dali,0197491053,0195574997,,,,,type_cape(sous-categorie)
+171,Centre Notre Dame de Refuge,CAPE,,Borgou,N'dali,N'Dali,"Komiguéa, N’Dali",195273950,0166225185,,,,,type_cape(sous-categorie)
+172,CAPE Saint Emile/OCPSP de Fô-Bouré,CAPE,,Borgou,Sinendé,Fô-Bourè,"Arrondissement de Fô-Bouré, Sinendé",0197918013,,,,,,type_cape(sous-categorie)
+173,Orphelinat Sainte Élisabeth ANN -SETON,CAPE,,Borgou,Nikki,Nikki,"Arrondissement de Biro, Nikki",0197158365,0197302742,,,,,type_cape(sous-categorie)
+174,Centre d’Accueil et de Sauvegarde de l’enfant/ orphelinat cœur de pauvre,CAPE,,Borgou,Parakou,,"Guéma Parakou, Maison ZOSSOUNGBO Justine, Borgou",0197225122,,,,,,"arrondissement, type_cape(sous-categorie)"
+175,Centre féminin Sainte Cécile de Parakou,CAPE,,Borgou,Parakou,,"kpébié, 1er Parakou, Borgou,",0197401818,0141372476,,,,,"arrondissement, type_cape(sous-categorie)"
+176,Foyer Frédéric Albert,CAPE,,Borgou,Pèrèrè,Pèrèrè,Pèrèrè,0194455675,,,,,,type_cape(sous-categorie)
+177,Maison de la joie,CAPE,,Borgou,Pèrèrè,Pèrèrè,Pèrèrè,0196466298,,,,,,type_cape(sous-categorie)
+178,Centre de récupération des enfants en situation difficile de Bagou,CAPE,,Alibori,Gogounou,Gogounou,"Yagbo, Borgou, Gogounou, Alibori",0164171724,0152089460,,,,,type_cape(sous-categorie)
+179,Centre socioéducatif AS-SADAKA  « l’amitié »,CAPE,,Alibori,Kandi,,Kandi,0153446097,,,,,,"arrondissement, type_cape(sous-categorie)"
+180,Foyer Don Bosco,CAPE,,Alibori,Kandi,,Kandi,0196374709,,,,,,"arrondissement, type_cape(sous-categorie)"
+181,Giant Step Premier Academy Garderie,Garderie,Crèches et garderies,Alibori,Kandi,,"Quartier Gansosso, derrière l’hôtel GB, Kandi",0195020011,,,,,,arrondissement
+182,CAPE Mère Marie de Jésus,CAPE,,Alibori,Segbana,Segbana,"Quartier Toumbou, Ségbana",0153870032,,,,,,type_cape(sous-categorie)
