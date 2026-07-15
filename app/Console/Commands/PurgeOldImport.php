@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\District;
 use App\Models\Requete;
+use App\Models\RequeteTypeGarderie;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -87,7 +88,13 @@ class PurgeOldImport extends Command
         }
 
         DB::transaction(function () {
-            // Les requêtes doivent partir avant les arrondissements qu'elles référencent.
+            // Les sous-types de garderie sont une donnée propre à la requête,
+            // créée à l'import : ils doivent partir avec elle. On les supprime
+            // d'abord, sinon leur clé étrangère bloque la suppression.
+            $ids = $this->requeteQuery()->pluck('id');
+            RequeteTypeGarderie::whereIn('requete_id', $ids)->delete();
+
+            // Puis les requêtes, avant les arrondissements qu'elles référencent.
             $this->requeteQuery()->delete();
             $this->districtQuery()->delete();
         });
