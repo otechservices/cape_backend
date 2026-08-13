@@ -2,6 +2,8 @@
 
 namespace App\Imports;
 
+use App\Models\Cape;
+use App\Models\Cps;
 use App\Models\Department;
 use App\Models\District;
 use App\Models\Municipality;
@@ -35,6 +37,12 @@ class AgreesImport implements ToCollection, WithHeadingRow
     public int $skipped = 0;
     public int $withoutDistrict = 0;
 
+    /** Lignes `capes` (autorisation matérialisée) créées. */
+    public int $capesCreated = 0;
+
+    /** Dossiers rattachés au bon CPS mais avec un arrondissement approximatif. */
+    public int $approximateDistrict = 0;
+
     /** @var string[] */
     public array $warnings = [];
 
@@ -49,6 +57,12 @@ class AgreesImport implements ToCollection, WithHeadingRow
 
     /** @var array<int, array<string, int>> */
     private array $districtCache = [];
+
+    /** @var array<string, int>|null */
+    private ?array $cpsLocalityCache = null;
+
+    /** @var array<int, array<string, int>> */
+    private array $cpsDistrictCache = [];
 
     public function __construct(private int $defaultPromoterId = 1) {}
 
@@ -68,17 +82,26 @@ class AgreesImport implements ToCollection, WithHeadingRow
 
             $communeName = trim((string) data_get($row, 'commune'));
             $localisation = trim((string) data_get($row, 'localisation'));
+            $arrondissement = trim((string) data_get($row, 'arrondissement'));
+            $gups = trim((string) data_get($row, 'gups'));
 
-            $districtId = $this->resolveDistrict(
-                trim((string) data_get($row, 'departement')),
-                $communeName,
-                trim((string) data_get($row, 'arrondissement')),
-                $localisation,
-                $line
-            );
+            // Le GUPS est la nouvelle appellation du CPS : c'est la source la
+            // plus fiable du rattachement. On l'utilise d'abord ; à défaut, on
+            // retombe sur la résolution géographique depuis la localisation.
+            $districtId = $this->resolveDistrictViaGups($gups, $arrondissement, $localisation)
+                ?? $this->resolveDistrict(
+                    trim((string) data_get($row, 'departement')),
+                    $communeName,
+                    $arrondissement,
+                    $localisation,
+                    $line
+                );
 
             if ($districtId === null) {
                 $this->withoutDistrict++;
+                if ($gups !== '') {
+                    $this->warnings[] = "Ligne $line : GUPS/CPS « $gups » non rattaché — à transférer manuellement.";
+                }
             }
 
             $phone = trim((string) data_get($row, 'telephone1')) ?: null;
@@ -98,26 +121,113 @@ class AgreesImport implements ToCollection, WithHeadingRow
                 'aggreement_reference' => trim((string) data_get($row, 'reference_agrement')) ?: null,
                 'aggreement_year' => trim((string) data_get($row, 'annee_agrement')) ?: null,
                 'status' => Requete::STATUS_AGREE_IMPORTE,
+                // Agréés hors plateforme mais considérés comme définitivement
+                // autorisés : ces drapeaux les rendent visibles partout où
+                // l'application reconnaît un dossier autorisé (tableau de bord,
+                // écrans « CAPE autorisés », recherche), au même titre que la
+                // ligne `capes` créée plus bas.
+                'has_agreemant' => true,
+                'is_authorized' => true,
                 'promoter_id' => $this->defaultPromoterId,
             ];
 
-            // Rapprochement sur dénomination + commune : deux centres homonymes
-            // situés dans des communes différentes restent bien distincts.
+            // Rapprochement restreint aux dossiers issus de l'import (statut 9) :
+            // un ré-import met à jour la ligne existante sans jamais écraser un
+            // dossier réel de la plateforme qui porterait le même nom. Les
+            // dénominations du fichier étant uniques, ce critère suffit.
             $existing = Requete::where('name', $name)
-                ->where(fn ($q) => $communeName !== ''
-                    ? $q->where('town', $communeName)
-                    : $q->whereNull('town'))
+                ->where('status', Requete::STATUS_AGREE_IMPORTE)
                 ->first();
 
             if ($existing) {
                 $existing->update($data);
+                $requete = $existing;
                 $this->updated++;
             } else {
                 $data['code'] = ($isGarderie ? 'GARD-' : 'CAPE-').Str::upper(Str::random(6));
-                Requete::create($data);
+                $requete = Requete::create($data);
                 $this->created++;
             }
+
+            // Matérialise l'autorisation : c'est la table `capes` que lisent les
+            // écrans « CAPE autorisés ». On reproduit le résultat du circuit
+            // d'agrément sans sa partie compte utilisateur / PDF / e-mail, qui
+            // n'a pas lieu d'être pour des centres déjà agréés hors plateforme.
+            // firstOrCreate garde la commande ré-exécutable sans doublon.
+            $cape = Cape::firstOrCreate(['requete_id' => $requete->id], ['status' => 1]);
+            if ($cape->wasRecentlyCreated) {
+                $this->capesCreated++;
+            }
         }
+    }
+
+    /**
+     * Rattache le dossier à partir du GUPS, nouvelle appellation du CPS.
+     *
+     * Le GUPS nomme directement le centre de rattachement (« Allada » →
+     * « Centre de Promotion Sociale d'Allada »), donc la source la plus fiable.
+     * On choisit ensuite, parmi les arrondissements de ce CPS, celui qui colle
+     * le mieux à la localisation ; faute de correspondance précise, on prend un
+     * arrondissement représentatif du CPS : le rattachement (donc la visibilité
+     * CPS/DDASM) reste correct, seule la précision de l'arrondissement est
+     * approximative et rattrapable par un transfert.
+     */
+    private function resolveDistrictViaGups(string $gups, string $arrondissement, string $localisation): ?int
+    {
+        if ($gups === '') {
+            return null;
+        }
+
+        $cpsId = TextMatcher::bestMatch($gups, $this->cpsLocalities(), 0.80);
+        if (! $cpsId) {
+            return null;
+        }
+
+        $districts = $this->cpsDistricts($cpsId);
+        if ($districts === []) {
+            return null;
+        }
+
+        $districtId = TextMatcher::bestMatch($arrondissement, $districts)
+            ?? TextMatcher::bestMatch($localisation, $districts);
+
+        if ($districtId) {
+            return $districtId;
+        }
+
+        // Rattachement au bon CPS sans arrondissement précis : à affiner ensuite.
+        $this->approximateDistrict++;
+
+        return (int) reset($districts);
+    }
+
+    /**
+     * Localité de chaque CPS (préfixe « Centre de Promotion Sociale … » retiré)
+     * vers son identifiant, pour le rapprochement avec le GUPS.
+     *
+     * @return array<string, int>
+     */
+    private function cpsLocalities(): array
+    {
+        return $this->cpsLocalityCache ??= Cps::pluck('name', 'id')
+            ->mapWithKeys(function ($name, $id) {
+                $loc = preg_replace('/^Centre de Promotion Sociale\s*/iu', '', (string) $name);
+                $loc = preg_replace('/^(\d+\s+)?(de la|de l|des|du|de|d)[\s\'’]+/iu', '', $loc);
+
+                return [trim($loc) => $id];
+            })
+            ->all();
+    }
+
+    /**
+     * Arrondissements rattachés à un CPS donné (libellé => id).
+     *
+     * @return array<string, int>
+     */
+    private function cpsDistricts(int $cpsId): array
+    {
+        return $this->cpsDistrictCache[$cpsId] ??= District::where('cps_id', $cpsId)
+            ->pluck('id', 'name')->all();
     }
 
     /**
@@ -153,16 +263,27 @@ class AgreesImport implements ToCollection, WithHeadingRow
             return null;
         }
 
-        $districtId = TextMatcher::bestMatch($districtName, $this->districts($municipalityId))
-            ?? TextMatcher::bestMatch($localisation, $this->districts($municipalityId));
+        $districts = $this->districts($municipalityId);
 
-        if (! $districtId) {
-            $this->warnings[] = "Ligne $line : arrondissement introuvable pour « $localisation » — à transférer manuellement.";
+        $districtId = TextMatcher::bestMatch($districtName, $districts)
+            ?? TextMatcher::bestMatch($localisation, $districts);
 
-            return null;
+        if ($districtId) {
+            return $districtId;
         }
 
-        return $districtId;
+        // Arrondissement non identifié mais commune connue : on rattache au
+        // premier arrondissement de la commune. Le dossier devient visible du
+        // CPS qui la couvre ; l'arrondissement exact reste à préciser.
+        if ($districts !== []) {
+            $this->approximateDistrict++;
+
+            return (int) reset($districts);
+        }
+
+        $this->warnings[] = "Ligne $line : aucun arrondissement pour la commune de « $localisation » — à rattacher manuellement.";
+
+        return null;
     }
 
     /**

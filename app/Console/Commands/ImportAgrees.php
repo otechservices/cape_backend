@@ -51,6 +51,13 @@ class ImportAgrees extends Command
         $this->info("Créées  : {$import->created}");
         $this->info("Mises à jour : {$import->updated}");
         $this->info("Ignorées : {$import->skipped}");
+        $this->info("Autorisations (lignes capes) créées : {$import->capesCreated}");
+
+        if ($import->approximateDistrict > 0) {
+            $this->newLine();
+            $this->warn("{$import->approximateDistrict} dossier(s) rattachés au bon CPS mais sans arrondissement précis.");
+            $this->line('  → visibles par le bon CPS ; l\'arrondissement exact est à préciser via « Transférer ».');
+        }
 
         if ($import->createdTypes) {
             $this->newLine();
