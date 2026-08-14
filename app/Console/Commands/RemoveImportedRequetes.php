@@ -3,28 +3,38 @@
 namespace App\Console\Commands;
 
 use App\Models\Requete;
+use App\Utilities\TextMatcher;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Retire définitivement des dossiers importés rattachés à un CPS donné.
+ * Retire définitivement des centres importés à tort comme agréés.
  *
- * Cas d'usage : des centres importés comme agréés qui ne le sont pas en réalité
- * (ex. les CAPE de Bembèrèkè, autorisés par le MES comme internats et non agréés
- * par le MASM). On supprime le dossier et toutes ses lignes filles.
+ * Corrections apportées à la liste MASM :
+ *  - les CAPE de Bembèrèkè, autorisés par le MES comme internats et non agréés
+ *    par le MASM ;
+ *  - « Orphelinat XéwaSowè » (Glazoué), fermé depuis plus de deux ans.
  *
- * Le périmètre est volontairement restreint au statut 9 (dossiers issus de
- * l'import) : un dossier réel de la plateforme ne peut pas être supprimé par
- * cette commande.
+ * Le rapprochement se fait par nom (tolérant aux accents et fautes de frappe),
+ * et strictement sur les dossiers issus de l'import (statut 9) : un dossier réel
+ * de la plateforme ne peut jamais être supprimé par cette commande.
  */
 class RemoveImportedRequetes extends Command
 {
     protected $signature = 'requetes:remove
-                            {--cps=Bembèrèkè : Filtre sur le nom du CPS de rattachement (sous-chaîne)}
-                            {--service= : 1 = CAPE, 2 = Garderie ; vide = les deux}
+                            {--name=* : Nom(s) supplémentaire(s) à retirer, en plus de la liste par défaut}
                             {--force : Supprime réellement (sans cette option, simple simulation)}';
 
-    protected $description = "Supprime des dossiers importés (statut 9) rattachés à un CPS, avec leurs lignes filles";
+    protected $description = "Supprime des centres importés à tort comme agréés (par nom), avec leurs lignes filles";
+
+    /** Centres à retirer, avec l'orthographe de la liste source. */
+    private const EXCLUSIONS = [
+        'Yénou Géo CAPE des Sœurs Filles du Cœur de Marie de Bembéréké',
+        'CAPE Saint François d’Assise',
+        'Saint François coll des Sœurs Dominicaine',
+        'Bèssè ka Barouka de Paroisse notre Dame',
+        'Orphelinat XéwaSowè',
+    ];
 
     /** Tables filles qui référencent requetes (clés étrangères). */
     private const CHILD_TABLES = [
@@ -32,37 +42,43 @@ class RemoveImportedRequetes extends Command
         'reponses', 'avis', 'affectations', 'referals', 'agendas',
     ];
 
-    private function query()
-    {
-        $cps = $this->option('cps');
-
-        $query = Requete::query()
-            ->where('status', Requete::STATUS_AGREE_IMPORTE)
-            ->whereHas('district.cps', fn ($q) => $q->where('name', 'like', "%$cps%"));
-
-        if ($this->option('service')) {
-            $query->where('service_id', (int) $this->option('service'));
-        }
-
-        return $query;
-    }
-
     public function handle()
     {
-        $requetes = $this->query()->with('district.cps')->get();
+        $targets = array_merge(self::EXCLUSIONS, $this->option('name'));
 
-        if ($requetes->isEmpty()) {
-            $this->info('Aucun dossier concerné.');
+        // Candidats = uniquement les dossiers issus de l'import.
+        $candidates = Requete::where('status', Requete::STATUS_AGREE_IMPORTE)
+            ->pluck('id', 'name')->all();
+
+        if ($candidates === []) {
+            $this->info('Aucun dossier importé (statut 9) en base.');
 
             return 0;
         }
 
+        $matched = [];
+        foreach ($targets as $target) {
+            $id = TextMatcher::bestMatch($target, $candidates, 0.80);
+            if ($id) {
+                $matched[$id] = $target;
+            } else {
+                $this->warn("Non trouvé en base : « $target ».");
+            }
+        }
+
+        if ($matched === []) {
+            $this->info('Aucun dossier à supprimer.');
+
+            return 0;
+        }
+
+        $ids = array_keys($matched);
+        $requetes = Requete::whereIn('id', $ids)->get(['id', 'code', 'name']);
+
         $this->warn($requetes->count().' dossier(s) seront SUPPRIMÉS définitivement :');
         $this->table(
-            ['id', 'code', 'dénomination', 'CPS'],
-            $requetes->map(fn ($r) => [
-                $r->id, $r->code, mb_strimwidth($r->name, 0, 40, '…'), $r->district?->cps?->name,
-            ])->all()
+            ['id', 'code', 'dénomination'],
+            $requetes->map(fn ($r) => [$r->id, $r->code, mb_strimwidth($r->name, 0, 45, '…')])->all()
         );
 
         if (! $this->option('force')) {
@@ -77,11 +93,8 @@ class RemoveImportedRequetes extends Command
             return 0;
         }
 
-        $ids = $requetes->pluck('id');
-
         DB::transaction(function () use ($ids) {
-            // Les lignes filles partent d'abord, sinon leurs clés étrangères
-            // bloquent la suppression des dossiers.
+            // Les lignes filles partent d'abord (clés étrangères), puis les dossiers.
             foreach (self::CHILD_TABLES as $table) {
                 DB::table($table)->whereIn('requete_id', $ids)->delete();
             }
@@ -89,7 +102,7 @@ class RemoveImportedRequetes extends Command
             Requete::whereIn('id', $ids)->delete();
         });
 
-        $this->info($ids->count().' dossier(s) supprimé(s).');
+        $this->info(count($ids).' dossier(s) supprimé(s).');
 
         return 0;
     }
