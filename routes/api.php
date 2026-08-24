@@ -319,6 +319,21 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
     
       Route::get('/send-recepisse/{code}', 'RequeteController@sendRecepisse');
 
+      /*
+       * Reconnaissance des agréments délivrés hors plateforme.
+       * Espace promoteur : revendication d'un centre importé puis dépôt des
+       * pièces. Espace DFEA : file d'attente et décision.
+       */
+      Route::get('/agrement-claims/available', 'AgrementClaimController@available');
+      Route::post('/agrement-claims/request-otp', 'AgrementClaimController@requestOtp');
+      Route::post('/agrement-claims/verify-otp', 'AgrementClaimController@verifyOtp');
+      Route::get('/agrement-claims/required-files', 'AgrementClaimController@requiredFiles');
+      Route::post('/agrement-claims/add-file', 'AgrementClaimController@addFile');
+      Route::post('/agrement-claims/submit', 'AgrementClaimController@submit');
+      Route::get('/agrement-claims/mine', 'AgrementClaimController@mine');
+      Route::get('/agrement-claims/pending', 'AgrementClaimController@pending');
+      Route::post('/agrement-claims/decide', 'AgrementClaimController@decide');
+
 
     });
 });

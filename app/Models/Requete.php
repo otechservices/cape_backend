@@ -19,6 +19,18 @@ private static $whiteListFilter = ['*'];
     public const STATUS_AGREE_IMPORTE = 9;
 
     /**
+     * Agrément délivré hors plateforme, en attente de reconnaissance par la DFEA.
+     *
+     * Statut pivot des deux parcours de régularisation : le centre importé que
+     * son promoteur revendique, et le nouveau dossier dont le promoteur déclare
+     * détenir déjà un agrément. Dans les deux cas la DFEA tranche, et le dossier
+     * n'emprunte pas le circuit d'instruction complet.
+     *
+     * @see \App\Models\AgrementClaim
+     */
+    public const STATUS_AGREMENT_A_VALIDER = 10;
+
+    /**
      * Un dossier est agréé s'il a été autorisé via la plateforme
      * (agrément délivré) ou s'il provient de l'import des agréments existants.
      */
@@ -198,5 +210,27 @@ private static $whiteListFilter = ['*'];
      public function promoter()
     {
         return $this->belongsTo(Promoter::class,'promoter_id');
+    }
+
+    public function agrementClaims()
+    {
+        return $this->hasMany(AgrementClaim::class, 'requete_id');
+    }
+
+    /**
+     * La demande de reconnaissance d'agrément en cours, s'il y en a une.
+     * Une seule peut être vivante à la fois (voir AgrementClaim::scopeOngoing).
+     */
+    public function agrementClaim()
+    {
+        return $this->hasOne(AgrementClaim::class, 'requete_id')->ongoing();
+    }
+
+    /**
+     * Dossiers dont l'agrément hors plateforme attend la décision de la DFEA.
+     */
+    public function scopeAgrementAValider($query)
+    {
+        return $query->where('status', self::STATUS_AGREMENT_A_VALIDER);
     }
 }

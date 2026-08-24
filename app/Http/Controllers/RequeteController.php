@@ -5,6 +5,7 @@ use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
 use App\Utilities\Mailer;
 use App\Utilities\FileStorage;
+use App\Models\AgrementClaim;
 use App\Models\District;
 use App\Models\Agenda;
 use App\Models\Requete;
@@ -241,13 +242,40 @@ class RequeteController extends Controller
         }
 
         $code = RequeteController::generateUniqueCode($service);
+
+        /*
+         * Agrément déjà détenu par le promoteur.
+         *
+         * Le dossier échappe au circuit d'instruction complet, mais il n'est
+         * pas pour autant autorisé d'office : `has_agreemant` et
+         * `is_authorized` ne seront posés qu'une fois l'agrément reconnu par
+         * la DFEA. En attendant, le dossier stationne au statut
+         * STATUS_AGREMENT_A_VALIDER, adossé à une demande de reconnaissance.
+         *
+         * @see \App\Http\Repositories\AgrementClaimRepository::decide()
+         */
+        $hasAgrement = ! empty($data->has_aggrement);
         $dataR = [];
-        if ($data->has_aggrement) {
+        if ($hasAgrement) {
+            if (! $request->file('file_aggreement')) {
+                return response()->json([
+                    "success" => false,
+                    "message" => "Veuillez joindre le scan de l'agrément que vous déclarez détenir",
+                    "data" => null
+                ], 422);
+            }
+
+            if (empty($data->aggreement_reference)) {
+                return response()->json([
+                    "success" => false,
+                    "message" => "Veuillez renseigner la référence de l'agrément",
+                    "data" => null
+                ], 422);
+            }
+
             $dataR['aggreement_reference'] = $data->aggreement_reference;
-            $dataR['aggreement_year'] = $data->aggreement_year;
+            $dataR['aggreement_year'] = $data->aggreement_year ?? null;
             $dataR['file_aggreement'] = FileStorage::setFile("doc_store", $request->file('file_aggreement'), $code, time());
-            $dataR['has_agreemant'] = true;
-            $dataR['is_authorized'] = true;
         }
         $filename = null;
         if ($request->file('zone_file')) {
@@ -294,7 +322,7 @@ class RequeteController extends Controller
             "pomoter_is_director" => $data->chief_is_directeor,
             "consent_file" => $consent_file,
             "target" => json_encode($data->targets),
-            "status" => $data->has_aggrement ? 8 : 0,
+            "status" => $hasAgrement ? Requete::STATUS_AGREMENT_A_VALIDER : 0,
             "district_id" => (int) $data->district_id,
             "service_id" => (int) $request->service_id,
             "promoter_id"=>Auth::user()->promoter_id
@@ -370,9 +398,27 @@ class RequeteController extends Controller
 
         Parcours::create([
             'delay' => 0,
-            'libelle' => "Dossier soumis par le centre " . $data->name,
+            'libelle' => $hasAgrement
+                ? "Dossier soumis avec agrément existant par le centre " . $data->name
+                : "Dossier soumis par le centre " . $data->name,
             'requete_id' => $requete->id
         ]);
+
+        // Ouvre la demande de reconnaissance : c'est elle qui fait apparaître le
+        // dossier dans la file d'attente de la DFEA, aux côtés des centres
+        // importés revendiqués par leur promoteur.
+        if ($hasAgrement) {
+            AgrementClaim::create([
+                'requete_id' => $requete->id,
+                'promoter_id' => Auth::user()->promoter_id,
+                'previous_promoter_id' => Auth::user()->promoter_id,
+                'user_id' => Auth::id(),
+                'origin' => AgrementClaim::ORIGIN_DECLARATION,
+                'status' => AgrementClaim::STATUS_SUBMITTED,
+                'otp_verified_at' => now(),
+                'submitted_at' => now(),
+            ]);
+        }
 
 
         $emails = [

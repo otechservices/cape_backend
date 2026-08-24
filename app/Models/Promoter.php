@@ -36,6 +36,20 @@ private static $whiteListFilter = ['*'];
         return $this->hasOne(User::class, 'promoter_id');
     }
 
+    /**
+     * Un promoteur peut détenir plusieurs centres : chaque dossier déposé ou
+     * revendiqué pointe sur lui.
+     */
+    public function requetes()
+    {
+        return $this->hasMany(Requete::class, 'promoter_id');
+    }
+
+    public function agrementClaims()
+    {
+        return $this->hasMany(AgrementClaim::class, 'promoter_id');
+    }
+
 
 
 }
