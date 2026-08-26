@@ -12,6 +12,7 @@ use App\Services\LogService;
 use App\Utilities\Common;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
+use App\Utilities\ErrorMessage;
 
 class CorpsController extends Controller
 {
@@ -90,9 +91,9 @@ class CorpsController extends Controller
 
             return Common::success($message, $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -162,9 +163,9 @@ class CorpsController extends Controller
 
             return Common::success('Corps trouvé', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -220,9 +221,9 @@ class CorpsController extends Controller
 
             return Common::successCreate('Corps créé avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -289,9 +290,9 @@ class CorpsController extends Controller
 
             return Common::success('Mise à jour de Corps effectuée avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -353,9 +354,9 @@ class CorpsController extends Controller
 
             return Common::successDelete('Corps supprimé avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -427,9 +428,9 @@ class CorpsController extends Controller
 
             return Common::success("Corps $statusMessage avec succès", $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
 
     }
@@ -487,9 +488,9 @@ class CorpsController extends Controller
 
             return Common::success('Filtrage effectué avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -502,9 +503,9 @@ class CorpsController extends Controller
 
             return Common::success('Filtrage effectué avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
     function verifyLink(VerifyLinkRequest $request) {
@@ -516,9 +517,9 @@ class CorpsController extends Controller
 
             return Common::success('Filtrage effectué avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
     function participate(ParticipateRequest $request) {
@@ -531,9 +532,9 @@ class CorpsController extends Controller
 
             return Common::success('Filtrage effectué avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
     function generateMediaLink($id) {
@@ -551,9 +552,9 @@ class CorpsController extends Controller
 
             return Common::success('Filtrage effectué avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }*/
 }

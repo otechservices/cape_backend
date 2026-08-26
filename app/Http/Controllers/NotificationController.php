@@ -10,6 +10,7 @@ use App\Services\LogService;
 use App\Utilities\Common;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
+use App\Utilities\ErrorMessage;
 
 class NotificationController
 {
@@ -83,9 +84,9 @@ class NotificationController
 
             return Common::success($message, $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($th->getMessage())]);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode(ErrorMessage::report($th))]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
 
     }
@@ -148,9 +149,9 @@ class NotificationController
             return Common::success('Notification trouvé', $result);
         } catch (\Throwable $th) {
             // return $th->status();
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($th->getMessage())]);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode(ErrorMessage::report($th))]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
 
     }
@@ -208,9 +209,9 @@ class NotificationController
 
             return Common::successCreate('Notification crée  avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($th->getMessage())]);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode(ErrorMessage::report($th))]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
 
     }
@@ -279,9 +280,9 @@ class NotificationController
 
             return Common::success('Mise à jour d\'une Notification effectuée avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -342,9 +343,9 @@ class NotificationController
 
             return Common::successDelete('Notification supprimé avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
 
     }
@@ -417,9 +418,9 @@ class NotificationController
 
             return Common::success("Notification $statusMessage avec succès", $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -476,9 +477,9 @@ class NotificationController
 
             return Common::success('Filtrage éffectué avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 }

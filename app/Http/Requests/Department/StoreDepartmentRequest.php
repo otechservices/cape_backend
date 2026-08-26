@@ -2,18 +2,17 @@
 
 namespace App\Http\Requests\Department;
 
-use App\Utilities\Common;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Http\Requests\BaseFormRequest;
 
-class StoreDepartmentRequest extends FormRequest
+class StoreDepartmentRequest extends BaseFormRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
+    /**
+     * Règles de validation appliquées à la requête.
+     *
+     * Les messages d'erreur français sont fournis automatiquement par
+     * lang/fr/validation.php (règles) et lang/fr/attributes.php (libellés
+     * des champs), via BaseFormRequest.
+     */
     public function rules(): array
     {
         return [
@@ -21,18 +20,4 @@ class StoreDepartmentRequest extends FormRequest
             'is_active' => 'sometimes|boolean', 
             ];
     }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(Common::error($validator->errors()->first(), $validator->errors()));
-    }
-
-    public function messages(): array
-    {
-        return [
-            'name.required'      => 'Le nom est requis.',
-            'is_active.required'  => 'Le statut doit être vrai ou faux.',                ];
-    }
-
-    protected function prepareForValidation() {}
 }

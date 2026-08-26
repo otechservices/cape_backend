@@ -1,15 +1,18 @@
 <?php
+
 namespace App\Http\Requests\Resident;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class StoreResidentRequest extends FormRequest
+class StoreResidentRequest extends BaseFormRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
+    /**
+     * Règles de validation appliquées à la requête.
+     *
+     * Les messages d'erreur français sont fournis automatiquement par
+     * lang/fr/validation.php (règles) et lang/fr/attributes.php (libellés
+     * des champs), via BaseFormRequest.
+     */
     public function rules(): array
     {
         return [
@@ -22,25 +25,6 @@ class StoreResidentRequest extends FormRequest
             'sex'         => ['required', 'in:Masculin,Féminin'],
             'size'        => ['nullable', 'numeric', 'min:0'],
             'weight'      => ['nullable', 'numeric', 'min:0'],
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'firstname.required'   => 'Le prénom est obligatoire.',
-            'lastname.required'    => 'Le nom de famille est obligatoire.',
-            'birthdate.required'   => 'La date de naissance est obligatoire.',
-            'birthdate.date'       => 'La date de naissance doit être une date valide.',
-            'birthdate.before'     => 'La date de naissance doit être antérieure à aujourd’hui.',
-            'birthplace.required'  => 'Le lieu de naissance est obligatoire.',
-            'address.required'     => 'L’adresse est obligatoire.',
-            'sex.required'         => 'Le sexe est obligatoire.',
-            'sex.in'               => 'Le sexe doit être Masculin ou Féminin.',
-            'size.numeric'         => 'La taille doit être un nombre.',
-            'size.min'             => 'La taille doit être supérieure ou égale à 0.',
-            'weight.numeric'       => 'Le poids doit être un nombre.',
-            'weight.min'           => 'Le poids doit être supérieur ou égal à 0.',
         ];
     }
 }

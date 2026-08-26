@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Utilities\ErrorMessage;
+
 use Illuminate\Http\Request;
 use App\Models\Staff;
 use App\Http\Repositories\StaffRepository;
@@ -92,9 +94,9 @@ class StaffController extends Controller
 
             return Common::success($message, $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -164,9 +166,9 @@ class StaffController extends Controller
 
             return Common::success('Staff trouvé', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -222,9 +224,9 @@ class StaffController extends Controller
 
             return Common::successCreate('Staff créé avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -291,9 +293,9 @@ class StaffController extends Controller
 
             return Common::success('Mise à jour de Staff effectuée avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -355,9 +357,9 @@ class StaffController extends Controller
 
             return Common::successDelete('Staff supprimé avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -429,9 +431,9 @@ class StaffController extends Controller
 
             return Common::success("Staff $statusMessage avec succès", $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
 
     }
@@ -489,9 +491,9 @@ class StaffController extends Controller
 
             return Common::success('Filtrage effectué avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 

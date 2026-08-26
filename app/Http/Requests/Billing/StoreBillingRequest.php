@@ -2,18 +2,17 @@
 
 namespace App\Http\Requests\Billing;
 
-use App\Utilities\Common;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Http\Requests\BaseFormRequest;
 
-class StoreBillingRequest extends FormRequest
+class StoreBillingRequest extends BaseFormRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
+    /**
+     * Règles de validation appliquées à la requête.
+     *
+     * Les messages d'erreur français sont fournis automatiquement par
+     * lang/fr/validation.php (règles) et lang/fr/attributes.php (libellés
+     * des champs), via BaseFormRequest.
+     */
     public function rules(): array
     {
         return [
@@ -24,24 +23,4 @@ class StoreBillingRequest extends FormRequest
             'priorite' => 'required|in:Urgente,Normale,Faible',
             ];
     }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(Common::error($validator->errors()->first(), $validator->errors()));
-    }
-
-    public function messages(): array
-    {
-        return [
-            'object.required' => 'L\'objet est requis.',
-            'name.required' => 'Le nom est requis.',
-            'email.required' => 'L\'email est requis.',
-            'content.required' => 'Le contenu est requis.',
-            'token.required' => 'Le token est requis.',
-            'is_open.required' => 'Le champ is_open est requis.',
-            'type_billing_id.required' => 'L\'ID du type de facturation est requis.',
-        ];    
-    }
-
-    protected function prepareForValidation() {}
 }

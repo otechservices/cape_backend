@@ -9,6 +9,7 @@ use App\Services\LogService;
 use App\Utilities\Common;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
+use App\Utilities\ErrorMessage;
 
 class PermissionController
 {
@@ -96,9 +97,9 @@ class PermissionController
 
             return Common::success($message, $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($th->getMessage())]);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode(ErrorMessage::report($th))]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -159,9 +160,9 @@ class PermissionController
 
             return Common::success('Permission trouvée', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($th->getMessage())]);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode(ErrorMessage::report($th))]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -217,9 +218,9 @@ class PermissionController
 
             return Common::successCreate('Permission créée avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($th->getMessage())]);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode(ErrorMessage::report($th))]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -286,9 +287,9 @@ class PermissionController
 
             return Common::success('Mise à jour d\'une permission effectuée avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -350,9 +351,9 @@ class PermissionController
 
             return Common::successDelete('Permission supprimée avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -410,9 +411,9 @@ class PermissionController
 
             return Common::success('Filtrage effectué avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 }

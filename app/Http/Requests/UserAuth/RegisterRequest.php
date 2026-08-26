@@ -1,15 +1,18 @@
 <?php
+
 namespace App\Http\Requests\UserAuth;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class RegisterRequest extends FormRequest
+class RegisterRequest extends BaseFormRequest
 {
-    public function authorize(): bool
-    {
-        return true; // ou appliquer une logique si nécessaire
-    }
-
+    /**
+     * Règles de validation appliquées à la requête.
+     *
+     * Les messages d'erreur français sont fournis automatiquement par
+     * lang/fr/validation.php (règles) et lang/fr/attributes.php (libellés
+     * des champs), via BaseFormRequest.
+     */
     public function rules(): array
     {
         return [
@@ -18,20 +21,6 @@ class RegisterRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['required', 'string', 'max:20', 'unique:promoters,phone'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'lastname.required' => 'Le lastname est obligatoire.',
-            'firstname.required' => 'Le prénom est obligatoire.',
-            'email.required' => 'L’email est obligatoire.',
-            'email.unique' => 'Cet email est déjà utilisé.',
-            'phone.required' => 'Le numéro de téléphone est obligatoire.',
-            'phone.unique' => 'Ce numéro est déjà utilisé.',
-            'password.required' => 'Le mot de passe est obligatoire.',
-            'password.confirmed' => 'La confirmation du mot de passe ne correspond pas.',
         ];
     }
 }

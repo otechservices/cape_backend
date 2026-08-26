@@ -2,18 +2,17 @@
 
 namespace App\Http\Requests\ControlFileElement;
 
-use App\Utilities\Common;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Http\Requests\BaseFormRequest;
 
-class StoreControlFileElementRequest extends FormRequest
+class StoreControlFileElementRequest extends BaseFormRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
+    /**
+     * Règles de validation appliquées à la requête.
+     *
+     * Les messages d'erreur français sont fournis automatiquement par
+     * lang/fr/validation.php (règles) et lang/fr/attributes.php (libellés
+     * des champs), via BaseFormRequest.
+     */
     public function rules(): array
     {
         return [
@@ -22,21 +21,4 @@ class StoreControlFileElementRequest extends FormRequest
             'is_active'  => 'sometimes|boolean',
             'service_id' => 'required|integer|exists:services,id',        ];
     }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(Common::error($validator->errors()->first(), $validator->errors()));
-    }
-
-    public function messages(): array
-    {
-        return [
-            'name.required'       => 'Le nom est requis.',
-            'note_max.required'   => 'La note maximale est requise.',
-            'is_active.required'   => 'Le statut doit être vrai ou faux.',
-            'service_id.required' => 'L\'ID du service est requis.',
-                    ];
-    }
-
-    protected function prepareForValidation() {}
 }

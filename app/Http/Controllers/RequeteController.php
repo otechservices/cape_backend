@@ -25,6 +25,7 @@ use App\Models\RequeteTypeGarderie;
 use App\Exports\RequetesExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Log;
+use App\Utilities\ErrorMessage;
 
 /** status check
  * 0 : Nouvelle
@@ -944,7 +945,7 @@ return response()->json([
             } catch (\Exception $e) {
                 return response()->json([
                     "success" => false,
-                    "message" => $e->getMessage(),
+                    "message" => ErrorMessage::of($e),
                     "data" => null
                 ], 200);
             }
@@ -1033,7 +1034,7 @@ return response()->json([
             } catch (\Exception  $e) {
                 return response()->json([
                     "success" => false,
-                    "message" => $e->getMessage(),
+                    "message" => ErrorMessage::of($e),
                     "data" => null
                 ]);
             }
@@ -1129,7 +1130,7 @@ return response()->json([
             } catch (\Exception $e) {
                 return response()->json([
                     "success" => false,
-                    "message" => $e->getMessage(),
+                    "message" => ErrorMessage::of($e),
                     "data" => null
                 ], 500);
             }
@@ -1259,7 +1260,7 @@ return response()->json([
             } catch (\Exception $e) {
                 return response()->json([
                     "success" => false,
-                    "message" => $e->getMessage(),
+                    "message" => ErrorMessage::of($e),
                     "data" => null
                 ],500);
             }
@@ -1430,7 +1431,7 @@ public function inviteStore(Request $request)
         //     Log::error($e);
         //     return response()->json([
         //         "success" => false,
-        //         "message" => $e->getMessage(),
+        //         "message" => ErrorMessage::of($e),
         //         "data" => null
         //     ], 200);
         // }

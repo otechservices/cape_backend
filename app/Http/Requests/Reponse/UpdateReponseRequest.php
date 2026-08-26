@@ -2,18 +2,17 @@
 
 namespace App\Http\Requests\Reponse;
 
-use App\Utilities\Common;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Http\Requests\BaseFormRequest;
 
-class UpdateReponseRequest extends FormRequest
+class UpdateReponseRequest extends BaseFormRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
+    /**
+     * Règles de validation appliquées à la requête.
+     *
+     * Les messages d'erreur français sont fournis automatiquement par
+     * lang/fr/validation.php (règles) et lang/fr/attributes.php (libellés
+     * des champs), via BaseFormRequest.
+     */
     public function rules(): array
     {
         return [
@@ -27,25 +26,4 @@ class UpdateReponseRequest extends FormRequest
             'is_active' => 'sometimes|boolean',
             'user_id' => 'required|integer',        ];
     }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(Common::error($validator->errors()->first(), $validator->errors()));
-    }
-
-    public function messages(): array
-    {
-        return [
-            'title.required' => 'Le titre est requis.',
-            'subtitle.string' => 'Le sous-titre doit être une chaîne de caractères.',
-            'big_photo.required' => 'La big photo est requis.',
-            'short_photo.required' => 'La short_photo est requis.',
-            'resume.required' => 'Le résumé est requis.',
-            'content.required' => 'Le contenu est requis.',
-            'author.string' => 'Le nom de l\'auteur doit être une chaîne de caractères.',
-            'user_id.required' => 'L\'ID de l\'utilisateur est requis.',
-        ];
-    }
-
-    protected function prepareForValidation() {}
 }

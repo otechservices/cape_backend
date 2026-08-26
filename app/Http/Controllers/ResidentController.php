@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Utilities\ErrorMessage;
+
 use Illuminate\Http\Request;
 use App\Models\Resident;
 use App\Http\Repositories\ResidentRepository;
@@ -92,9 +94,9 @@ class ResidentController extends Controller
 
             return Common::success($message, $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -109,9 +111,9 @@ class ResidentController extends Controller
 
             return Common::success($message, $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -125,9 +127,9 @@ class ResidentController extends Controller
 
             return Common::success($message, $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -141,9 +143,9 @@ class ResidentController extends Controller
 
             return Common::success($message, $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -219,9 +221,9 @@ class ResidentController extends Controller
 
             return Common::success('Resident trouvé', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -277,9 +279,9 @@ class ResidentController extends Controller
 
             return Common::successCreate('Resident créé avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -346,9 +348,9 @@ class ResidentController extends Controller
 
             return Common::success('Mise à jour de Resident effectuée avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -410,9 +412,9 @@ class ResidentController extends Controller
 
             return Common::successDelete('Resident supprimé avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -484,9 +486,9 @@ class ResidentController extends Controller
 
             return Common::success("Resident $statusMessage avec succès", $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
 
     }
@@ -544,9 +546,9 @@ class ResidentController extends Controller
 
             return Common::success('Filtrage effectué avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 

@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Str;
+use App\Utilities\ErrorMessage;
 
 /**
  * @OA\Tag(
@@ -85,9 +86,9 @@ class UserAuthController extends Controller
             // Vérifier si c'est une exception JsonResponseException
             return $e->render();
         } catch (\Throwable $th) {
-            // $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            // $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -132,9 +133,9 @@ class UserAuthController extends Controller
             // Vérifier si c'est une exception JsonResponseException
             return $e->render();
         } catch (\Throwable $th) {
-            // $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            // $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -166,9 +167,9 @@ class UserAuthController extends Controller
 
             return Common::success('Données utilisateur récupérées avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -207,9 +208,9 @@ class UserAuthController extends Controller
 
             return Common::success('Recuperation des permissions', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -251,9 +252,9 @@ class UserAuthController extends Controller
 
             return Common::success('Mot de passe changé avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -294,9 +295,9 @@ class UserAuthController extends Controller
 
             return Common::success('Changement mot de passe effectué avec succès', $result);
         } catch (\Throwable $th) {
-            // $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            // $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -352,9 +353,9 @@ class UserAuthController extends Controller
 
             return Common::success('Mise à jour du profil effectuée avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -410,9 +411,9 @@ class UserAuthController extends Controller
 
             return Common::success('Notification utilisateur envoyé avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -444,9 +445,9 @@ class UserAuthController extends Controller
 
             return Common::success('Utilisateur déconnecté avec succès.', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -486,9 +487,9 @@ class UserAuthController extends Controller
 
             return Common::success('Mot de passe réinitialisé avec succès', $result->validated());
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -528,9 +529,9 @@ class UserAuthController extends Controller
 
             return Common::success('Email de réinitialisation envoyé avec succès', $result);
         } catch (\Throwable $th) {
-            // $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            // $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -570,9 +571,9 @@ class UserAuthController extends Controller
 
             return Common::success('Mot de passe réinitialisé avec succès', $result);
         } catch (\Throwable $th) {
-            //  $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            //  $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -645,7 +646,7 @@ class UserAuthController extends Controller
             }
 
         } catch (\Throwable $th) {
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -687,7 +688,7 @@ class UserAuthController extends Controller
 
             return Common::success('Fichier supprimé avec succès', []);
         } catch (\Throwable $th) {
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -728,7 +729,7 @@ class UserAuthController extends Controller
 
             return Common::success('Ajout de push token', $result);
         } catch (\Throwable $th) {
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -770,7 +771,7 @@ class UserAuthController extends Controller
 
             return Common::success('Suppression de push notification', $result);
         } catch (\Throwable $th) {
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 }

@@ -2,18 +2,17 @@
 
 namespace App\Http\Requests\BillingResponse;
 
-use App\Utilities\Common;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Http\Requests\BaseFormRequest;
 
-class UpdateBillingResponseRequest extends FormRequest
+class UpdateBillingResponseRequest extends BaseFormRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
+    /**
+     * Règles de validation appliquées à la requête.
+     *
+     * Les messages d'erreur français sont fournis automatiquement par
+     * lang/fr/validation.php (règles) et lang/fr/attributes.php (libellés
+     * des champs), via BaseFormRequest.
+     */
     public function rules(): array
     {
         return [
@@ -22,19 +21,4 @@ class UpdateBillingResponseRequest extends FormRequest
             'billing_id' => 'required|integer|exists:billings,id',    
             ];
     }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(Common::error($validator->errors()->first(), $validator->errors()));
-    }
-
-    public function messages(): array
-    {
-        return [
-            'content.required' => 'Le nom est requis.',
-            'billing_id.required' => 'Le lieu est requis.',
-        ];
-    }
-
-    protected function prepareForValidation() {}
 }

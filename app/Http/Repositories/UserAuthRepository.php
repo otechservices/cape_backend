@@ -26,6 +26,7 @@ use JWTAuth;
 use NotificationChannels\Fcm\FcmChannel;
 use NotificationChannels\Twilio\TwilioChannel;
 use Spatie\Permission\Models\Role;
+use App\Utilities\ErrorMessage;
 
 
 class UserAuthRepository
@@ -111,7 +112,7 @@ class UserAuthRepository
                     DB::rollback();
 
             throw new JsonResponseException([
-                'message' => $th->getMessage(),
+                'message' => ErrorMessage::of($th),
                 'success' => false,
                 'data' => null,
                 'warning' => null,

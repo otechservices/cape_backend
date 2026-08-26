@@ -6,6 +6,7 @@ use App\Http\Repositories\AgrementClaimRepository;
 use App\Services\LogService;
 use App\Utilities\Common;
 use Illuminate\Http\Request;
+use App\Utilities\ErrorMessage;
 
 /**
  * Reconnaissance des agréments délivrés hors plateforme.
@@ -41,7 +42,7 @@ class AgrementClaimController extends Controller
         } catch (\App\Exceptions\JsonResponseException $e) {
             return $e->render();
         } catch (\Throwable $th) {
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -58,7 +59,7 @@ class AgrementClaimController extends Controller
         } catch (\App\Exceptions\JsonResponseException $e) {
             return $e->render();
         } catch (\Throwable $th) {
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -75,7 +76,7 @@ class AgrementClaimController extends Controller
         } catch (\App\Exceptions\JsonResponseException $e) {
             return $e->render();
         } catch (\Throwable $th) {
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -91,7 +92,7 @@ class AgrementClaimController extends Controller
         } catch (\App\Exceptions\JsonResponseException $e) {
             return $e->render();
         } catch (\Throwable $th) {
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -108,7 +109,7 @@ class AgrementClaimController extends Controller
         } catch (\App\Exceptions\JsonResponseException $e) {
             return $e->render();
         } catch (\Throwable $th) {
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -125,7 +126,7 @@ class AgrementClaimController extends Controller
         } catch (\App\Exceptions\JsonResponseException $e) {
             return $e->render();
         } catch (\Throwable $th) {
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -141,7 +142,7 @@ class AgrementClaimController extends Controller
         } catch (\App\Exceptions\JsonResponseException $e) {
             return $e->render();
         } catch (\Throwable $th) {
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -157,7 +158,7 @@ class AgrementClaimController extends Controller
         } catch (\App\Exceptions\JsonResponseException $e) {
             return $e->render();
         } catch (\Throwable $th) {
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -180,7 +181,7 @@ class AgrementClaimController extends Controller
         } catch (\App\Exceptions\JsonResponseException $e) {
             return $e->render();
         } catch (\Throwable $th) {
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 }

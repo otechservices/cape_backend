@@ -10,6 +10,7 @@ use App\Services\LogService;
 use App\Utilities\Common;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
+use App\Utilities\ErrorMessage;
 
 class RoleController
 {
@@ -83,9 +84,9 @@ class RoleController
 
             return Common::success('Récupération de la liste des rôles', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($th->getMessage())]);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode(ErrorMessage::report($th))]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -145,9 +146,9 @@ class RoleController
 
             return Common::success('Rôle trouvé', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($th->getMessage())]);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode(ErrorMessage::report($th))]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -204,9 +205,9 @@ class RoleController
 
             return Common::successCreate('Rôle créé avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($th->getMessage())]);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode(ErrorMessage::report($th))]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -273,9 +274,9 @@ class RoleController
 
             return Common::success('Mise à jour du rôle effectuée avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($th->getMessage())]);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode(ErrorMessage::report($th))]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -336,9 +337,9 @@ class RoleController
 
             return Common::successDelete('Role supprimé avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($th->getMessage())]);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode(ErrorMessage::report($th))]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
 
     }
@@ -395,9 +396,9 @@ class RoleController
 
             return Common::success('Flitrage éffectué avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($th->getMessage())]);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode(ErrorMessage::report($th))]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 }

@@ -2,7 +2,16 @@
 
 namespace App\Exceptions;
 
+use App\Utilities\Common;
+use App\Utilities\ErrorMessage;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\ValidationException;
+use PDOException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -46,5 +55,49 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    /**
+     * Réponse renvoyée au client pour toute exception non interceptée.
+     *
+     * Aucun détail technique (requête SQL, code SQLSTATE, trace) ne sort
+     * d'ici : seul un message français est retourné, le détail restant
+     * disponible dans storage/logs.
+     */
+    public function render($request, Throwable $e)
+    {
+        // Réponse déjà construite (FormRequest, abort_response, ...)
+        if ($e instanceof HttpResponseException) {
+            return $e->getResponse();
+        }
+
+        // Exceptions qui savent se rendre elles-mêmes (ex. JsonResponseException)
+        if (method_exists($e, 'render') && $rendered = $e->render($request)) {
+            return $rendered;
+        }
+
+        if (! $request->expectsJson() && ! $request->is('api/*')) {
+            return parent::render($request, $e);
+        }
+
+        if ($e instanceof ValidationException) {
+            return Common::error(
+                $e->validator->errors()->first(),
+                $e->validator->errors()
+            );
+        }
+
+        if ($e instanceof AuthenticationException) {
+            return Common::expired();
+        }
+
+        if ($e instanceof ModelNotFoundException || $e instanceof NotFoundHttpException) {
+            return Common::notFound();
+        }
+
+        // Toute autre exception (y compris QueryException / PDOException) :
+        // le détail technique part dans les logs, le client reçoit un message
+        // en français.
+        return Common::error(ErrorMessage::report($e), []);
     }
 }

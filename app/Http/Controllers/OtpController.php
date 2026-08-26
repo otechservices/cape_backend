@@ -7,6 +7,7 @@ use App\Http\Requests\OTP\VerifyOTPRequest;
 use App\Services\OTPService;
 use App\Utilities\Common;
 use Illuminate\Http\Request;
+use App\Utilities\ErrorMessage;
 
 class OtpController extends Controller
 {
@@ -86,7 +87,7 @@ class OtpController extends Controller
 
             return Common::success('Code OTP envoyé avec succès', $result);
         } catch (\Throwable $th) {
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
 
     }
@@ -143,7 +144,7 @@ class OtpController extends Controller
 
             return Common::success('Code OTP vérifé avec suucès', $result);
         } catch (\Throwable $th) {
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
 
     }

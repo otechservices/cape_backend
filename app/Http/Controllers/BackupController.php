@@ -9,6 +9,7 @@ use App\Http\Requests\BackupController\UpdateBackupControllerRequest;
 use App\Services\LogService;
 use App\Utilities\Common;
 use OpenApi\Attributes as OA;
+use App\Utilities\ErrorMessage;
 
 
 class BackupControllerController extends Controller
@@ -88,9 +89,9 @@ class BackupControllerController extends Controller
 
             return Common::success($message, $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -147,9 +148,9 @@ class BackupControllerController extends Controller
 
             return Common::successCreate('BackupController créé avec succès', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => $th->getMessage()]);
+            $this->ls->trace(['action_name' => $message, 'description' => ErrorMessage::report($th)]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 

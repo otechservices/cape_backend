@@ -2,18 +2,17 @@
 
 namespace App\Http\Requests\Cps;
 
-use App\Utilities\Common;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Http\Requests\BaseFormRequest;
 
-class UpdateCpsRequest extends FormRequest
+class UpdateCpsRequest extends BaseFormRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
+    /**
+     * Règles de validation appliquées à la requête.
+     *
+     * Les messages d'erreur français sont fournis automatiquement par
+     * lang/fr/validation.php (règles) et lang/fr/attributes.php (libellés
+     * des champs), via BaseFormRequest.
+     */
     public function rules(): array
     {
         return [
@@ -21,19 +20,4 @@ class UpdateCpsRequest extends FormRequest
             'identite' => 'sometimes|required|string|max:255',
         ];
     }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(Common::error($validator->errors()->first(), $validator->errors()));
-    }
-
-    public function messages(): array
-    {
-        return [
-            'code.required' => 'Le nom est requis.',
-            'identite.required' => 'Le lieu est requis.',
-        ];
-    }
-
-    protected function prepareForValidation() {}
 }

@@ -2,48 +2,22 @@
 
 namespace App\Http\Requests\UserAuth;
 
-use App\Utilities\Common;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Http\Requests\BaseFormRequest;
 
-class AddPushTokenRequest extends FormRequest
+class AddPushTokenRequest extends BaseFormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
-    /**
-     * Get the validation rules that apply to the request.
+     * Règles de validation appliquées à la requête.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Les messages d'erreur français sont fournis automatiquement par
+     * lang/fr/validation.php (règles) et lang/fr/attributes.php (libellés
+     * des champs), via BaseFormRequest.
      */
     public function rules(): array
     {
         return [
             'user_id' => 'required|exists:users,id',
             'push_token' => 'required|string',
-
-        ];
-    }
-
-    public function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(Common::error($validator->errors()->first(), $validator->errors()));
-    }
-
-    /**
-     * Mettre les messages d'erreur en Français
-     *
-     * @return array
-     */
-    public function messages()
-    {
-        return [
 
         ];
     }

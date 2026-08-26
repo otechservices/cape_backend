@@ -9,6 +9,7 @@ use App\Services\LogService;
 use App\Utilities\Common;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
+use App\Utilities\ErrorMessage;
 
 class SettingController
 {
@@ -73,9 +74,9 @@ class SettingController
 
             return Common::success('Récupération de la liste des paramètres', $result);
         } catch (\Throwable $th) {
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($th->getMessage())]);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode(ErrorMessage::report($th))]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 
@@ -132,9 +133,9 @@ class SettingController
             return Common::success('Mise à jour du paramètre effectuée avec succès', $result);
         } catch (\Throwable $th) {
 
-            $this->ls->trace(['action_name' => $message, 'description' => json_encode($th->getMessage())]);
+            $this->ls->trace(['action_name' => $message, 'description' => json_encode(ErrorMessage::report($th))]);
 
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 }

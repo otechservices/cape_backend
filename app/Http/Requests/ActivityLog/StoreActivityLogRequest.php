@@ -2,18 +2,17 @@
 
 namespace App\Http\Requests\ActivityLog;
 
-use App\Utilities\Common;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Http\Requests\BaseFormRequest;
 
-class StoreActivityLogRequest extends FormRequest
+class StoreActivityLogRequest extends BaseFormRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
+    /**
+     * Règles de validation appliquées à la requête.
+     *
+     * Les messages d'erreur français sont fournis automatiquement par
+     * lang/fr/validation.php (règles) et lang/fr/attributes.php (libellés
+     * des champs), via BaseFormRequest.
+     */
     public function rules(): array
     {
         return [
@@ -28,26 +27,4 @@ class StoreActivityLogRequest extends FormRequest
             'batch_uuid'    => 'required|string|size:36',
         ];
     }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(Common::error($validator->errors()->first(), $validator->errors()));
-    }
-
-    public function messages(): array
-    {
-        return [
-            'log_name.required'      => 'Le nom du log est requis.',
-            'description.required'   => 'La description est requise.',
-            'subject_type.required'  => 'Le type du sujet est requis.',
-            'event.required'         => 'L\'événement est requis.',
-            'subject_id.required'    => 'L\'identifiant du sujet est requis.',
-            'causer_type.required'   => 'Le type de l\'auteur est requis.',
-            'causer_id.required'     => 'L\'identifiant de l\'auteur est requis.',
-            'properties.required'    => 'Les propriétés sont requises.',
-            'batch_uuid.required'    => 'Le batch_uuid est requis.',
-                ];
-    }
-
-    protected function prepareForValidation() {}
 }

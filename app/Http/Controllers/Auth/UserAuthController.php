@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Utilities\ErrorMessage;
+
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use App\Models\User;
@@ -127,7 +129,7 @@ class UserAuthController extends Controller
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
-                'message' => $th->getMessage()
+                'message' => ErrorMessage::of($th)
             ], 500);
            }
     }

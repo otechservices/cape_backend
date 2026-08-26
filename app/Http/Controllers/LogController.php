@@ -6,6 +6,7 @@ use App\Http\Repositories\logRepository;
 use App\Utilities\Common;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
+use App\Utilities\ErrorMessage;
 
 class LogController
 {
@@ -73,7 +74,7 @@ class LogController
 
             return Common::success('Journal des logs', $result);
         } catch (\Throwable $th) {
-            return Common::error($th->getMessage(), []);
+            return Common::error(ErrorMessage::of($th), []);
         }
     }
 }

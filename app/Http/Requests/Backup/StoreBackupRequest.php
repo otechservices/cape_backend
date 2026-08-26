@@ -2,38 +2,22 @@
 
 namespace App\Http\Requests\Backup;
 
-use App\Utilities\Common;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Http\Requests\BaseFormRequest;
 
-class StoreBackupRequest extends FormRequest
+class StoreBackupRequest extends BaseFormRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
+    /**
+     * Règles de validation appliquées à la requête.
+     *
+     * Les messages d'erreur français sont fournis automatiquement par
+     * lang/fr/validation.php (règles) et lang/fr/attributes.php (libellés
+     * des champs), via BaseFormRequest.
+     */
     public function rules(): array
     {
-        return [
-            'name'     => 'required|string|max:191',
-            'filename' => 'nullable|string|max:191',
-    ];
-    }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(Common::error($validator->errors()->first(), $validator->errors()));
-    }
-
-    public function messages(): array
-    {
-        return [
-            'name.required' => 'Le nom du document est requis.',
-            'filename.required' => 'Le nom du fichier est requis.',            
+            return [
+                'name'     => 'required|string|max:191',
+                'filename' => 'nullable|string|max:191',
         ];
     }
-
-    protected function prepareForValidation() {}
 }

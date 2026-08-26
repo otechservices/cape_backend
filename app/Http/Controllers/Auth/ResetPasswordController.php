@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Http\Controllers\Auth;
+
+use App\Utilities\ErrorMessage;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PasswordReset;
@@ -45,7 +47,7 @@ public function sendResetPasswordLink(Request $request){
     } catch (\Throwable $th) {
         return response()->json([
             'status' => false,
-            'message' => $th->getMessage()
+            'message' => ErrorMessage::of($th)
         ], 500);
     }
    

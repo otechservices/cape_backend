@@ -2,18 +2,17 @@
 
 namespace App\Http\Requests\Cps;
 
-use App\Utilities\Common;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Http\Requests\BaseFormRequest;
 
-class StoreCpsRequest extends FormRequest
+class StoreCpsRequest extends BaseFormRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
+    /**
+     * Règles de validation appliquées à la requête.
+     *
+     * Les messages d'erreur français sont fournis automatiquement par
+     * lang/fr/validation.php (règles) et lang/fr/attributes.php (libellés
+     * des champs), via BaseFormRequest.
+     */
     public function rules(): array
     {
         return [
@@ -25,25 +24,4 @@ class StoreCpsRequest extends FormRequest
             'municipality_id' => 'required|integer|exists:municipalities,id',
                 ];
     }
-
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(Common::error($validator->errors()->first(), $validator->errors()));
-    }
-
-    public function messages(): array
-    {
-        return [
-            'name.required'            => 'Le nom est requis.',
-            'acronym.required'         => 'L\'acronyme est requis.',
-            'acronym.required'           => 'L\'acronyme doit être une chaîne de caractères.',
-            'name_chief.required'      => 'Le nom du chef est requis.',
-            'name_chief.required'        => 'Le nom du chef doit être une chaîne de caractères.',
-            'phone.required'           => 'Le numéro de téléphone est requis.',
-            'email.required'           => 'L\'email est requis.',
-            'municipality_id.required'  => 'L\'ID de la commune doit être un entier.',
-                ];
-    }
-
-    protected function prepareForValidation() {}
 }
