@@ -13,18 +13,16 @@
     <meta charset="UTF-8">
     <title>Fiche d'état — {{ $requete->name }}</title>
 
-    <div id="footer">
-        <span class="foot-left">Fiche d'état — {{ $requete->code }}</span>
-        <i> Page <span class="pagenum"></span> </i>
-    </div>
-
     <style>
         @page { margin: 90px 40px 70px 40px; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 9.5px; color: #1f2937; }
 
+        /* Deux colonnes via un tableau, sans float : un flottant dans un bloc
+           position:fixed fait doubler la pagination de dompdf. */
         #footer { position: fixed; bottom: -45px; left: 0; right: 0; font-size: 8px; color: #6b7280;
-                  border-top: 1px solid #d1d5db; padding-top: 4px; text-align: right; }
-        #footer .foot-left { float: left; }
+                  border-top: 1px solid #d1d5db; padding-top: 4px; }
+        #footer table { width: 100%; border-collapse: collapse; }
+        #footer td { border: none; padding: 0; }
         .pagenum:before { content: counter(page); }
 
         .title-block { text-align: center; margin: 4px 0 14px 0; }
@@ -32,7 +30,7 @@
         .title-block .subject { font-size: 11.5px; font-weight: bold; margin: 0; }
         .title-block .meta { font-size: 8.5px; color: #4b5563; margin-top: 3px; }
 
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 9px; font-size: 8px;
+        .badge { padding: 2px 8px; border-radius: 9px; font-size: 8px;
                  font-weight: bold; border: 1px solid #9ca3af; color: #374151; }
         .badge-agree { border-color: #15803d; color: #15803d; }
 
@@ -56,8 +54,10 @@
         .none { color: #6b7280; font-style: italic; padding: 5px 0; }
         table.stats { width: 100%; border-collapse: collapse; }
         table.stats td { text-align: center; border: 1px solid #d1d5db; padding: 6px; width: 25%; }
-        .stats .n { font-size: 15px; font-weight: bold; color: #1e3a8a; }
-        .stats .k { font-size: 8px; text-transform: uppercase; color: #6b7280; }
+        table.stats td.n { font-size: 15px; font-weight: bold; color: #1e3a8a;
+                           border-bottom: none; padding-bottom: 0; }
+        table.stats td.k { font-size: 8px; text-transform: uppercase; color: #6b7280;
+                           border-top: none; padding-top: 2px; }
         .signature { margin-top: 26px; font-size: 8.5px; color: #4b5563; }
         .flag { margin-top: 12px; text-align: center; }
         .flag span { display: inline-block; width: 70px; height: 8px; }
@@ -65,6 +65,15 @@
     </style>
 </head>
 <body>
+
+<div id="footer">
+    <table>
+        <tr>
+            <td>Fiche d'état — {{ $requete->code }}</td>
+            <td style="text-align: right;"><i>Page <span class="pagenum"></span></i></td>
+        </tr>
+    </table>
+</div>
 
 @include('pdf.partials.entete')
 
@@ -74,9 +83,7 @@
     <p class="meta">
         Dossier n° {{ $requete->code }} &nbsp;·&nbsp;
         {{ $requete->service?->name }} &nbsp;·&nbsp;
-        <span class="badge {{ $estAgree ? 'badge-agree' : '' }}">
-            {{ $estAgree ? 'Agréé' : 'Non agréé' }}
-        </span>
+        <span class="badge {{ $estAgree ? 'badge-agree' : '' }}">{{ $estAgree ? 'Agréé' : 'Non agréé' }}</span>
         &nbsp;·&nbsp; {{ \App\Exports\RequetesExport::statusLabel($requete->status) }}
     </p>
 </div>
@@ -294,10 +301,16 @@
 <h2 class="section">9. Exploitation du centre</h2>
 <table class="stats">
     <tr>
-        <td><div class="n">{{ $residents_actifs }}</div><div class="k">Pensionnaires présents</div></td>
-        <td><div class="n">{{ $residents_abandons }}</div><div class="k">Enfants abandonnés</div></td>
-        <td><div class="n">{{ $staffs->count() }}</div><div class="k">Membres du personnel</div></td>
-        <td><div class="n">{{ $activity_reports->count() }}</div><div class="k">Rapports d'activité</div></td>
+        <td class="n">{{ $residents_actifs }}</td>
+        <td class="n">{{ $residents_abandons }}</td>
+        <td class="n">{{ $staffs->count() }}</td>
+        <td class="n">{{ $activity_reports->count() }}</td>
+    </tr>
+    <tr>
+        <td class="k">Pensionnaires présents</td>
+        <td class="k">Enfants abandonnés</td>
+        <td class="k">Membres du personnel</td>
+        <td class="k">Rapports d'activité</td>
     </tr>
 </table>
 
