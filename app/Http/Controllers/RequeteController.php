@@ -26,6 +26,7 @@ use App\Exports\RequetesExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Log;
 use App\Utilities\ErrorMessage;
+use App\Http\Repositories\RequeteRepository;
 
 /** status check
  * 0 : Nouvelle
@@ -42,9 +43,42 @@ use App\Utilities\ErrorMessage;
 class RequeteController extends Controller
 {
 
-    public function __construct() {
-      
+    /**
+     * @var RequeteRepository
+     */
+    protected $requeteRepository;
+
+    public function __construct(RequeteRepository $requeteRepository) {
+
+        $this->requeteRepository = $requeteRepository;
+
         $this->middleware('auth', ['except' => ['getListForPublic','showResult']]);
+    }
+
+    /**
+     * Fiche d'état d'un CAPE / d'une garderie : l'ensemble des informations
+     * détenues sur le centre, réunies en un document imprimable.
+     *
+     * Réservée à l'administrateur et à la DFEA, seuls habilités à diffuser une
+     * synthèse qui agrège dossier, enquête sociale, contrôles et sanctions.
+     */
+    public function ficheEtat($code)
+    {
+        $role = Auth::user()->roles()->first()?->name;
+
+        if (! in_array($role, ['admin', 'dfea'], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Vous n'êtes pas autorisé à éditer la fiche d'état",
+                'data' => null,
+            ], 403);
+        }
+
+        $fiche = $this->requeteRepository->ficheEtat($code);
+
+        $pdf = Pdf::loadView('pdf.fiche_etat', $fiche)->setPaper('a4');
+
+        return $pdf->download('fiche_etat_'.$code.'.pdf');
     }
 
 

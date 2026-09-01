@@ -292,6 +292,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
       Route::get('/requetes/search/all', 'RequeteController@search');
       Route::get('/requetes/search/export', 'RequeteController@export');
       Route::post('/requetes/transfer-district', 'RequeteController@transferDistrict');
+      Route::get('/requetes/fiche-etat/{code}', 'RequeteController@ficheEtat');
 
 
       Route::post('/responses/step/need-correction', 'ReponseController@needCorrection');

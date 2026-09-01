@@ -118,6 +118,7 @@ class RequetesExport implements FromQuery, WithHeadings, WithMapping, WithStyles
             7 => 'Attente inscription session',
             8 => 'Agréé',
             9 => 'Agréé (avant plateforme)',
+            10 => 'Agrément en validation DFEA',
         ][$status] ?? 'Non défini';
     }
 }

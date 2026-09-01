@@ -4,7 +4,12 @@ namespace App\Http\Repositories;
 
 use App\Traits\Repository;
  use App\Models\Requete;
+use App\Models\ActivityReport;
 use App\Models\Cape;
+use App\Models\Control;
+use App\Models\Resident;
+use App\Models\Sanction;
+use App\Models\Staff;
 use App\Utilities\FileStorage;
 
 use Auth;
@@ -1300,10 +1305,91 @@ class RequeteRepository
         }
     }
 
+    /**
+     * Rassemble tout ce que le système sait d'un CAPE ou d'une garderie.
+     *
+     * Le dossier (`requetes`) reste la pièce maîtresse même après l'agrément :
+     * les pensionnaires et les rapports d'activité pointent sur lui via
+     * `centre_id`, tandis que contrôles et sanctions pointent sur la ligne
+     * `capes` créée à l'agrément. La fiche d'état réunit les deux versants.
+     */
+    public function ficheEtat($code)
+    {
+        $requete = Requete::with([
+            'service',
+            'NaturePromotor',
+            'TypeCape',
+            'RequeteTypeGarderies.TypeGarderie',
+            'district.Municipality.Department',
+            'district.cps',
+            'promoter',
+            'session',
+            'files.file.TypeFile',
+            'files2',
+            'parcours.user',
+            'reponses.user',
+            'referals',
+            'Cape',
+        ])->where('code', $code)->firstOrFail();
 
+        $cape = $requete->Cape;
 
+        // Le personnel est saisi par le promoteur : `cape_id` n'est renseigné
+        // que sur les centres agréés via la plateforme, d'où le repli sur le
+        // promoteur. Le promoteur technique n°1 des dossiers importés ne porte
+        // aucun personnel réel : on ne l'interroge pas.
+        $staffs = collect();
+        if ($cape) {
+            $staffs = Staff::where('cape_id', $cape->id)->orderBy('lastname')->get();
+        }
+        if ($staffs->isEmpty() && $requete->promoter_id > 1) {
+            $staffs = Staff::where('promoter_id', $requete->promoter_id)->orderBy('lastname')->get();
+        }
 
+        $residents = Resident::where('centre_id', $requete->id)->orderBy('lastname')->get();
 
+        return [
+            'requete' => $requete,
+            'cape' => $cape,
+            'targets' => $this->ficheEtatTargets($requete->target),
+            'staffs' => $staffs,
+            'residents' => $residents,
+            'residents_actifs' => $residents->where('abandon', 0)->count(),
+            'residents_abandons' => $residents->where('abandon', '<>', 0)->count(),
+            'activity_reports' => ActivityReport::where('centre_id', $requete->id)
+                ->orderByDesc('created_at')->get(),
+            'controls' => $cape
+                ? Control::with('TypeControl')->where('cape_id', $cape->id)
+                    ->orderByDesc('date_control')->get()
+                : collect(),
+            'sanctions' => $cape
+                ? Sanction::with('TypeSanction')->where('cape_id', $cape->id)
+                    ->orderByDesc('created_at')->get()
+                : collect(),
+            'generated_at' => now(),
+            'generated_by' => Auth::user(),
+        ];
+    }
 
+    /**
+     * Les cibles sont figées en JSON au dépôt : selon l'ancienneté du dossier
+     * on y trouve des objets `{id, name}` ou de simples libellés.
+     */
+    private function ficheEtatTargets($target): array
+    {
+        if (blank($target)) {
+            return [];
+        }
 
+        $decoded = is_array($target) ? $target : json_decode($target, true);
+        if (! is_array($decoded)) {
+            return [];
+        }
+
+        return collect($decoded)
+            ->map(fn ($t) => is_array($t) ? ($t['name'] ?? null) : $t)
+            ->filter()
+            ->values()
+            ->all();
+    }
 }
