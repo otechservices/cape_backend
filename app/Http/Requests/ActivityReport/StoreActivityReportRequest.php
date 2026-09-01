@@ -3,6 +3,7 @@
 namespace App\Http\Requests\ActivityReport;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Rules\CentreAgree;
 
 class StoreActivityReportRequest extends BaseFormRequest
 {
@@ -16,7 +17,7 @@ class StoreActivityReportRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'centre_id' => 'nullable|exists:requetes,id',
+            'centre_id' => ['required', 'exists:requetes,id', new CentreAgree],
             'description' => 'nullable|string',
             'activity_report_filename' => 'required',
             'financial_report_filename' => 'required',

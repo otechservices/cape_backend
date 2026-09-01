@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Staff;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Rules\CentreAgree;
 
 class StoreStaffRequest extends BaseFormRequest
 {
@@ -16,6 +17,7 @@ class StoreStaffRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
+            'centre_id'   => ['required', 'exists:requetes,id', new CentreAgree],
             'firstname'   => ['required', 'string', 'max:100'],
             'lastname'    => ['required', 'string', 'max:100'],
             'birthdate'   => ['required', 'date', 'before:today'],

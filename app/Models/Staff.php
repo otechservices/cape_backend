@@ -12,6 +12,17 @@ class Staff extends Model
 private static $whiteListFilter = ['*'];
     protected $guarded = [];
 
+    /** Centre auquel ce membre du personnel est affecté. */
+    public function centre()
+    {
+        return $this->belongsTo(Requete::class, 'centre_id');
+    }
+
+    public function promoter()
+    {
+        return $this->belongsTo(Promoter::class, 'promoter_id');
+    }
+
 
         public static function boot()
     {

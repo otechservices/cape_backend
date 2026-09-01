@@ -12,6 +12,12 @@ class Requete extends Model
 private static $whiteListFilter = ['*'];
     protected $guarded = [];
 
+    /**
+     * `is_agree` conditionne l'affichage côté promoteur : sans cet appends,
+     * l'accesseur n'existait qu'en PHP et le front devait redéduire la règle.
+     */
+    protected $appends = ['is_agree'];
+
     /** Dossier arrivé au bout du circuit de la plateforme. */
     public const STATUS_AUTORISE = 8;
 

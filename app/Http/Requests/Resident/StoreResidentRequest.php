@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Resident;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Rules\CentreAgree;
 
 class StoreResidentRequest extends BaseFormRequest
 {
@@ -16,7 +17,7 @@ class StoreResidentRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'centre_id' => 'nullable|exists:requetes,id',
+            'centre_id' => ['required', 'exists:requetes,id', new CentreAgree],
             'firstname'   => ['required', 'string', 'max:100'],
             'lastname'    => ['required', 'string', 'max:100'],
             'birthdate'   => ['required', 'date', 'before:today'],
