@@ -1669,7 +1669,14 @@ public function inviteStore(Request $request)
     public function getPendingValidation()
     {
        // $requetes=Requete::with(['TypeCape','service','Cape','district.municipality.department','district.cps'])->where('is_authorized',true)->where('is_validated',false)->where('has_agreemant',true)->where("session_id",null)->get();
-        $requetes=Requete::with(['TypeCape','service','Cape','district.municipality.department','district.cps'])->where('status',8)->get();
+        // La décision est écrite dans `is_validated`, jamais dans `status` : sans
+        // ce filtre, un dossier validé restait indéfiniment dans la file
+        // d'attente. Les rejets, eux, y demeurent — `setStatus2` les remet à
+        // NULL, c'est-à-dire à l'état « pas encore tranché ».
+        $requetes=Requete::with(['TypeCape','service','Cape','district.municipality.department','district.cps'])
+            ->where('status',8)
+            ->where(fn ($q) => $q->whereNull('is_validated')->orWhere('is_validated','<>',1))
+            ->get();
         return response()->json([
             "success"=>true,
             "message"=>"En attente de validation",
