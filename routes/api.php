@@ -302,6 +302,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
    
       Route::post('/requetes/set-status', 'RequeteController@setStatus');
       Route::post('/requetes/set-status2', 'RequeteController@setStatus2');
+      Route::post('/requetes/validate-agrement', 'RequeteController@validateAgrement');
       Route::post('/requetes/set-file-traitment', 'RequeteController@setFileTreatment');
 
 

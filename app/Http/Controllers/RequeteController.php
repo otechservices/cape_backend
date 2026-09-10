@@ -8,6 +8,7 @@ use App\Utilities\FileStorage;
 use App\Models\AgrementClaim;
 use App\Models\District;
 use App\Models\Agenda;
+use App\Http\Requests\Requete\ValidateAgrementRequest;
 use App\Models\Requete;
 use App\Models\RequeteFile;
 use App\Models\User;
@@ -1681,6 +1682,46 @@ public function inviteStore(Request $request)
             "success"=>true,
             "message"=>"En attente de validation",
             "data"=>$requetes
+        ], 200);
+    }
+
+    /**
+     * Valide un agrément en y rattachant la pièce qui le justifie.
+     *
+     * La validation se contentait de cocher `is_validated`, sans trace de ce
+     * qui la fondait : impossible ensuite de savoir quel arrêté avait été
+     * produit, ni de le ressortir. L'arrêté scanné et sa référence sont
+     * désormais exigés et conservés sur le dossier, où la fiche d'état et les
+     * écrans de consultation savent déjà les lire.
+     */
+    public function validateAgrement(ValidateAgrementRequest $request)
+    {
+        $requete = Requete::findOrFail($request->id);
+
+        $donnees = [
+            'aggreement_reference' => $request->aggreement_reference,
+            'aggreement_year'      => $request->aggreement_year,
+            'is_validated'         => true,
+            'has_agreemant'        => true,
+            'is_authorized'        => true,
+        ];
+
+        if ($request->file('file_aggreement')) {
+            $donnees['file_aggreement'] = FileStorage::setFile(
+                'doc_store', $request->file('file_aggreement'), $requete->code, time()
+            );
+        }
+
+        if (filled($request->observation)) {
+            $donnees['final_observation'] = $request->observation;
+        }
+
+        $requete->update($donnees);
+
+        return response()->json([
+            "success" => true,
+            "message" => "Agrément validé et pièce justificative enregistrée",
+            "data"    => $requete->fresh(),
         ], 200);
     }
 
