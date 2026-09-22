@@ -20,6 +20,9 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
     Route::post('/forgot-password', 'UserAuthController@sendResetPasswordLink');
     Route::post('/recovery-password', 'UserAuthController@recoveryPassword');
     Route::post('/register', 'UserAuthController@register');
+    // Création de compte sur invitation : le jeton du lien tient lieu d'authentification.
+    Route::get('/promoter-invitations/{token}', 'PromoterInvitationController@show');
+    Route::post('/promoter-invitations/{token}/accept', 'PromoterInvitationController@accept');
     Route::post('/verify-otp', 'OtpController@verifyOTP');
 
     Route::post('/user-notify', 'UserAuthController@notify');
@@ -278,6 +281,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
       Route::get('/requetes/get-by-instance/rejected', 'RequeteController@getRejectedRequete');
       Route::get('/requetes/get-by-instance/validated', 'RequeteController@getValidatedRequete');
       Route::get('/requetes/get-by-instance/finished', 'RequeteController@getFinishedRequete');
+      Route::get('/requetes/duplicates/finished', 'RequeteController@getFinishedDuplicates');
       Route::get('/requetes/get-by-instance/admissible', 'RequeteController@getAdmissibleRequete');
       Route::get('/requetes/get-by-instance/transmitted', 'RequeteController@getTransmittedRequete');
       Route::post('/requetes/state/finished-store-1', 'RequeteController@finishStore1');
@@ -303,6 +307,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
       Route::post('/requetes/set-status', 'RequeteController@setStatus');
       Route::post('/requetes/set-status2', 'RequeteController@setStatus2');
       Route::post('/requetes/validate-agrement', 'RequeteController@validateAgrement');
+      Route::post('/requetes/declare-agree', 'AgrementDeclarationController@declare');
       Route::post('/requetes/set-file-traitment', 'RequeteController@setFileTreatment');
 
 

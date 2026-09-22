@@ -157,6 +157,17 @@ private static $whiteListFilter = ['*'];
         return $this->hasOne(Affectation::class,'requete_id')->where('isLast',true);
     }
 
+    /**
+     * Le détenteur d'un dossier est le destinataire de sa dernière affectation :
+     * lui seul peut le faire avancer, les autres agents ne font que le consulter.
+     */
+    public function isHeldBy($user): bool
+    {
+        return $user !== null
+            && $this->affectation !== null
+            && (int) $this->affectation->user_down === (int) $user->id;
+    }
+
     public function parcours()
     {
         return $this->hasMany(Parcours::class,'requete_id');

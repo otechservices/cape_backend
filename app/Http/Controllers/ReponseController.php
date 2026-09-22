@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Auth,Mail,PDF,Http,Hash,Str;
 use App\Models\Requete;
+use App\Traits\GuardsRequeteHolder;
 use App\Models\Prestation;
 use App\Models\Reponse;
 use App\Utilities\Core;
@@ -27,6 +28,7 @@ use App\Utilities\Mailer;
 
 class ReponseController extends Controller
 {
+    use GuardsRequeteHolder;
     
     /**
      * Display a listing of the resource.
@@ -41,6 +43,9 @@ class ReponseController extends Controller
     public function needCorrection(Request $request)
     {
         $req=Requete::whereId($request->id)->first();
+        if ($denied = $this->denyUnlessHolder($req)) {
+            return $denied;
+        }
 
         Reponse::create([
             // 'hasPermission'=>$request->hasPermission,
@@ -76,6 +81,9 @@ class ReponseController extends Controller
     public function decline(Request $request){
 
         $req=Requete::whereId($request->id)->first();
+        if ($denied = $this->denyUnlessHolder($req)) {
+            return $denied;
+        }
 
         Reponse::create([
             'hasPermission'=>$request->hasPermission,
@@ -102,6 +110,9 @@ class ReponseController extends Controller
     public function validation(Request $request){
 
         $req=Requete::whereId($request->id)->first();
+        if ($denied = $this->denyUnlessHolder($req)) {
+            return $denied;
+        }
 
         Reponse::create([
             'hasPermission'=>$request->hasPermission,

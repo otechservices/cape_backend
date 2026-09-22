@@ -11,6 +11,7 @@ use App\Models\Resident;
 use App\Models\Sanction;
 use App\Models\Staff;
 use App\Utilities\FileStorage;
+use Illuminate\Support\Str;
 
 use Auth;
 
@@ -904,8 +905,8 @@ class RequeteRepository
             } else {
                 $role = Role::where('name', 'dfea')->first();
                 $user = User::role($role)->first();
-                $message = "Compte DDASM non actif veuillez contacter l'administrateur";
-                $libelle = "Dossier validé transmis au DDASM";
+                $message = "Compte DFEA non actif veuillez contacter l'administrateur";
+                $libelle = "Dossier validé transmis à la DFEA";
                 $status = 6;
             }
         } elseif ($requete->status == 6) {
@@ -1303,6 +1304,99 @@ class RequeteRepository
         } else {
             return 0; // ou null si aucun parcours trouvé
         }
+    }
+
+    /**
+     * Doublons probables parmi les dossiers à inscrire en session.
+     *
+     * Chaque dossier de la liste est comparé, sur son nom, à tous les dossiers
+     * du même service quel que soit leur statut : un centre a pu être déposé
+     * deux fois, ou figurer déjà parmi les agréés. Les noms sont ramenés à une
+     * forme canonique (casse, accents, ponctuation) puis mesurés par distance
+     * d'édition ; au-delà du seuil, les dossiers sont regroupés de proche en
+     * proche. La décision de supprimer reste humaine : homonymes de deux
+     * communes différentes, par exemple, ne sont pas des doublons.
+     *
+     * @param  int  $seuil  similarité minimale, en pourcentage (90 à 100)
+     * @return array<int, array<int, array>>  groupes, du plus ancien dépôt au plus récent
+     */
+    public function finishedDuplicates(int $serviceId, int $seuil): array
+    {
+        $dossiers = Requete::with(['district.municipality', 'Cape'])
+            ->where('service_id', $serviceId)
+            ->whereNotNull('name')
+            ->where('name', '<>', 'N/A')
+            ->get();
+
+        $cles = $dossiers->mapWithKeys(fn ($r) => [$r->id => self::cleNom($r->name)]);
+        $liste = $dossiers->filter(fn ($r) => $r->status == 7 && $r->session_id === null);
+
+        // Union-find : deux dossiers liés au-delà du seuil partagent un groupe.
+        $parent = [];
+        $racine = function ($id) use (&$parent, &$racine) {
+            return ($parent[$id] ?? $id) === $id ? $id : ($parent[$id] = $racine($parent[$id]));
+        };
+        $meilleure = [];
+
+        foreach ($liste as $a) {
+            foreach ($dossiers as $b) {
+                if ($a->id === $b->id) {
+                    continue;
+                }
+                $s = self::similarite($cles[$a->id], $cles[$b->id], $seuil);
+                if ($s < $seuil) {
+                    continue;
+                }
+                $parent[$racine($b->id)] = $racine($a->id);
+                $meilleure[$a->id] = max($meilleure[$a->id] ?? 0, $s);
+                $meilleure[$b->id] = max($meilleure[$b->id] ?? 0, $s);
+            }
+        }
+
+        return $dossiers
+            ->filter(fn ($r) => isset($meilleure[$r->id]))
+            ->sortBy('created_at')
+            ->groupBy(fn ($r) => $racine($r->id))
+            ->map(fn ($groupe) => $groupe->map(fn ($r) => [
+                'id' => $r->id,
+                'code' => $r->code,
+                'name' => $r->name,
+                'status' => $r->status,
+                'commune' => $r->district?->municipality?->name ?? $r->town,
+                'district' => $r->district?->name,
+                'promoteur' => trim($r->name_pomoter.' '.$r->firstname_pomoter),
+                'created_at' => $r->created_at,
+                'similarite' => (int) floor($meilleure[$r->id]),
+                'dans_liste' => $r->status == 7 && $r->session_id === null,
+                // Même règle que la suppression : un centre agréé est conservé.
+                'supprimable' => $r->Cape === null,
+            ])->values())
+            ->values()
+            ->all();
+    }
+
+    /** Forme canonique d'un nom de centre : sans casse, accents ni ponctuation. */
+    private static function cleNom(?string $nom): string
+    {
+        return trim(preg_replace('/[^a-z0-9]+/', ' ', strtolower(Str::ascii((string) $nom))));
+    }
+
+    /**
+     * Similarité en pourcentage (100 = identiques) fondée sur la distance de
+     * Levenshtein. L'écart de longueur minore la distance : s'il suffit déjà à
+     * passer sous le seuil, le calcul est évité.
+     */
+    private static function similarite(string $a, string $b, int $seuil): float
+    {
+        $max = max(strlen($a), strlen($b));
+        if ($max === 0) {
+            return 100.0;
+        }
+        if ((1 - abs(strlen($a) - strlen($b)) / $max) * 100 < $seuil) {
+            return 0.0;
+        }
+
+        return (1 - levenshtein($a, $b) / $max) * 100;
     }
 
     /**

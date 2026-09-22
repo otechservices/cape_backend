@@ -28,6 +28,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use Log;
 use App\Utilities\ErrorMessage;
 use App\Http\Repositories\RequeteRepository;
+use App\Traits\GuardsRequeteHolder;
+use Illuminate\Support\Facades\DB;
 
 /** status check
  * 0 : Nouvelle
@@ -43,6 +45,7 @@ use App\Http\Repositories\RequeteRepository;
  */
 class RequeteController extends Controller
 {
+    use GuardsRequeteHolder;
 
     /**
      * @var RequeteRepository
@@ -91,10 +94,13 @@ class RequeteController extends Controller
         if (request()->service_id) {
             $role=Auth::user()->roles()->first()->name;
 
+            // « Parcours traitement » suit les dossiers déposés sur la plateforme :
+            // les centres agréés avant elle (import, statut 9) n'ont aucun
+            // traitement à suivre et n'ont rien à y faire.
             switch ($role) {
                 case 'cps':
                     $districtIds=Auth::user()->cps->districts->pluck('id');
-                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours'])->whereIn('district_id',$districtIds)->where('service_id',request()->service_id)->orderBy("id","desc")->get();
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours'])->whereIn('district_id',$districtIds)->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
                     break;
                 case 'ddasm':
                     $districtIds=[];
@@ -107,13 +113,13 @@ class RequeteController extends Controller
                      
                     }
                     
-                    $requetes=Requete::with(['parcours.user','TypeCape','service','district.cps','lastParcours'])->whereIn('district_id',$districtIds)->where('service_id',request()->service_id)->orderBy("id","desc")->get();
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','district.cps','lastParcours'])->whereIn('district_id',$districtIds)->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
                                     break;
                 case 'dfea':
-                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours'])->where('service_id',request()->service_id)->orderBy("id","desc")->get();
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours'])->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
                     break;
                 case 'ministre':
-                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours'])->where('service_id',request()->service_id)->orderBy("id","desc")->get();
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours'])->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
                     break;
 
                 case 'Promoteur':
@@ -873,6 +879,29 @@ return response()->json([
         return response()->json([], 200);
 
     }
+    /**
+     * Doublons probables de la liste « à inscrire en session » : la DFEA les
+     * repère ici avant d'inscrire un même centre deux fois.
+     */
+    public function getFinishedDuplicates()
+    {
+        if (Auth::user()->roles()->first()?->name !== 'dfea') {
+            return response()->json([
+                "success" => false,
+                "message" => "Recherche des doublons réservée à la DFEA",
+                "data" => []
+            ], 403);
+        }
+
+        $seuil = min(100, max(90, (int) request()->input('seuil', 90)));
+
+        return response()->json([
+            "success" => true,
+            "message" => "Doublons probables",
+            "data" => $this->requeteRepository->finishedDuplicates((int) request()->service_id, $seuil)
+        ], 200);
+    }
+
     public function getAdmissibleRequete()
     {
 
@@ -888,6 +917,9 @@ return response()->json([
         $code=$request->code;
         $datas=$request->all();
         $requete=Requete::where('code',$code)->first();
+        if ($denied = $this->denyUnlessHolder($requete)) {
+            return $denied;
+        }
         if ($request->file('file')) {
             $filename= FileStorage::setFile("doc_store",$request->file('file'),$code,time());
             if ($requete->has_cps_file) {
@@ -1079,6 +1111,12 @@ return response()->json([
 
   public function finishStore2(Request $request)
     {
+        $denied = $this->denyUnlessHolder(
+            Requete::where('code', $request->input('codeForRecepisse', $request->code))->first()
+        );
+        if ($denied) {
+            return $denied;
+        }
 
         if ($request->has('codeForRecepisse')) {
             try {
@@ -1305,6 +1343,9 @@ return response()->json([
     public function transUp(Request $request)
     {
         $requete=Requete::where('code',$request->code)->first();
+        if ($denied = $this->denyUnlessHolder($requete)) {
+            return $denied;
+        }
         $message="";
         $status=$requete->status;
         if ($requete->status ==5 || $requete->affectation->sens == -1) {
@@ -1322,8 +1363,8 @@ return response()->json([
             }else{
                 $role=Role::where('name','dfea')->first();
                 $user=User::role($role)->first();
-                $message="Compte DDASM non actif veuillez contacter l'administrateur";
-                $libelle="Dossier validé transmis au DDASM";
+                $message="Compte DFEA non actif veuillez contacter l'administrateur";
+                $libelle="Dossier validé transmis à la DFEA";
                 $status=6;
             }
       
@@ -1381,6 +1422,9 @@ return response()->json([
     public function transDown(Request $request)
     {
         $requete=Requete::where('code',$request->code)->first();
+        if ($denied = $this->denyUnlessHolder($requete)) {
+            return $denied;
+        }
         $message="";
         $status=$requete->status;
         if ($requete->status ==5) {
@@ -1417,6 +1461,9 @@ public function inviteStore(Request $request)
     {
         //try {
             $requete = Requete::find($request->id);
+            if ($denied = $this->denyUnlessHolder($requete)) {
+                return $denied;
+            }
 
             $checkFileTreatedValid = RequeteFile::where('requete_id', $requete->id)->where('is_treated', true)->where('is_valid', false)->where('file_id', "!=", null)
                 ->orWhere('requete_id', $requete->id)->where('is_treated', false)->where('file_id', "!=", null)->get();
@@ -1674,8 +1721,10 @@ public function inviteStore(Request $request)
         // ce filtre, un dossier validé restait indéfiniment dans la file
         // d'attente. Les rejets, eux, y demeurent — `setStatus2` les remet à
         // NULL, c'est-à-dire à l'état « pas encore tranché ».
+        // Les centres agréés avant la plateforme (statut 9) attendent eux aussi
+        // que la DFEA enregistre leur arrêté : validés, ils passent au statut 8.
         $requetes=Requete::with(['TypeCape','service','Cape','district.municipality.department','district.cps'])
-            ->where('status',8)
+            ->whereIn('status',[Requete::STATUS_AUTORISE, Requete::STATUS_AGREE_IMPORTE])
             ->where(fn ($q) => $q->whereNull('is_validated')->orWhere('is_validated','<>',1))
             ->get();
         return response()->json([
@@ -1716,7 +1765,33 @@ public function inviteStore(Request $request)
             $donnees['final_observation'] = $request->observation;
         }
 
-        $requete->update($donnees);
+        // Un centre agréé avant la plateforme rejoint les dossiers agréés et
+        // cesse d'être revendicable : une revendication à peine entamée (code
+        // OTP non confirmé) est close, faute de quoi sa confirmation ferait
+        // repasser le dossier au statut 10.
+        $importe = $requete->status == Requete::STATUS_AGREE_IMPORTE;
+        if ($importe) {
+            $donnees['status'] = Requete::STATUS_AUTORISE;
+        }
+
+        DB::transaction(function () use ($requete, $donnees, $importe) {
+            $requete->update($donnees);
+
+            if ($importe) {
+                $requete->agrementClaims()->ongoing()->update([
+                    'status'      => AgrementClaim::STATUS_REJECTED,
+                    'decided_at'  => now(),
+                    'decided_by'  => Auth::id(),
+                    'observation' => "Agrément validé directement par la DFEA",
+                ]);
+
+                Parcours::create([
+                    'libelle'    => "Agrément hors plateforme validé par la DFEA",
+                    'requete_id' => $requete->id,
+                    'user_id'    => Auth::id(),
+                ]);
+            }
+        });
 
         return response()->json([
             "success" => true,
@@ -1767,6 +1842,9 @@ public function inviteStore(Request $request)
     public function setFileTreatment(Request $request)
     {
         $reqFile=RequeteFile::find($request->id);
+        if ($denied = $this->denyUnlessHolder($reqFile?->requete)) {
+            return $denied;
+        }
         $reqFile->update([
             "is_treated"=>true,
             "observation"=>$request->observation,

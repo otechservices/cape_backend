@@ -114,7 +114,7 @@ class RequetesExport implements FromQuery, WithHeadings, WithMapping, WithStyles
             3 => 'Dossier corrigé',
             4 => 'Invitation envoyée',
             5 => 'Transmis au DD',
-            6 => 'Attente approbation DDASM',
+            6 => 'Approuvé DDASM, attente DFEA',
             7 => 'Attente inscription session',
             8 => 'Agréé',
             9 => 'Agréé (avant plateforme)',
