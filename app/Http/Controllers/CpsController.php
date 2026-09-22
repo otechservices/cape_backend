@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\Models\Cps;
 use App\Models\District;
+use App\Services\GupsAffectationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 use Illuminate\Http\Request;
@@ -134,8 +135,16 @@ class CpsController extends Controller
     public function storeDistricts(Request $request)
     {
 
+        $affectations = app(GupsAffectationService::class);
+
         foreach (json_decode($request->items) as $value) {
-           District::find($value->id)->update(['cps_id'=>$request->id]);
+           $district = District::find($value->id);
+           $district->update(['cps_id'=>$request->id]);
+
+           // Les dossiers en cours au GUPS suivent l'arrondissement vers son nouveau GUPS.
+           if ($district->wasChanged('cps_id')) {
+               $affectations->reaffecterArrondissement($district->id, "arrondissement {$district->name} rattaché à ce GUPS");
+           }
         }
 
 

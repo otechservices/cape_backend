@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Models\District;
+use App\Services\GupsAffectationService;
 use Illuminate\Http\Request;
 
 class DistrictController extends Controller
@@ -71,6 +72,11 @@ class DistrictController extends Controller
         $district=District::find($id);
 
         $district->update($datas);
+
+        // Les dossiers en cours au GUPS suivent l'arrondissement vers son nouveau GUPS.
+        if ($district->wasChanged('cps_id')) {
+            app(GupsAffectationService::class)->reaffecterArrondissement($district->id, "arrondissement {$district->name} rattaché à ce GUPS");
+        }
 
         $district=District::find($id);
 

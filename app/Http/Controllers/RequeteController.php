@@ -29,6 +29,7 @@ use Log;
 use App\Utilities\ErrorMessage;
 use App\Http\Repositories\RequeteRepository;
 use App\Traits\GuardsRequeteHolder;
+use App\Services\GupsAffectationService;
 use Illuminate\Support\Facades\DB;
 
 /** status check
@@ -2006,9 +2007,15 @@ public function inviteStore(Request $request)
             'user_id' => Auth::id(),
         ]);
 
+        // Encore au GUPS, le dossier suit l'arrondissement : sans cela il
+        // resterait dans la liste « À valider » de l'ancien GUPS.
+        $agent = app(GupsAffectationService::class)
+            ->reaffecter($requete->load('district.cps', 'affectation'), 'transfert vers '.$district->name);
+
         return response()->json([
             "success" => true,
-            "message" => "Dossier transféré vers ".$district->name,
+            "message" => "Dossier transféré vers ".$district->name
+                .($agent !== null ? ' et confié au '.$district->cps?->name : ''),
             "data" => $requete->load('district.cps', 'district.Municipality.Department'),
         ], 200);
     }
