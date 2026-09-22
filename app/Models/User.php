@@ -74,6 +74,16 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsTo(SessionMember::class,'session_member_id');
     }
 
+    /** GUPS de rattachement d'un agent au rôle cps : borne les dossiers qu'il voit. */
+    function cps()  {
+        return $this->belongsTo(Cps::class,'cps_id');
+    }
+
+    /** Département de rattachement d'un agent au rôle ddasm. */
+    function department()  {
+        return $this->belongsTo(Department::class,'department_id');
+    }
+
 
 
     /**
