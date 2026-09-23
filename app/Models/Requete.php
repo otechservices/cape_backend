@@ -179,7 +179,9 @@ private static $whiteListFilter = ['*'];
 
     public function lastParcours()
     {
-        return $this->hasOne(Parcours::class,'requete_id')->orderBy('id','desc')->take(1);
+        // latestOfMany : une dernière étape par dossier. Un take(1) limitait
+        // le chargement groupé (with) à une seule ligne pour toute la liste.
+        return $this->hasOne(Parcours::class,'requete_id')->latestOfMany('id');
     }
 
     public function NaturePromotor()
