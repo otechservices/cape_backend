@@ -95,13 +95,15 @@ class RequeteController extends Controller
         if (request()->service_id) {
             $role=Auth::user()->roles()->first()->name;
 
+            // L'affectation courante est chargée : elle dit si le dossier suit
+            // encore le circuit ou s'il n'y est jamais entré.
             // « Parcours traitement » suit les dossiers déposés sur la plateforme :
             // les centres agréés avant elle (import, statut 9) n'ont aucun
             // traitement à suivre et n'ont rien à y faire.
             switch ($role) {
                 case 'cps':
                     $districtIds=Auth::user()->cps->districts->pluck('id');
-                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours'])->whereIn('district_id',$districtIds)->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours','affectation'])->whereIn('district_id',$districtIds)->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
                     break;
                 case 'ddasm':
                     $districtIds=[];
@@ -114,13 +116,13 @@ class RequeteController extends Controller
                      
                     }
                     
-                    $requetes=Requete::with(['parcours.user','TypeCape','service','district.cps','lastParcours'])->whereIn('district_id',$districtIds)->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','district.cps','lastParcours','affectation'])->whereIn('district_id',$districtIds)->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
                                     break;
                 case 'dfea':
-                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours'])->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours','affectation'])->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
                     break;
                 case 'ministre':
-                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours'])->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours','affectation'])->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
                     break;
 
                 case 'Promoteur':
@@ -335,6 +337,14 @@ class RequeteController extends Controller
             $consent_file = FileStorage::setFile("doc_store", $request->file('consent_file'), $code, time());
 
         }
+
+        // Dépôt atomique. Sans transaction, un échec survenu après la création
+        // du dossier (récépissé, mail) laissait en base un dossier sans
+        // affectation ni parcours : invisible dans « À valider » de tous, donc
+        // jamais instruit. L'affectation est désormais créée avant le récépissé.
+        DB::beginTransaction();
+
+        try {
         $requete = Requete::create(array_merge([
             "code" => $code,
             "name" => $data->name,
@@ -406,31 +416,6 @@ class RequeteController extends Controller
         //         "requete_id"=>$requete->id,
         //     ]);
         // }
-        $recFile = time() . "recepice_inscription.pdf";
-        $filePath = public_path('docs/' . $code . "/" . $recFile);
-        RequeteFile::create([
-            "type" => "PDF",
-            "reference" => "Récépissé inscription",
-            "filename" => $recFile,
-            "level" => 1,
-            "file_id" => null,
-            "promoter_id"=>Auth::user()->promoter_id,
-            "requete_id" => $requete->id,
-        ]);
-
-
-
-
-
-        $cape = $requete;
-        $cape->district->municipality->departement;
-        $cape->district->cps;
-        Pdf::loadView('emails.success_pj', [
-            "cape" => $cape,
-            "name" => $data->name,
-            "cps" => $district->cps->name,
-            "date" => date_format($requete->created_at, "d-m-Y"),
-        ])->save($filePath);
 
         Affectation::create([
             "user_up" => $user->id,
@@ -463,6 +448,56 @@ class RequeteController extends Controller
             ]);
         }
 
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Dépôt non enregistré : '.ErrorMessage::technical($th));
+
+            return response()->json([
+                "success" => false,
+                "message" => ErrorMessage::of($th, "Le dépôt n'a pas pu être enregistré. Veuillez réessayer."),
+                "data" => null
+            ], 500);
+        }
+
+        $cape = $requete;
+
+        // Récépissé et notifications : hors transaction, car leur échec ne doit
+        // pas défaire un dépôt valide. La ligne `requete_files` n'est écrite
+        // qu'une fois le fichier réellement produit, pour ne pas référencer un
+        // récépissé absent.
+        $recFile = time() . "recepice_inscription.pdf";
+        $filePath = public_path('docs/' . $code . "/" . $recFile);
+        $recepisse = null;
+
+        try {
+            if (! is_dir(dirname($filePath))) {
+                mkdir(dirname($filePath), 0775, true);
+            }
+
+            $cape->district->municipality->departement;
+            $cape->district->cps;
+            Pdf::loadView('emails.success_pj', [
+                "cape" => $cape,
+                "name" => $data->name,
+                "cps" => $district->cps->name,
+                "date" => date_format($requete->created_at, "d-m-Y"),
+            ])->save($filePath);
+
+            RequeteFile::create([
+                "type" => "PDF",
+                "reference" => "Récépissé inscription",
+                "filename" => $recFile,
+                "level" => 1,
+                "file_id" => null,
+                "promoter_id" => Auth::user()->promoter_id,
+                "requete_id" => $requete->id,
+            ]);
+
+            $recepisse = $filePath;
+        } catch (\Throwable $th) {
+            Log::error("Récépissé non généré pour $code : ".$th->getMessage());
+        }
 
         $emails = [
             [
@@ -494,25 +529,23 @@ class RequeteController extends Controller
         $allMailsSent = true;
 
         foreach ($emails as $item) {
-            $mailResult = Mailer::sendSimpleWithFile(
-                "emails.submit_success",
-                [
-                        "cape" => $cape,
-                        "name" => $item['name'],
-                        'code' => $request->input('codeForRecepisse'),
-                        'service' => $service,
-                        'cps' => $cape->district->cps->name
+            $contenu = [
+                "cape" => $cape,
+                "name" => $item['name'],
+                'code' => $code,
+                'service' => $service,
+                'cps' => $cape->district->cps->name,
+            ];
 
-                    ],
-                "Soumission de dossier CAPE/Garderie",
-                $item['name'],
-                $item['email'],
-                //'alexiskatel92@gmail.com',
-                [$filePath],
-            );
-            if (!$mailResult) {
+            try {
+                $recepisse === null
+                    ? Mailer::sendSimple("emails.submit_success", $contenu, "Soumission de dossier CAPE/Garderie", $item['name'], $item['email'])
+                    : Mailer::sendSimpleWithFile("emails.submit_success", $contenu, "Soumission de dossier CAPE/Garderie", $item['name'], $item['email'], [$recepisse]);
+            } catch (\Throwable $th) {
+                // Le dossier est déposé : un mail non délivré ne doit pas
+                // transformer un dépôt réussi en erreur pour le promoteur.
                 $allMailsSent = false;
-                Log::error('Échec d\'envoi à ' . $item['email']);
+                Log::error('Échec d\'envoi à ' . $item['email'] . ' : ' . $th->getMessage());
             }
         }
 
@@ -881,15 +914,19 @@ return response()->json([
 
     }
     /**
-     * Doublons probables de la liste « à inscrire en session » : la DFEA les
-     * repère ici avant d'inscrire un même centre deux fois.
+     * Doublons probables d'une liste : « à inscrire en session » (la DFEA les
+     * repère avant d'inscrire deux fois le même centre) ou « Parcours
+     * traitement » (chaque instance les repère sur son périmètre).
      */
-    public function getFinishedDuplicates()
+    public function getDuplicates(string $portee = 'parcours')
     {
-        if (Auth::user()->roles()->first()?->name !== 'dfea') {
+        $role = Auth::user()->roles()->first()?->name;
+        $autorises = $portee === 'finished' ? ['dfea'] : ['cps', 'ddasm', 'dfea', 'ministre'];
+
+        if (! in_array($role, $autorises, true)) {
             return response()->json([
                 "success" => false,
-                "message" => "Recherche des doublons réservée à la DFEA",
+                "message" => "Recherche des doublons non autorisée pour ce profil",
                 "data" => []
             ], 403);
         }
@@ -899,8 +936,47 @@ return response()->json([
         return response()->json([
             "success" => true,
             "message" => "Doublons probables",
-            "data" => $this->requeteRepository->finishedDuplicates((int) request()->service_id, $seuil)
+            "data" => $this->requeteRepository->duplicates((int) request()->service_id, $seuil, $portee)
         ], 200);
+    }
+
+    /**
+     * Export de la liste « Dossiers à inscrire en session », en Excel ou en PDF.
+     *
+     * Le fichier reprend exactement la liste affichée : dossiers recevables
+     * (statut 7) du service, pas encore inscrits à une session.
+     */
+    public function exportFinished(Request $request)
+    {
+        if (Auth::user()->roles()->first()?->name !== 'dfea') {
+            return response()->json([
+                "success" => false,
+                "message" => "Export réservé à la DFEA",
+                "data" => null
+            ], 403);
+        }
+
+        $service = Service::find((int) $request->service_id);
+        $filtres = [
+            'service_id' => (int) $request->service_id,
+            'status' => 7,
+            'sans_session' => true,
+        ];
+        $nom = 'dossiers_a_inscrire_'.Str::slug($service?->name ?? 'centres').'_'.date('d_m_Y');
+
+        if ($request->format === 'pdf') {
+            $requetes = Requete::applyFilters($filtres)
+                ->with(['TypeCape', 'service', 'district.cps', 'district.Municipality.Department'])
+                ->orderBy('name')
+                ->get();
+
+            return Pdf::loadView('pdf.requetes_a_inscrire', [
+                'requetes' => $requetes,
+                'service' => $service,
+            ])->setPaper('a4', 'landscape')->download($nom.'.pdf');
+        }
+
+        return Excel::download(new RequetesExport($filtres), $nom.'.xlsx');
     }
 
     public function getAdmissibleRequete()

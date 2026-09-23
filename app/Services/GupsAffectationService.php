@@ -109,6 +109,85 @@ class GupsAffectationService
     }
 
     /**
+     * Destinataire attendu d'un dossier selon l'étape où il se trouve : le GUPS
+     * de son arrondissement pendant l'instruction, la DDASM du département une
+     * fois transmis, la DFEA ensuite. C'est la cible que le circuit lui aurait
+     * donnée s'il l'avait suivi normalement.
+     */
+    public function destinataire(Requete $requete): ?User
+    {
+        $status = (int) $requete->status;
+
+        if (in_array($status, self::STATUTS_GUPS, true)) {
+            return $this->agentCompetent($requete);
+        }
+
+        if ($status === 5) {
+            $departementId = $requete->district?->municipality?->department_id;
+
+            return $departementId === null ? null : User::role('ddasm')
+                ->where('department_id', $departementId)
+                ->where('is_active', true)
+                ->orderBy('id')
+                ->first();
+        }
+
+        if (in_array($status, [6, 7], true)) {
+            return User::role('dfea')->where('is_active', true)->orderBy('id')->first();
+        }
+
+        return null;
+    }
+
+    /**
+     * Dossier jamais entré dans le circuit : déposé en ligne, mais dont la
+     * création s'est interrompue avant l'affectation (voir le dépôt, rendu
+     * atomique depuis). Personne ne le voit dans sa liste de travail.
+     */
+    public function estOrphelin(Requete $requete): bool
+    {
+        return (int) $requete->status <= 7 && $requete->affectation === null;
+    }
+
+    /**
+     * Confie au destinataire attendu un dossier resté sans affectation.
+     *
+     * @return User|null l'agent destinataire, ou null si le dossier n'est pas
+     *                   concerné ou qu'aucun destinataire n'est identifiable
+     */
+    public function reprendre(Requete $requete, string $motif): ?User
+    {
+        if (! $this->estOrphelin($requete)) {
+            return null;
+        }
+
+        $agent = $this->destinataire($requete);
+        if ($agent === null) {
+            return null;
+        }
+
+        DB::transaction(function () use ($requete, $agent, $motif) {
+            Affectation::create([
+                'user_up' => $agent->id,
+                'user_down' => $agent->id,
+                'isLast' => true,
+                'requete_id' => $requete->id,
+                'sens' => 1,
+            ]);
+
+            Parcours::create([
+                'libelle' => "Dossier repris et confié à son instance de traitement ($motif)",
+                'requete_id' => $requete->id,
+                'user_id' => Auth::id(),
+            ]);
+        });
+
+        $requete->unsetRelation('affectation');
+
+        return $agent;
+    }
+
+    /**
      * Réaffecte les dossiers au niveau GUPS d'un arrondissement.
      *
      * @return int nombre de dossiers déplacés

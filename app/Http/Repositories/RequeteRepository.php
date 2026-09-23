@@ -1307,20 +1307,22 @@ class RequeteRepository
     }
 
     /**
-     * Doublons probables parmi les dossiers à inscrire en session.
+     * Doublons probables parmi les dossiers d'une liste.
      *
      * Chaque dossier de la liste est comparé, sur son nom, à tous les dossiers
      * du même service quel que soit leur statut : un centre a pu être déposé
-     * deux fois, ou figurer déjà parmi les agréés. Les noms sont ramenés à une
-     * forme canonique (casse, accents, ponctuation) puis mesurés par distance
-     * d'édition ; au-delà du seuil, les dossiers sont regroupés de proche en
-     * proche. La décision de supprimer reste humaine : homonymes de deux
-     * communes différentes, par exemple, ne sont pas des doublons.
+     * deux fois, ou figurer déjà parmi les agréés. Un doublon se loge souvent
+     * hors du périmètre de l'agent, d'où la comparaison large. Les noms sont
+     * ramenés à une forme canonique (casse, accents, ponctuation) puis mesurés
+     * par distance d'édition ; au-delà du seuil, les dossiers sont regroupés de
+     * proche en proche. La décision de supprimer reste humaine : homonymes de
+     * deux communes différentes, par exemple, ne sont pas des doublons.
      *
-     * @param  int  $seuil  similarité minimale, en pourcentage (90 à 100)
+     * @param  int     $seuil   similarité minimale, en pourcentage (90 à 100)
+     * @param  string  $portee  'finished' (à inscrire en session) ou 'parcours'
      * @return array<int, array<int, array>>  groupes, du plus ancien dépôt au plus récent
      */
-    public function finishedDuplicates(int $serviceId, int $seuil): array
+    public function duplicates(int $serviceId, int $seuil, string $portee): array
     {
         $dossiers = Requete::with(['district.municipality', 'Cape'])
             ->where('service_id', $serviceId)
@@ -1329,7 +1331,8 @@ class RequeteRepository
             ->get();
 
         $cles = $dossiers->mapWithKeys(fn ($r) => [$r->id => self::cleNom($r->name)]);
-        $liste = $dossiers->filter(fn ($r) => $r->status == 7 && $r->session_id === null);
+        $ancres = $this->ancresDoublons($serviceId, $portee)->pluck('id')->all();
+        $liste = $dossiers->filter(fn ($r) => in_array($r->id, $ancres));
 
         // Union-find : deux dossiers liés au-delà du seuil partagent un groupe.
         $parent = [];
@@ -1367,12 +1370,39 @@ class RequeteRepository
                 'promoteur' => trim($r->name_pomoter.' '.$r->firstname_pomoter),
                 'created_at' => $r->created_at,
                 'similarite' => (int) floor($meilleure[$r->id]),
-                'dans_liste' => $r->status == 7 && $r->session_id === null,
+                'dans_liste' => in_array($r->id, $ancres),
                 // Même règle que la suppression : un centre agréé est conservé.
                 'supprimable' => $r->Cape === null,
             ])->values())
             ->values()
             ->all();
+    }
+
+    /**
+     * Dossiers de la liste consultée, sur lesquels les groupes sont ancrés.
+     *
+     * « Parcours traitement » reprend le périmètre de la liste elle-même :
+     * les arrondissements du GUPS, le département du DDASM, tout le service
+     * pour la DFEA et le ministre.
+     */
+    private function ancresDoublons(int $serviceId, string $portee)
+    {
+        $query = Requete::query()->where('service_id', $serviceId);
+
+        if ($portee === 'finished') {
+            return $query->where('status', 7)->whereNull('session_id');
+        }
+
+        $query->where('status', '<>', Requete::STATUS_AGREE_IMPORTE);
+
+        switch (Auth::user()->roles()->first()?->name) {
+            case 'cps':
+                return $query->whereIn('district_id', Auth::user()->cps?->districts->pluck('id') ?? []);
+            case 'ddasm':
+                return $query->whereHas('district.Municipality', fn ($m) => $m->where('department_id', Auth::user()->department_id));
+            default:
+                return $query;
+        }
     }
 
     /** Forme canonique d'un nom de centre : sans casse, accents ni ponctuation. */

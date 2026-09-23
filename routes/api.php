@@ -281,7 +281,8 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
       Route::get('/requetes/get-by-instance/rejected', 'RequeteController@getRejectedRequete');
       Route::get('/requetes/get-by-instance/validated', 'RequeteController@getValidatedRequete');
       Route::get('/requetes/get-by-instance/finished', 'RequeteController@getFinishedRequete');
-      Route::get('/requetes/duplicates/finished', 'RequeteController@getFinishedDuplicates');
+      Route::get('/requetes/finished/export', 'RequeteController@exportFinished');
+      Route::get('/requetes/duplicates/{portee}', 'RequeteController@getDuplicates')->whereIn('portee', ['finished', 'parcours']);
       Route::get('/requetes/get-by-instance/admissible', 'RequeteController@getAdmissibleRequete');
       Route::get('/requetes/get-by-instance/transmitted', 'RequeteController@getTransmittedRequete');
       Route::post('/requetes/state/finished-store-1', 'RequeteController@finishStore1');

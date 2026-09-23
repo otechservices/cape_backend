@@ -101,6 +101,10 @@ private static $whiteListFilter = ['*'];
             is_array($status) ? $q->whereIn('status', $status) : $q->where('status', $status);
         });
 
+        // Dossiers pas encore inscrits en session : c'est ce qui distingue la
+        // liste « à inscrire » des dossiers déjà programmés.
+        $query->when($filters['sans_session'] ?? null, fn ($q) => $q->whereNull('session_id'));
+
         $query->when($filters['department_id'] ?? null, fn ($q, $id) => $q->whereHas(
             'district.Municipality', fn ($m) => $m->where('department_id', $id)
         ));
