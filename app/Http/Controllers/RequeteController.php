@@ -119,10 +119,10 @@ class RequeteController extends Controller
                     $requetes=Requete::with(['parcours.user','TypeCape','service','district.cps','lastParcours','affectation'])->whereIn('district_id',$districtIds)->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
                                     break;
                 case 'dfea':
-                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours','affectation'])->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','district.cps','lastParcours','affectation'])->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
                     break;
                 case 'ministre':
-                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours','affectation'])->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','district.cps','lastParcours','affectation'])->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
                     break;
 
                 case 'Promoteur':
@@ -797,7 +797,7 @@ return response()->json([
             $status= $role=="ddasm" ?5:6;
             $idUser=Auth::id();
 
-            $requetes=Requete::with(['files','reponses','parcours','affectation','TypeCape','service','RequeteTypeGarderies.TypeGarderie','service','NaturePromotor'])->where('status', $status)->whereHas('affectations', function($q) use($idUser) {
+            $requetes=Requete::with(['files','reponses','parcours','affectation','TypeCape','service','district.cps','RequeteTypeGarderies.TypeGarderie','NaturePromotor'])->where('status', $status)->whereHas('affectations', function($q) use($idUser) {
                 $q->where('user_down',"=", $idUser)->where('isLast',"=", true);
                 })->where('service_id',request()->service_id)->orderBy("id",'desc')->get();
                 return response()->json($requetes, 200);
@@ -821,7 +821,7 @@ return response()->json([
             $status= $role=="ddasm" ?5:6;
             $idUser=Auth::id();
 
-            $requetes=Requete::with(['files','reponses','parcours','affectation','TypeCape','service','RequeteTypeGarderies.TypeGarderie','service','NaturePromotor'])->where('status', $status)->whereHas('affectations', function($q) use($idUser) {
+            $requetes=Requete::with(['files','reponses','parcours','affectation','TypeCape','service','district.cps','RequeteTypeGarderies.TypeGarderie','NaturePromotor'])->where('status', $status)->whereHas('affectations', function($q) use($idUser) {
                 $q->where('user_down',"=", $idUser)->where('isLast',"=", true);
                 })->where('service_id',request()->service_id)->get();
                 return response()->json($requetes, 200);
