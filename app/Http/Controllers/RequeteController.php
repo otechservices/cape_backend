@@ -103,7 +103,7 @@ class RequeteController extends Controller
             switch ($role) {
                 case 'cps':
                     $districtIds=Auth::user()->cps->districts->pluck('id');
-                    $requetes=Requete::with(['parcours.user','TypeCape','service','lastParcours','affectation'])->whereIn('district_id',$districtIds)->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','district.cps','lastParcours','affectation.detenteur.cps'])->whereIn('district_id',$districtIds)->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
                     break;
                 case 'ddasm':
                     $districtIds=[];
@@ -116,13 +116,13 @@ class RequeteController extends Controller
                      
                     }
                     
-                    $requetes=Requete::with(['parcours.user','TypeCape','service','district.cps','lastParcours','affectation'])->whereIn('district_id',$districtIds)->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','district.cps','lastParcours','affectation.detenteur.cps'])->whereIn('district_id',$districtIds)->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
                                     break;
                 case 'dfea':
-                    $requetes=Requete::with(['parcours.user','TypeCape','service','district.cps','lastParcours','affectation'])->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','district.cps','lastParcours','affectation.detenteur.cps'])->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
                     break;
                 case 'ministre':
-                    $requetes=Requete::with(['parcours.user','TypeCape','service','district.cps','lastParcours','affectation'])->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','district.cps','lastParcours','affectation.detenteur.cps'])->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
                     break;
 
                 case 'Promoteur':
