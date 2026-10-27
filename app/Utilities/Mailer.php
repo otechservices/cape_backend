@@ -9,7 +9,7 @@ class Mailer
     public static function sendSimple($file, $data, $subject, $name, $email)
     {
         Mail::send($file, $data, function ($message) use ($name, $email, $subject) {
-            $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'))
+            $message->from(config('mail.from.address'), config('mail.from.name'))
                 ->subject($subject);
             $message->to($email, $name);
         });
@@ -20,7 +20,7 @@ class Mailer
 
        // try {
               Mail::send($file, $data, function ($message) use ($name, $email, $subject, $files) {
-            $message->from(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'))
+            $message->from(config('mail.from.address'), config('mail.from.name'))
                 ->subject($subject);
             $message->to($email, $name);
             foreach ($files as $file) {

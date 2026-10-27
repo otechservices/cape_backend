@@ -27,7 +27,7 @@ class RequetesExport implements FromQuery, WithHeadings, WithMapping, WithStyles
     public function query()
     {
         return Requete::applyFilters($this->filters)
-            ->with(['TypeCape', 'service', 'district.cps', 'district.Municipality.Department'])
+            ->with(['TypeCape', 'service', 'gups', 'district.cps', 'district.Municipality.Department'])
             ->orderBy('name');
     }
 
@@ -78,7 +78,7 @@ class RequetesExport implements FromQuery, WithHeadings, WithMapping, WithStyles
             $municipality?->Department?->name,
             $municipality?->name ?? $requete->town,
             $requete->district?->name,
-            $requete->district?->cps?->name,
+            $requete->gups?->name ?? $requete->district?->cps?->name,
             $requete->district?->cps ? 'Rattaché' : 'Non rattaché',
             $requete->capacity,
             $requete->created_at?->format('d/m/Y'),

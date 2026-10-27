@@ -76,7 +76,7 @@ class ReferalRepository
 
         switch ($role) {
             case 'cps':
-                $districtIds = Auth::user()->cps->districts->pluck('id');
+                $cpsId = Auth::user()->cps_id;
 
                 $referals = Cape::with([
                     'requete.referals.controls',
@@ -91,8 +91,8 @@ class ReferalRepository
                         });
                     },
                     'requete.TypeCape'
-                ])->whereHas('requete', function($q) use ($districtIds, $service_id) {
-                    $q->whereIn('district_id', $districtIds)
+                ])->whereHas('requete', function($q) use ($cpsId, $service_id) {
+                    $q->where('cps_id', $cpsId)
                     ->where('is_authorized', true)
                     ->where('service_id', $service_id);
                 })->get();

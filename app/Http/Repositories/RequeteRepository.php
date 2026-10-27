@@ -55,9 +55,9 @@ class RequeteRepository
 
             switch ($role) {
                 case 'cps':
-                    $districtIds = Auth::user()->cps->districts->pluck('id');
+                    // GUPS en charge du dossier, et non GUPS par défaut de l'arrondissement : plusieurs GUPS peuvent couvrir un même arrondissement.
                     $query = Requete::with(['parcours.user', 'TypeCape', 'service', 'lastParcours'])
-                        ->whereIn('district_id', $districtIds)
+                        ->where('cps_id', Auth::user()->cps_id)
                         ->where('service_id', request()->service_id)
                         ->orderByDesc('id');
                     break;
@@ -615,11 +615,9 @@ class RequeteRepository
 
             } elseif ($role === "cps") {
 
-                $districts = Auth::user()->cps?->districts->pluck('id') ?? [];
-
                 $requetes = Requete::with($relations)
                     ->where('status', '>=', 5)
-                    ->whereIn('district_id', $districts)
+                    ->where('cps_id', Auth::user()->cps_id)
                     ->where('service_id', request()->service_id)
                     ->get();
             }
@@ -1020,7 +1018,7 @@ class RequeteRepository
         Mailer::sendSimple(
             "emails.success",
             [
-                "cps" => $requete?->district?->cps?->name,
+                "cps" => $requete?->gups?->name ?? $requete?->district?->cps?->name,
                 "date_meeting" => $request->date_meeting,
             ],
             "Invitation au dépôt du dossier physique",
@@ -1042,7 +1040,7 @@ class RequeteRepository
         // Création de l'agenda
         Agenda::create([
             'invite_date' => date_create($request->date_meeting),
-            'cps_id' => $requete?->district?->cps?->id,
+            'cps_id' => $requete?->cps_id ?? $requete?->district?->cps?->id,
             'status' => $requete->id,
         ]);
 
@@ -1116,7 +1114,7 @@ class RequeteRepository
 
     public function authorized()
     {
-        $session = Session::where('is_active', false)->orderBy("id", "desc")->first();
+        $session = Session::where('is_active', false)->notCancelled()->orderBy("id", "desc")->first();
         $requetes = Requete::where('session_id', $session->id)->where('is_authorized', true)->get();
 
         foreach ($requetes as $value) {
@@ -1198,7 +1196,7 @@ class RequeteRepository
 
     public function getDecision()
     {
-        $session = Session::where('is_active', false)
+        $session = Session::where('is_active', false)->notCancelled()
             ->orderBy('id', 'desc')
             ->first();
 
@@ -1397,7 +1395,7 @@ class RequeteRepository
 
         switch (Auth::user()->roles()->first()?->name) {
             case 'cps':
-                return $query->whereIn('district_id', Auth::user()->cps?->districts->pluck('id') ?? []);
+                return $query->where('cps_id', Auth::user()->cps_id);
             case 'ddasm':
                 return $query->whereHas('district.Municipality', fn ($m) => $m->where('department_id', Auth::user()->department_id));
             default:

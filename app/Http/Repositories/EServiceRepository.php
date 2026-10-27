@@ -83,12 +83,13 @@ class EServiceRepository
                 break;
 
             case 'cps':
-                $districtIds = Auth::user()->cps->districts->pluck('id');
+                // GUPS en charge du dossier, et non GUPS par défaut de l'arrondissement : plusieurs GUPS peuvent couvrir un même arrondissement.
+                $cpsId = Auth::user()->cps_id;
                 if ($request->service_id) {
                     $service_id = $request->service_id;
                     $req->withCount(['residents', 'staffs'])
-                        ->whereHas('requete', function ($q) use ($districtIds, $service_id) {
-                            $q->whereIn('district_id', $districtIds)
+                        ->whereHas('requete', function ($q) use ($cpsId, $service_id) {
+                            $q->where('cps_id', $cpsId)
                             ->where('service_id', $service_id);
                         })->where('is_transmitted', true);
                 }
@@ -191,7 +192,7 @@ class EServiceRepository
     public static function sendSubmittedMail($name, $email, $subject, $data, $file)
     {
         Mail::send($file, $data, function ($message) use ($name, $email, $subject) {
-            $message->from(env('MAIL_FROM_ADDRESS'), env("MAIL_FROM_NAME"))
+            $message->from(config('mail.from.address'), config('mail.from.name'))
                     ->subject($subject)
                     ->to($email, $name);
         });

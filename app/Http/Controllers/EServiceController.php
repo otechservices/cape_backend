@@ -85,7 +85,7 @@ class EServiceController extends Controller
     {
 
         Mail::send($file, $data, function($message)use ($name,$email,$subject){
-            $message->from(env('MAIL_FROM_ADDRESS'), env("MAIL_FROM_NAME"))
+            $message->from(config('mail.from.address'), config('mail.from.name'))
                 ->subject($subject);
             $message->to($email, $name)
             ;

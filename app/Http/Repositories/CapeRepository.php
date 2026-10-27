@@ -53,7 +53,8 @@ class CapeRepository
 
         switch ($role) {
             case 'cps':
-                $departDistricts = Auth::user()->cps->districts->pluck('id');
+                // GUPS en charge du dossier, et non GUPS par défaut de l'arrondissement : plusieurs GUPS peuvent couvrir un même arrondissement.
+                $cpsId = Auth::user()->cps_id;
 
                 $req = Cape::with([
                     'requete.TypeCape',
@@ -70,8 +71,8 @@ class CapeRepository
                             ->where("user_down", Auth::id());
                         });
                     },
-                ])->whereHas('requete', function($q) use ($departDistricts) {
-                    $q->whereIn('district_id', $departDistricts)
+                ])->whereHas('requete', function($q) use ($cpsId) {
+                    $q->where('cps_id', $cpsId)
                     ->where('is_authorized', true);
                 });
                 break;

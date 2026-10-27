@@ -94,7 +94,7 @@ class BillingRepository
             ['user'=> $billing->user],
             "Demande d'assistance",
             "MASM CAPE",
-            env('MAIL_FROM_ADDRESS')
+            config('mail.from.address')
         );
 
         // Retour direct du modèle

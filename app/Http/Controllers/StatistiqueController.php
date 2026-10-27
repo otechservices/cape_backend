@@ -63,10 +63,10 @@ class StatistiqueController extends Controller
 
     switch ($role) {
         case 'cps':
-            $districts=Auth::user()->cps->districts;
+            $districts=Auth::user()->cps->couverture;
             for ($i=0; $i < $districts->count(); $i++) { 
                 $datas['data']['label']="Capes inscrits";
-                $datas['data']['data'][$i]=Requete::where('district_id',$districts[$i]->id)->where('service_id',$service_id)->count();
+                $datas['data']['data'][$i]=Requete::where('district_id',$districts[$i]->id)->where('cps_id',Auth::user()->cps_id)->where('service_id',$service_id)->count();
                 $datas['labels'][$i]=$districts[$i]->name;
             }
             break;
@@ -150,13 +150,13 @@ class StatistiqueController extends Controller
 
     switch ($role) {
         case 'cps':
-            $districts=Auth::user()->cps->districts;
+            $districts=Auth::user()->cps->couverture;
 
             for ($i=0; $i < $districts->count(); $i++) { 
                 $datas['data']['label']="Capes inscrits";
                 $current=$districts[$i];
                 $datas['data']['data'][$i]=Cape::whereHas("requete",function($q)use($current,$service_id){
-                    $q->where('service_id',$service_id)->where('district_id',$current->id);
+                    $q->where('service_id',$service_id)->where('district_id',$current->id)->where('cps_id',Auth::user()->cps_id);
                 })->count();
                 $datas['labels'][$i]=$districts[$i]->name;
             }
@@ -243,9 +243,9 @@ class StatistiqueController extends Controller
 
     switch ($role) {
         case 'cps':
-            $districts=Auth::user()->cps->districts->pluck('id');
-            $capes=Cape::with('requete')->whereHas("requete",function($q)use($districts,$service_id){
-                $q->where('service_id',$service_id)->whereIn('district_id',$districts);
+            $cpsId=Auth::user()->cps_id;
+            $capes=Cape::with('requete')->whereHas("requete",function($q)use($cpsId,$service_id){
+                $q->where('service_id',$service_id)->where('cps_id',$cpsId);
             })->get();
             for ($i=0; $i < $capes->count(); $i++) { 
                 $datas['data'][$i]['count']=$capes[$i]->controls->count();

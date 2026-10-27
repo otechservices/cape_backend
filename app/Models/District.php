@@ -12,10 +12,27 @@ class District extends Model
 private static $whiteListFilter = ['*'];
     protected $guarded = [];
 
+    /** Le GUPS par défaut fait toujours partie de la couverture, quel que soit le chemin d'écriture. */
+    protected static function booted()
+    {
+        static::saved(function (District $district) {
+            if ($district->cps_id !== null && ($district->wasRecentlyCreated || $district->wasChanged('cps_id'))) {
+                $district->gups()->syncWithoutDetaching([$district->cps_id]);
+            }
+        });
+    }
 
+
+    /** GUPS par défaut : celui qui reçoit les nouveaux dépôts de l'arrondissement. */
     public function cps()
     {
         return $this->belongsTo(Cps::class,'cps_id');
+    }
+
+    /** Tous les GUPS qui couvrent l'arrondissement, GUPS par défaut compris. */
+    public function gups()
+    {
+        return $this->belongsToMany(Cps::class,'cps_district','district_id','cps_id')->withTimestamps();
     }
 
 

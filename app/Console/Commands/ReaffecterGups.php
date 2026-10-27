@@ -47,7 +47,7 @@ class ReaffecterGups extends Command
                     User::find($requete->affectation->user_down)?->email ?? 'compte supprimé',
                     $agent === null
                         ? 'AUCUN AGENT ACTIF'
-                        : $requete->district->cps->name.' ('.$agent->email.')',
+                        : ($requete->gups?->name ?? $requete->district->cps->name).' ('.$agent->email.')',
                 ];
             })
         );

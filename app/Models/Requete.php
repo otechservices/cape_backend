@@ -37,6 +37,22 @@ private static $whiteListFilter = ['*'];
     public const STATUS_AGREMENT_A_VALIDER = 10;
 
     /**
+     * Un dossier naît rattaché au GUPS par défaut de son arrondissement.
+     *
+     * Posé ici plutôt qu'à chaque création (dépôt en ligne, imports,
+     * commandes) pour qu'aucun chemin ne l'oublie. Ensuite, seul un transfert
+     * explicite le change : voir GupsAffectationService::transferer().
+     */
+    protected static function booted()
+    {
+        static::creating(function (Requete $requete) {
+            if ($requete->cps_id === null && $requete->district_id !== null) {
+                $requete->cps_id = District::whereKey($requete->district_id)->value('cps_id');
+            }
+        });
+    }
+
+    /**
      * Un dossier est agréé s'il a été autorisé via la plateforme
      * (agrément délivré) ou s'il provient de l'import des agréments existants.
      */
@@ -206,6 +222,12 @@ private static $whiteListFilter = ['*'];
         return $this->belongsTo(District::class,'district_id');
     }
 
+    /** GUPS en charge du dossier (pas forcément le GUPS par défaut de l'arrondissement). */
+    public function gups()
+    {
+        return $this->belongsTo(Cps::class,'cps_id');
+    }
+
     public function session()
     {
         return $this->belongsTo(Session::class,'session_id');
@@ -220,9 +242,17 @@ private static $whiteListFilter = ['*'];
         return $this->hasOne(Cape::class,'requete_id');
     }
 
+    /**
+     * Avis des membres, hors sessions annulées : un dossier réinscrit après une
+     * annulation est délibéré à neuf, les anciens avis restent en base pour
+     * l'historique mais ne doivent plus peser.
+     */
     public function avis()
     {
-        return $this->hasMany(Avis::class,'requete_id');
+        return $this->hasMany(Avis::class,'requete_id')
+            ->whereDoesntHave('sm.session', function ($q) {
+                $q->where('closure_mode', Session::CLOSURE_FORCED_CANCEL);
+            });
     }
 
     public function myAvis()

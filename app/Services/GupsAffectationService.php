@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Affectation;
+use App\Models\Cps;
 use App\Models\Parcours;
 use App\Models\Requete;
 use App\Models\User;
@@ -26,20 +27,111 @@ class GupsAffectationService
     public const STATUTS_GUPS = [0, 1, 2, 3, 4];
 
     /**
-     * Agent (compte actif au rôle cps) du GUPS dont relève l'arrondissement.
+     * GUPS en charge du dossier.
+     *
+     * Plusieurs GUPS pouvant couvrir un même arrondissement, il ne se déduit
+     * plus de l'arrondissement : il est porté par le dossier (`requetes.cps_id`).
+     * Le GUPS par défaut de l'arrondissement ne sert que de repli pour un
+     * dossier qui n'en porterait pas encore.
+     */
+    public function gupsId(Requete $requete): ?int
+    {
+        return $requete->cps_id ?? $requete->district?->cps_id;
+    }
+
+    /**
+     * Agent (compte actif au rôle cps) du GUPS en charge du dossier.
      */
     public function agentCompetent(Requete $requete): ?User
     {
-        $cpsId = $requete->district?->cps_id;
-        if ($cpsId === null) {
-            return null;
-        }
+        $cpsId = $this->gupsId($requete);
 
+        return $cpsId === null ? null : $this->agentDuGups($cpsId);
+    }
+
+    public function agentDuGups(int $cpsId): ?User
+    {
         return User::role('cps')
             ->where('cps_id', $cpsId)
             ->where('is_active', true)
             ->orderBy('id')
             ->first();
+    }
+
+    /** Le GUPS couvre-t-il l'arrondissement du dossier ? */
+    public function couvre(int $cpsId, ?int $districtId): bool
+    {
+        return $districtId !== null && DB::table('cps_district')
+            ->where('cps_id', $cpsId)
+            ->where('district_id', $districtId)
+            ->exists();
+    }
+
+    /**
+     * Autres GUPS vers lesquels le dossier peut être transféré : ceux qui
+     * couvrent aussi son arrondissement. `has_agent` signale ceux qui n'ont pas
+     * d'agent actif, vers lesquels le transfert sera refusé.
+     */
+    public function gupsCandidats(Requete $requete)
+    {
+        $actuel = $this->gupsId($requete);
+
+        return Cps::whereHas('couverture', fn ($q) => $q->where('districts.id', $requete->district_id))
+            ->when($actuel !== null, fn ($q) => $q->where('id', '!=', $actuel))
+            ->orderBy('name')
+            ->get(['id', 'name', 'acronym'])
+            ->each(fn ($cps) => $cps->setAttribute('has_agent', $this->agentDuGups($cps->id) !== null));
+    }
+
+    /**
+     * Transfère un dossier en instruction vers un autre GUPS qui couvre son
+     * arrondissement, et le confie à l'agent de ce GUPS.
+     *
+     * @throws \DomainException si le transfert n'est pas possible (message affichable)
+     */
+    public function transferer(Requete $requete, Cps $cible, string $motif): User
+    {
+        if (! in_array((int) $requete->status, self::STATUTS_GUPS, true)) {
+            throw new \DomainException("Le dossier n'est plus au niveau GUPS : il ne peut plus être transféré à un autre GUPS");
+        }
+        if ((int) $this->gupsId($requete) === (int) $cible->id) {
+            throw new \DomainException('Le dossier est déjà pris en charge par ce GUPS');
+        }
+        if (! $this->couvre($cible->id, $requete->district_id)) {
+            throw new \DomainException("Le {$cible->name} ne couvre pas l'arrondissement de ce dossier");
+        }
+        $agent = $this->agentDuGups($cible->id);
+        if ($agent === null) {
+            throw new \DomainException("Le {$cible->name} n'a pas d'agent actif pour recevoir le dossier");
+        }
+
+        $ancien = $requete->gups?->name ?? $requete->district?->cps?->name ?? 'GUPS non renseigné';
+        $actuelle = $requete->affectation;
+
+        DB::transaction(function () use ($requete, $actuelle, $agent, $cible, $ancien, $motif) {
+            $requete->update(['cps_id' => $cible->id]);
+
+            $actuelle?->update(['isLast' => false]);
+            Affectation::create([
+                'user_up' => $actuelle?->user_down ?? Auth::id(),
+                'user_down' => $agent->id,
+                'isLast' => true,
+                'requete_id' => $requete->id,
+                'sens' => $actuelle->sens ?? 1,
+                'instruction' => $actuelle?->instruction,
+            ]);
+
+            Parcours::create([
+                'libelle' => "Transfert de GUPS : $ancien → {$cible->name}. Motif : $motif",
+                'requete_id' => $requete->id,
+                'user_id' => Auth::id(),
+            ]);
+        });
+
+        $requete->unsetRelation('affectation');
+        $requete->unsetRelation('gups');
+
+        return $agent;
     }
 
     /**
@@ -52,7 +144,7 @@ class GupsAffectationService
             return false;
         }
 
-        $cpsId = $requete->district?->cps_id;
+        $cpsId = $this->gupsId($requete);
         $detenteur = User::find($requete->affectation->user_down);
 
         return $cpsId !== null && ! (
@@ -97,7 +189,7 @@ class GupsAffectationService
             ]);
 
             Parcours::create([
-                'libelle' => 'Dossier confié au '.($requete->district->cps->name ?? 'GUPS compétent')." ($motif)",
+                'libelle' => 'Dossier confié au '.(Cps::whereKey($this->gupsId($requete))->value('name') ?? 'GUPS compétent')." ($motif)",
                 'requete_id' => $requete->id,
                 'user_id' => Auth::id(),
             ]);
@@ -188,17 +280,27 @@ class GupsAffectationService
     }
 
     /**
-     * Réaffecte les dossiers au niveau GUPS d'un arrondissement.
+     * Après un changement de couverture d'un arrondissement : les dossiers au
+     * niveau GUPS dont le GUPS ne couvre plus l'arrondissement passent au GUPS
+     * par défaut de celui-ci. Les dossiers d'un GUPS qui le couvre toujours ne
+     * bougent pas, même si le GUPS par défaut a changé.
      *
      * @return int nombre de dossiers déplacés
      */
     public function reaffecterArrondissement(int $districtId, string $motif): int
     {
+        $defaut = DB::table('districts')->where('id', $districtId)->value('cps_id');
+
         return Requete::with(['district.cps', 'affectation'])
             ->where('district_id', $districtId)
             ->whereIn('status', self::STATUTS_GUPS)
             ->get()
-            ->filter(fn ($requete) => $this->reaffecter($requete, $motif) !== null)
+            ->filter(function ($requete) use ($defaut, $districtId, $motif) {
+                if ($requete->cps_id === null || ! $this->couvre($requete->cps_id, $districtId)) {
+                    $requete->update(['cps_id' => $defaut]);
+                }
+                return $this->reaffecter($requete, $motif) !== null;
+            })
             ->count();
     }
 }

@@ -46,7 +46,7 @@ class MessageController extends Controller
         
         $file=Message::create($datas);
 
-        $to=env('MAIL_FROM_ADDRESS');
+        $to=config('mail.from.address');
         Mail::to($to)->send(new ContactFormMail($datas));
 
         return response()->json([

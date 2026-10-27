@@ -23,7 +23,7 @@ class ReferalController extends Controller
 
         switch ($role) {
             case 'cps':
-                $districtIds=Auth::user()->cps->districts->pluck('id');
+                $cpsId=Auth::user()->cps_id;
                 $referals=Cape::with([
                     'requete.referals.controls',
                     'requete.referals.myControls'=>function($q){$q->where("user_id",Auth::id())->withCount('transmissions');},
@@ -31,8 +31,8 @@ class ReferalController extends Controller
                         $q->whereHas("transmissions",function($qu){
                         $qu->where("user_id","!=",Auth::id())->where("isLast",true)->where("user_down",Auth::id());
                     });},
-                    'requete.TypeCape'])->whereHas('requete',function($q)use($districtIds,$service_id){
-                    $q->whereIn('district_id',$districtIds)->where('is_authorized',true)->where('service_id',$service_id);
+                    'requete.TypeCape'])->whereHas('requete',function($q)use($cpsId,$service_id){
+                    $q->where('cps_id',$cpsId)->where('is_authorized',true)->where('service_id',$service_id);
                 })->get();
             break;
             case 'ddasm':

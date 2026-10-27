@@ -252,6 +252,8 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
 
 
       Route::post('/cps/store-districts/all', 'CpsController@storeDistricts');
+      Route::delete('/cps/{id}/districts/{districtId}', 'CpsController@removeDistrict');
+      Route::post('/cps/{id}/districts/{districtId}/default', 'CpsController@setDefaultDistrict');
 
       Route::get('/controls/trans-up/{id}', 'ControlController@transUp');
       Route::get('/referal-controls/trans-up/{id}', 'ReferalControlController@transUp');
@@ -271,6 +273,8 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
       Route::post('/sessions/store-requetes-notes/all', 'SessionController@enregistrerNotes');
       Route::get('/sessions/requests/all', 'SessionController@getSessionRequests');
       Route::get('/sessions/set-status/{id}/{state}', 'SessionController@setStatus');
+      Route::post('/sessions/force-close/{id}', 'SessionController@forceClose');
+      Route::post('/mail-test', 'MailTestController@test');
       Route::get('/sessions/set-status-member/{id}/{state}', 'SessionController@setStatutMember');
 
 
@@ -297,6 +301,8 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
       Route::get('/requetes/search/all', 'RequeteController@search');
       Route::get('/requetes/search/export', 'RequeteController@export');
       Route::post('/requetes/transfer-district', 'RequeteController@transferDistrict');
+      Route::get('/requetes/{id}/gups-candidats', 'RequeteController@gupsCandidats');
+      Route::post('/requetes/transfer-gups', 'RequeteController@transferGups');
       Route::get('/requetes/fiche-etat/{code}', 'RequeteController@ficheEtat');
 
 

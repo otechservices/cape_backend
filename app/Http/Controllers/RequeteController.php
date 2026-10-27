@@ -30,6 +30,7 @@ use App\Utilities\ErrorMessage;
 use App\Http\Repositories\RequeteRepository;
 use App\Traits\GuardsRequeteHolder;
 use App\Services\GupsAffectationService;
+use App\Models\Cps;
 use Illuminate\Support\Facades\DB;
 
 /** status check
@@ -102,8 +103,7 @@ class RequeteController extends Controller
             // traitement à suivre et n'ont rien à y faire.
             switch ($role) {
                 case 'cps':
-                    $districtIds=Auth::user()->cps->districts->pluck('id');
-                    $requetes=Requete::with(['parcours.user','TypeCape','service','district.cps','lastParcours','affectation.detenteur.cps'])->whereIn('district_id',$districtIds)->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
+                    $requetes=Requete::with(['parcours.user','TypeCape','service','district.cps','gups','lastParcours','affectation.detenteur.cps'])->where('cps_id',Auth::user()->cps_id)->where('service_id',request()->service_id)->where('status','<>',Requete::STATUS_AGREE_IMPORTE)->orderBy("id","desc")->get();
                     break;
                 case 'ddasm':
                     $districtIds=[];
@@ -255,7 +255,8 @@ class RequeteController extends Controller
                 "data" => null
             ], 500);
         }
-        $user = User::where('cps_id', $district->cps->id)->first();
+        // Nouveau dépôt : GUPS par défaut de l'arrondissement, et son agent actif.
+        $user = app(GupsAffectationService::class)->agentDuGups($district->cps->id);
 
         if ($user == null) {
             return response()->json([
@@ -761,7 +762,7 @@ return response()->json([
     }
     public function show($code)
     {
-        $requetes=Requete::with(['files.file.TypeFile','files2','reponses.user','parcours','affectation','TypeCape','service','RequeteTypeGarderies.TypeGarderie','district.Municipality.Department','RequeteTypeGarderies.TypeGarderie','service','NaturePromotor'])->where('code',$code)->first();
+        $requetes=Requete::with(['files.file.TypeFile','files2','reponses.user','parcours','affectation','gups','TypeCape','service','RequeteTypeGarderies.TypeGarderie','district.Municipality.Department','RequeteTypeGarderies.TypeGarderie','service','NaturePromotor'])->where('code',$code)->first();
 
         return response()->json($requetes, 200);
     }
@@ -827,7 +828,7 @@ return response()->json([
                 return response()->json($requetes, 200);
         }else if($role="cps") {
             $idUser=Auth::id();
-            $requetes=Requete::with(['files','reponses','parcours','affectation','TypeCape','service','RequeteTypeGarderies.TypeGarderie','service','NaturePromotor'])->where('status',">=",5)->whereIn('district_id',Auth::user()->cps?->districts->pluck('id'))->where('service_id',request()->service_id)->get();
+            $requetes=Requete::with(['files','reponses','parcours','affectation','TypeCape','service','RequeteTypeGarderies.TypeGarderie','service','NaturePromotor'])->where('status',">=",5)->where('cps_id',Auth::user()->cps_id)->where('service_id',request()->service_id)->get();
                 return response()->json($requetes, 200);
         }}
         return response()->json([], 200);
@@ -1555,7 +1556,7 @@ public function inviteStore(Request $request)
             $mailResult = Mailer::sendSimple(
                 "emails.success",
                 [
-                    "cps" => $requete?->district?->cps?->name,
+                    "cps" => $requete?->gups?->name ?? $requete?->district?->cps?->name,
                     "date_meeting" => $request->date_meeting,
                 ],
                 "Invitation au dépôt du dossier physique",
@@ -1577,7 +1578,7 @@ public function inviteStore(Request $request)
 
             Agenda::create([
                 'invite_date' => date_create($request->date_meeting),
-                'cps_id' => $requete?->district?->cps?->id,
+                'cps_id' => $requete?->cps_id ?? $requete?->district?->cps?->id,
                 'status' => $requete?->id,
             ]);
 
@@ -1659,7 +1660,7 @@ public function inviteStore(Request $request)
     public function authorized()
     {
 
-        $session=Session::where('is_active',false)->orderBy("id","desc")->first();
+        $session=Session::where('is_active',false)->notCancelled()->orderBy("id","desc")->first();
         $requetes=Requete::where('session_id', $session->id)->where('is_authorized',true)->get();
         foreach ($requetes as $value) {
                 // $cape=Cape::create([
@@ -1727,7 +1728,7 @@ public function inviteStore(Request $request)
     public function getDecision()
     {
 
-        $session=Session::where('is_active',false)->orderBy("id","desc")->first();
+        $session=Session::where('is_active',false)->notCancelled()->orderBy("id","desc")->first();
         $requetes=Requete::where('session_id', $session->id)->where('can_closed', false)->where('status',"!=",8)->get();
         return response()->json([
             "success"=>true,
@@ -2068,9 +2069,16 @@ public function inviteStore(Request $request)
 
         $ancien = $requete->district()->with('cps')->first();
 
+        $gupsService = app(GupsAffectationService::class);
+
+        // Le GUPS du dossier le suit s'il couvre aussi le nouvel arrondissement ;
+        // sinon le dossier passe au GUPS par défaut de celui-ci.
         $requete->update([
             'district_id' => $district->id,
             'town' => $district->Municipality?->name ?? $requete->town,
+            'cps_id' => $requete->cps_id !== null && $gupsService->couvre($requete->cps_id, $district->id)
+                ? $requete->cps_id
+                : $district->cps_id,
         ]);
 
         Parcours::create([
@@ -2085,14 +2093,75 @@ public function inviteStore(Request $request)
 
         // Encore au GUPS, le dossier suit l'arrondissement : sans cela il
         // resterait dans la liste « À valider » de l'ancien GUPS.
-        $agent = app(GupsAffectationService::class)
+        $agent = $gupsService
             ->reaffecter($requete->load('district.cps', 'affectation'), 'transfert vers '.$district->name);
 
         return response()->json([
             "success" => true,
             "message" => "Dossier transféré vers ".$district->name
-                .($agent !== null ? ' et confié au '.$district->cps?->name : ''),
-            "data" => $requete->load('district.cps', 'district.Municipality.Department'),
+                .($agent !== null ? ' et confié au '.$requete->gups?->name : ''),
+            "data" => $requete->load('district.cps', 'gups', 'district.Municipality.Department'),
+        ], 200);
+    }
+
+    /**
+     * GUPS vers lesquels le dossier peut être transféré : ceux qui couvrent
+     * aussi son arrondissement.
+     */
+    public function gupsCandidats($id)
+    {
+        $requete = Requete::with('district')->findOrFail($id);
+
+        return response()->json([
+            "success" => true,
+            "message" => "GUPS couvrant l'arrondissement",
+            "data" => app(GupsAffectationService::class)->gupsCandidats($requete),
+        ], 200);
+    }
+
+    /**
+     * Transfert d'un dossier en instruction vers un autre GUPS qui couvre son
+     * arrondissement.
+     *
+     * Ouvert à l'agent GUPS qui détient le dossier, ainsi qu'à la DDASM, la
+     * DFEA et l'administrateur pour débloquer un dossier mal orienté.
+     */
+    public function transferGups(Request $request)
+    {
+        $request->validate([
+            'requete_id' => 'required|exists:requetes,id',
+            'cps_id' => 'required|exists:cps,id',
+            'motif' => 'required|string|min:5|max:500',
+        ]);
+
+        $requete = Requete::with(['district.cps', 'gups', 'affectation'])->findOrFail($request->requete_id);
+        $role = Auth::user()->roles()->first()?->name;
+
+        $estDetenteur = $role === 'cps' && (int) $requete->affectation?->user_down === (int) Auth::id();
+        if (! $estDetenteur && ! in_array($role, ['ddasm', 'dfea', 'admin'], true)) {
+            return response()->json([
+                "success" => false,
+                "message" => "Seul le GUPS qui détient le dossier peut le transférer",
+                "data" => null,
+            ], 403);
+        }
+
+        $cible = Cps::findOrFail($request->cps_id);
+
+        try {
+            $agent = app(GupsAffectationService::class)->transferer($requete, $cible, trim($request->motif));
+        } catch (\DomainException $e) {
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage(),
+                "data" => null,
+            ], 422);
+        }
+
+        return response()->json([
+            "success" => true,
+            "message" => "Dossier transféré au ".$cible->name." (".$agent->name.")",
+            "data" => null,
         ], 200);
     }
 }

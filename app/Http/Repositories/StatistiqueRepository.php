@@ -102,10 +102,11 @@ class StatistiqueRepository
 
         switch ($role) {
             case 'cps':
-                $districts = Auth::user()->cps->districts;
+                $districts = Auth::user()->cps->couverture;
                 foreach ($districts as $i => $district) {
                     $datas['data']['label'] = "Capes inscrits";
                     $datas['data']['data'][$i] = Requete::where('district_id', $district->id)
+                                                        ->where('cps_id', Auth::user()->cps_id)
                                                         ->where('service_id', $service_id)
                                                         ->count();
                     $datas['labels'][$i] = $district->name;
@@ -222,12 +223,13 @@ class StatistiqueRepository
 
         switch ($role) {
             case 'cps':
-                $districts = Auth::user()->cps->districts;
+                $districts = Auth::user()->cps->couverture;
                 foreach ($districts as $i => $district) {
                     $datas['data']['label'] = "Capes inscrits";
                     $datas['data']['data'][$i] = Cape::whereHas("requete", function ($q) use ($district, $service_id) {
                         $q->where('service_id', $service_id)
-                        ->where('district_id', $district->id);
+                        ->where('district_id', $district->id)
+                        ->where('cps_id', Auth::user()->cps_id);
                     })->count();
                     $datas['labels'][$i] = $district->name;
                 }
@@ -321,11 +323,11 @@ class StatistiqueRepository
 
         switch ($role) {
             case 'cps':
-                $districts = Auth::user()->cps->districts->pluck('id')->toArray();
+                $cpsId = Auth::user()->cps_id;
 
-                $capes = Cape::with('requete')->whereHas('requete', function ($q) use ($districts, $service_id) {
+                $capes = Cape::with('requete')->whereHas('requete', function ($q) use ($cpsId, $service_id) {
                     $q->where('service_id', $service_id)
-                    ->whereIn('district_id', $districts);
+                    ->where('cps_id', $cpsId);
                 })->get();
 
                 foreach ($capes as $cape) {

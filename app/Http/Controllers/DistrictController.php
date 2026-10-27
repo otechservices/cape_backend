@@ -73,7 +73,8 @@ class DistrictController extends Controller
 
         $district->update($datas);
 
-        // Les dossiers en cours au GUPS suivent l'arrondissement vers son nouveau GUPS.
+        // Les dossiers ne bougent que si leur GUPS ne couvre plus l'arrondissement
+        // (le nouveau GUPS par défaut s'ajoute à la couverture, cf. District::booted).
         if ($district->wasChanged('cps_id')) {
             app(GupsAffectationService::class)->reaffecterArrondissement($district->id, "arrondissement {$district->name} rattaché à ce GUPS");
         }
