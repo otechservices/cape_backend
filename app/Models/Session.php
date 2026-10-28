@@ -30,6 +30,27 @@ private static $whiteListFilter = ['*'];
         });
     }
 
+    /**
+     * Cycle de vie : `is_active` NULL = en préparation, vrai = ouverte, faux = close.
+     *
+     * Comparaisons strictes à NULL : `0 == null` est vrai en PHP, une session
+     * close passerait sinon pour une session en préparation.
+     */
+    public function isPending(): bool
+    {
+        return $this->is_active === null;
+    }
+
+    public function isOpen(): bool
+    {
+        return $this->is_active !== null && (bool) $this->is_active;
+    }
+
+    public function isClosed(): bool
+    {
+        return $this->is_active !== null && !$this->is_active;
+    }
+
     public function closedBy()
     {
         return $this->belongsTo(User::class, 'closed_by');

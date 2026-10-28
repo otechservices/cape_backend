@@ -7,23 +7,26 @@ use App\Http\Requests\BaseFormRequest;
 class StoreSessionRequest extends BaseFormRequest
 {
     /**
-     * Règles de validation appliquées à la requête.
-     *
-     * Les messages d'erreur français sont fournis automatiquement par
-     * lang/fr/validation.php (règles) et lang/fr/attributes.php (libellés
-     * des champs), via BaseFormRequest.
+     * Création d'une session : libellé, période et note d'accord (PDF, affichée
+     * dans le visualiseur de l'écran des sessions).
      */
     public function rules(): array
     {
         return [
-            'title' => 'required|string|max:191',
-            'subtitle' => 'required|string|max:191',
-            'big_photo' => 'required|string',
-            'short_photo' => 'required|string',
-            'resume' => 'required|string',
-            'content' => 'required|string',
-            'author' => 'required|string|max:191',
-            'is_active' => 'required|boolean',
-            'user_id' => 'required|integer',        ];
+            'name' => 'required|string|max:191',
+            'date_start' => 'required|date',
+            'date_end' => 'required|date|after_or_equal:date_start',
+            'file' => 'required|file|mimes:pdf|max:20480',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return array_merge(parent::attributes(), [
+            'name' => 'libellé',
+            'date_start' => 'date de début',
+            'date_end' => 'date de fin',
+            'file' => "note d'accord",
+        ]);
     }
 }

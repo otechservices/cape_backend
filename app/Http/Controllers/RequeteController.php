@@ -1602,6 +1602,13 @@ public function inviteStore(Request $request)
     {
 
         $requete=Requete::find($request->id);
+        if (!$requete || !$requete->session?->isOpen()) {
+            return response()->json([
+                "success"=>false,
+                "message"=>"La décision ne peut être prise que pendant une session ouverte",
+                "data"=>null
+            ],422);
+        }
         $avis=[];
 
         if ($request->decision ==0) {

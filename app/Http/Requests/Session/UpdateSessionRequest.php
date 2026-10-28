@@ -7,23 +7,26 @@ use App\Http\Requests\BaseFormRequest;
 class UpdateSessionRequest extends BaseFormRequest
 {
     /**
-     * Règles de validation appliquées à la requête.
-     *
-     * Les messages d'erreur français sont fournis automatiquement par
-     * lang/fr/validation.php (règles) et lang/fr/attributes.php (libellés
-     * des champs), via BaseFormRequest.
+     * Modification d'une session en préparation. La note d'accord n'est
+     * remplacée que si un nouveau fichier est envoyé.
      */
     public function rules(): array
     {
         return [
-            'title' => 'required|string|max:191',
-            'subtitle' => 'nullable|string|max:191',
-            'big_photo' => 'required|string',
-            'short_photo' => 'nullable|string',
-            'resume' => 'required|string',
-            'content' => 'required|string',
-            'author' => 'nullable|string|max:191',
-            'is_active' => 'sometimes|boolean',
-            'user_id' => 'required|integer',        ];
+            'name' => 'required|string|max:191',
+            'date_start' => 'required|date',
+            'date_end' => 'required|date|after_or_equal:date_start',
+            'file' => 'nullable|file|mimes:pdf|max:20480',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return array_merge(parent::attributes(), [
+            'name' => 'libellé',
+            'date_start' => 'date de début',
+            'date_end' => 'date de fin',
+            'file' => "note d'accord",
+        ]);
     }
 }
