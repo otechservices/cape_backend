@@ -1609,33 +1609,15 @@ public function inviteStore(Request $request)
                 "data"=>null
             ],422);
         }
-        $avis=[];
-
         if ($request->decision ==0) {
-            $i=0;
-                foreach ($requete->files as $value) {
-                    foreach ($value->avis as $key) {
-                        $avis[$i]=$key;
-
-                    $i++;
-                    }
-                   
-                }
-                Parcours::create([
-                    'libelle'=>"Envoi des mails de rejet au CAPE",
-                    'requete_id'=>$requete->id,
-                    'user_id'=>Auth::id(),
-                ]); 
-          
-            Mailer::sendSimple(
-                "emails.rejected",
-                [
-                    "observation"=>$request->observation,
-                    "motifs"=>$avis
-                ],
-                "Décision du conseil",
-                $requete->name_promoter,
-                $requete->email);
+            // Le mail de rejet part à la clôture de la session
+            // (SessionController::envoyerMailsDeRejet) : la décision peut
+            // encore changer d'ici là, ou être effacée par une annulation.
+            Parcours::create([
+                'libelle'=>"Rejet décidé en session, le promoteur sera informé par mail à la clôture",
+                'requete_id'=>$requete->id,
+                'user_id'=>Auth::id(),
+            ]);
           }else {
             foreach (json_decode($request->referals) as $value) {
                     Referal::create([

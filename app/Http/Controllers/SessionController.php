@@ -257,7 +257,7 @@ class SessionController extends Controller
                 ]);
             });
             $action='Clôture de session';
-            $message="Session clôturée";
+            $message="Session clôturée".$this->envoyerMailsDeRejet($session);
         }
 
         app(LogService::class)->trace([
@@ -283,8 +283,9 @@ class SessionController extends Controller
      *  - `cancel` : la session est annulée. Ses décisions, observations, notes et
      *    recommandations sont effacées, tous ses dossiers reviennent dans la
      *    liste. Les avis restent en base mais ne sont plus lus (Requete::avis).
-     *    Les mails de rejet déjà envoyés, eux, ne peuvent pas être rappelés.
+     *    Aucun mail de rejet ne part.
      * Dans les deux cas les comptes des membres sont supprimés, comme à la
+     * clôture normale ; en `continue`, les rejets sont notifiés comme à la
      * clôture normale.
      */
     public function forceClose(ForceCloseSessionRequest $request, $id)
@@ -356,18 +357,67 @@ class SessionController extends Controller
             "success"=>true,
             "message"=>$cancel
                 ? "Session annulée : ".$retires." dossier(s) à réinscrire"
-                : "Session clôturée : ".$retires." dossier(s) sans décision remis à inscrire",
+                : "Session clôturée : ".$retires." dossier(s) sans décision remis à inscrire".$this->envoyerMailsDeRejet($session),
             "data"=>null
         ],200);
+    }
+
+    /**
+     * Informe les promoteurs des dossiers rejetés, une fois la session close.
+     *
+     * Appelé après la transaction de clôture. Les mails partent en file
+     * (SendMailJob) : un serveur SMTP indisponible donne des reprises
+     * automatiques, puis un job en échec (`php artisan queue:failed`), sans
+     * jamais bloquer la clôture. Seule la mise en file peut échouer ici.
+     *
+     * @return string complément du message de clôture
+     */
+    private function envoyerMailsDeRejet(Session $session): string
+    {
+        $rejetes=$session->requetes()->where('has_agreemant',0)->get();
+        $echecs=[];
+
+        foreach ($rejetes as $requete) {
+            try {
+                Mailer::sendSimple(
+                    "emails.rejected",
+                    ["motif"=>nl2br(e($requete->observation))],
+                    "Décision du conseil",
+                    $requete->name_promoter,
+                    $requete->email);
+
+                Parcours::create([
+                    'libelle'=>"Mail de rejet au promoteur mis en file d'envoi (clôture de la session « ".$session->name." »)",
+                    'requete_id'=>$requete->id,
+                    'user_id'=>Auth::id(),
+                ]);
+            } catch (\Throwable $th) {
+                report($th);
+                $echecs[]=$requete->name;
+            }
+        }
+
+        $envoyes=$rejetes->count()-count($echecs);
+        if ($rejetes->count()!=0) {
+            app(LogService::class)->trace([
+                'action_name'=>'Mails de rejet',
+                'description'=>"Session #".$session->id." « ".$session->name." » : ".$envoyes." mis en file, ".count($echecs)." échec(s)",
+            ]);
+        }
+
+        if (count($echecs)!=0) {
+            return ". Attention : mail de rejet non envoyé pour ".implode(', ',$echecs);
+        }
+        return $envoyes!=0 ? ". ".$envoyes." mail(s) de rejet en cours d'envoi" : "";
     }
 
     /**
      * Affecte des membres à une session non close et leur crée un compte.
      *
      * `items` : JSON d'identifiants de membres. Les membres déjà affectés sont
-     * ignorés. Chaque membre est traité dans sa propre transaction, envoi du
-     * mail compris : si le mail part en erreur, aucun compte n'est créé avec un
-     * mot de passe que le membre ne recevrait jamais.
+     * ignorés. Chaque membre est traité dans sa propre transaction ; le mail
+     * d'invitation part en file après le commit (SendMailJob), avec reprises
+     * automatiques si le serveur SMTP est indisponible.
      */
     public function storeMembers(Request $request)
     {
@@ -437,13 +487,13 @@ class SessionController extends Controller
 
         if (count($echecs)!=0) {
             return $this->refuse(
-                $ajoutes." membre(s) affecté(s). Échec de l'invitation (mail non envoyé, membre non affecté) pour : ".implode(', ',$echecs)
+                $ajoutes." membre(s) affecté(s). Échec de l'affectation pour : ".implode(', ',$echecs)
             );
         }
 
         return response()->json([
             "success"=>true,
-            "message"=>$ajoutes." membre(s) affecté(s), invitation envoyée",
+            "message"=>$ajoutes." membre(s) affecté(s), invitation en cours d'envoi",
             "data"=>null
         ],200);
     }

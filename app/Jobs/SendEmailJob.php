@@ -31,6 +31,6 @@ class SendEmailJob implements ShouldQueue
      */
     public function handle(): void
     {
-        Mailer::sendSimple('emails.new_account', ['user' => $this->user, 'password' => $this->password], 'Identifiant de connexion', $this->user->name, $this->user->email);
+        Mailer::sendNow('emails.new_account', ['user' => $this->user, 'password' => $this->password], 'Identifiant de connexion', $this->user->name, $this->user->email);
     }
 }

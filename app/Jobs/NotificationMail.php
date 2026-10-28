@@ -39,7 +39,7 @@ class NotificationMail implements ShouldQueue
      */
     public function handle(): void
     {
-        Mailer::sendSimple('emails.notification', $this->data, 'Notification FCT', $this->name, $this->email);
+        Mailer::sendNow('emails.notification', $this->data, 'Notification FCT', $this->name, $this->email);
 
     }
 }
