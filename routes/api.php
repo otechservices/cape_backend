@@ -301,6 +301,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
       Route::get('/requetes/search/all', 'RequeteController@search');
       Route::get('/requetes/search/export', 'RequeteController@export');
       Route::post('/requetes/transfer-district', 'RequeteController@transferDistrict');
+      Route::get('/requetes/transfer-district/gups/{districtId}', 'RequeteController@gupsArrondissement');
       Route::get('/requetes/{id}/gups-candidats', 'RequeteController@gupsCandidats');
       Route::post('/requetes/transfer-gups', 'RequeteController@transferGups');
       Route::get('/requetes/fiche-etat/{code}', 'RequeteController@ficheEtat');

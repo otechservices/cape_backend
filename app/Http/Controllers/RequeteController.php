@@ -31,6 +31,7 @@ use App\Http\Repositories\RequeteRepository;
 use App\Traits\GuardsRequeteHolder;
 use App\Services\GupsAffectationService;
 use App\Models\Cps;
+use App\Services\LogService;
 use Illuminate\Support\Facades\DB;
 
 /** status check
@@ -2017,7 +2018,7 @@ public function inviteStore(Request $request)
     public function search(Request $request)
     {
         $query = Requete::applyFilters($this->searchFilters($request))
-            ->with(['TypeCape', 'service', 'district.cps', 'district.Municipality.Department'])
+            ->with(['TypeCape', 'service', 'gups', 'district.cps', 'district.Municipality.Department'])
             ->orderBy('name');
 
         return response()->json([
@@ -2044,53 +2045,130 @@ public function inviteStore(Request $request)
      * rapprochement textuel des imports peut se tromper de cible, et un centre
      * peut aussi déménager : ce transfert permet de corriger le rattachement
      * sans repasser par un import.
+     *
+     * Réservé à l'administrateur, à la DFEA et à la DDASM (dans son seul
+     * département, au départ comme à l'arrivée). Refusé pendant une session
+     * ouverte, où le dossier est en délibération.
+     *
+     * Plusieurs GUPS pouvant couvrir l'arrondissement d'arrivée, `cps_id`
+     * choisit le GUPS du dossier parmi eux ; à défaut, cf.
+     * GupsAffectationService::gupsApresTransfert. Un dossier encore au niveau
+     * GUPS doit pouvoir être confié à un agent actif de ce GUPS.
      */
     public function transferDistrict(Request $request)
     {
         $request->validate([
             'requete_id' => 'required|exists:requetes,id',
             'district_id' => 'required|exists:districts,id',
-            'motif' => 'nullable|string|max:255',
+            'cps_id' => 'nullable|exists:cps,id',
+            'motif' => 'required|string|min:5|max:255',
         ]);
 
-        $requete = Requete::findOrFail($request->requete_id);
+        $requete = Requete::with(['district.Municipality', 'district.cps', 'gups', 'affectation', 'session'])
+            ->findOrFail($request->requete_id);
         $district = District::with('cps', 'Municipality')->findOrFail($request->district_id);
+        $ancien = $requete->district;
+        $motif = trim($request->motif);
 
-        $ancien = $requete->district()->with('cps')->first();
+        $role = Auth::user()->roles()->first()?->name;
+        if (! in_array($role, ['admin', 'dfea', 'ddasm'], true)) {
+            return $this->refusTransfert("Seuls l'administrateur, la DFEA et la DDASM peuvent transférer un dossier", 403);
+        }
+        if ($role === 'ddasm') {
+            $departement = (int) Auth::user()->department_id;
+            if ((int) $ancien?->Municipality?->department_id !== $departement
+                || (int) $district->Municipality?->department_id !== $departement) {
+                return $this->refusTransfert("La DDASM ne transfère qu'entre arrondissements de son département", 403);
+            }
+        }
+        if ((int) $requete->district_id === (int) $district->id) {
+            return $this->refusTransfert("Le dossier est déjà rattaché à ".$district->name
+                .". Pour changer seulement de GUPS, utilisez le transfert entre GUPS.");
+        }
+        if ($requete->session?->isOpen()) {
+            return $this->refusTransfert("Le dossier est inscrit à la session ouverte « ".$requete->session->name." » : transfert impossible avant sa clôture");
+        }
 
         $gupsService = app(GupsAffectationService::class);
 
-        // Le GUPS du dossier le suit s'il couvre aussi le nouvel arrondissement ;
-        // sinon le dossier passe au GUPS par défaut de celui-ci.
-        $requete->update([
-            'district_id' => $district->id,
-            'town' => $district->Municipality?->name ?? $requete->town,
-            'cps_id' => $requete->cps_id !== null && $gupsService->couvre($requete->cps_id, $district->id)
-                ? $requete->cps_id
-                : $district->cps_id,
-        ]);
+        if ($request->filled('cps_id')) {
+            if (! $gupsService->couvre((int) $request->cps_id, $district->id)) {
+                return $this->refusTransfert("Ce GUPS ne couvre pas l'arrondissement ".$district->name);
+            }
+            $cpsId = (int) $request->cps_id;
+        } else {
+            $cpsId = $gupsService->gupsApresTransfert($requete, $district->id);
+        }
+        $gups = $cpsId !== null ? Cps::find($cpsId) : null;
 
-        Parcours::create([
-            'libelle' => 'Transfert : '
-                .($ancien?->name ?? 'arrondissement non renseigné')
-                .' → '.$district->name
-                .' (CPS : '.($district->cps?->name ?? 'non rattaché').')'
-                .($request->motif ? ' — '.$request->motif : ''),
-            'requete_id' => $requete->id,
-            'user_id' => Auth::id(),
-        ]);
+        // Encore en instruction au GUPS, le dossier doit changer de mains : sans
+        // agent actif pour le recevoir, il resterait bloqué chez l'ancien.
+        $enInstruction = in_array((int) $requete->status, GupsAffectationService::STATUTS_GUPS, true)
+            && $requete->affectation !== null;
+        if ($enInstruction && ($gups === null || $gupsService->agentDuGups($gups->id) === null)) {
+            return $this->refusTransfert($gups
+                ? "Le ".$gups->name." n'a pas d'agent actif pour recevoir le dossier"
+                : "Aucun GUPS ne couvre l'arrondissement ".$district->name." : le dossier ne pourrait être confié à personne");
+        }
 
-        // Encore au GUPS, le dossier suit l'arrondissement : sans cela il
-        // resterait dans la liste « À valider » de l'ancien GUPS.
-        $agent = $gupsService
-            ->reaffecter($requete->load('district.cps', 'affectation'), 'transfert vers '.$district->name);
+        $agent = DB::transaction(function () use ($requete, $district, $cpsId, $gups, $ancien, $motif, $gupsService) {
+            $requete->update([
+                'district_id' => $district->id,
+                'town' => $district->Municipality?->name ?? $requete->town,
+                'cps_id' => $cpsId,
+            ]);
+
+            Parcours::create([
+                'libelle' => 'Transfert : '
+                    .($ancien?->name ?? 'arrondissement non renseigné')
+                    .' → '.$district->name
+                    .' (GUPS : '.($gups?->name ?? 'non rattaché').'). Motif : '.$motif,
+                'requete_id' => $requete->id,
+                'user_id' => Auth::id(),
+            ]);
+
+            // Encore au GUPS, le dossier suit l'arrondissement : sans cela il
+            // resterait dans la liste « À valider » de l'ancien GUPS.
+            return $gupsService->reaffecter(
+                $requete->unsetRelation('district')->unsetRelation('gups')->load('district.cps', 'affectation'),
+                'transfert vers '.$district->name
+            );
+        });
+
+        app(LogService::class)->trace([
+            'action_name' => "Transfert d'arrondissement",
+            'description' => "Dossier ".$requete->code." : ".($ancien?->name ?? '—')." → ".$district->name
+                ." (GUPS : ".($gups?->name ?? 'non rattaché')."). Motif : ".$motif,
+        ]);
 
         return response()->json([
             "success" => true,
             "message" => "Dossier transféré vers ".$district->name
-                .($agent !== null ? ' et confié au '.$requete->gups?->name : ''),
+                .($agent !== null ? ' et confié au '.$gups?->name : ''),
             "data" => $requete->load('district.cps', 'gups', 'district.Municipality.Department'),
         ], 200);
+    }
+
+    /**
+     * GUPS qui couvrent un arrondissement : alimente le choix du GUPS lors
+     * d'un transfert d'arrondissement.
+     */
+    public function gupsArrondissement($districtId)
+    {
+        return response()->json([
+            "success" => true,
+            "message" => "GUPS couvrant l'arrondissement",
+            "data" => app(GupsAffectationService::class)->gupsDeLArrondissement((int) $districtId),
+        ], 200);
+    }
+
+    private function refusTransfert(string $message, int $code = 422)
+    {
+        return response()->json([
+            "success" => false,
+            "message" => $message,
+            "data" => null,
+        ], $code);
     }
 
     /**

@@ -84,6 +84,45 @@ class GupsAffectationService
     }
 
     /**
+     * GUPS qui couvrent un arrondissement, pour choisir celui d'un dossier qui
+     * y est transféré. `is_default` : GUPS par défaut de l'arrondissement ;
+     * `has_agent` : au moins un agent actif pour recevoir le dossier.
+     */
+    public function gupsDeLArrondissement(int $districtId)
+    {
+        $defaut = DB::table('districts')->where('id', $districtId)->value('cps_id');
+
+        return Cps::whereHas('couverture', fn ($q) => $q->where('districts.id', $districtId))
+            ->orderBy('name')
+            ->get(['id', 'name', 'acronym'])
+            ->each(function ($cps) use ($defaut) {
+                $cps->setAttribute('is_default', (int) $cps->id === (int) $defaut);
+                $cps->setAttribute('has_agent', $this->agentDuGups($cps->id) !== null);
+            });
+    }
+
+    /**
+     * GUPS d'un dossier qui change d'arrondissement, faute de choix explicite :
+     * le sien s'il couvre aussi le nouvel arrondissement, sinon le GUPS par
+     * défaut de celui-ci, sinon l'unique GUPS qui le couvre.
+     */
+    public function gupsApresTransfert(Requete $requete, int $districtId): ?int
+    {
+        if ($requete->cps_id !== null && $this->couvre($requete->cps_id, $districtId)) {
+            return $requete->cps_id;
+        }
+
+        $defaut = DB::table('districts')->where('id', $districtId)->value('cps_id');
+        if ($defaut !== null) {
+            return $defaut;
+        }
+
+        $couvrants = DB::table('cps_district')->where('district_id', $districtId)->pluck('cps_id');
+
+        return $couvrants->count() === 1 ? $couvrants->first() : null;
+    }
+
+    /**
      * Transfère un dossier en instruction vers un autre GUPS qui couvre son
      * arrondissement, et le confie à l'agent de ce GUPS.
      *
